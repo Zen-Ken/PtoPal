@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, Calendar, Clock, TrendingUp, Users, Shield, Sparkles, ChevronRight, CalendarDays, Zap, User } from 'lucide-react';
 import ProfilePage from './components/ProfilePage';
+import CalendarPage from './components/CalendarPage';
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -73,6 +74,17 @@ function App() {
     );
   }
 
+  if (currentPage === 'calendar') {
+    return (
+      <CalendarPage 
+        onBack={() => setCurrentPage('home')}
+        currentPTO={currentPTO}
+        accrualRate={accrualRate}
+        payPeriod={payPeriod}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
       {/* Navigation */}
@@ -93,12 +105,18 @@ function App() {
                   <a href="#" className="text-slate-900 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">
                     Home
                   </a>
-                  <a href="#" className="text-slate-500 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">
+                  <button 
+                    onClick={() => setCurrentPage('profile')}
+                    className="text-slate-500 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors"
+                  >
                     Dashboard
-                  </a>
-                  <a href="#" className="text-slate-500 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">
+                  </button>
+                  <button 
+                    onClick={() => setCurrentPage('calendar')}
+                    className="text-slate-500 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors"
+                  >
                     Calendar
-                  </a>
+                  </button>
                   <a href="#" className="text-slate-500 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">
                     Analytics
                   </a>
@@ -136,8 +154,24 @@ function App() {
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white/95 backdrop-blur-md border-t border-slate-200/50">
               <a href="#" className="text-slate-900 block px-3 py-2 text-base font-medium">Home</a>
-              <a href="#" className="text-slate-500 hover:text-slate-900 block px-3 py-2 text-base font-medium">Dashboard</a>
-              <a href="#" className="text-slate-500 hover:text-slate-900 block px-3 py-2 text-base font-medium">Calendar</a>
+              <button 
+                onClick={() => {
+                  setCurrentPage('profile');
+                  setIsMenuOpen(false);
+                }}
+                className="text-slate-500 hover:text-slate-900 block px-3 py-2 text-base font-medium w-full text-left"
+              >
+                Dashboard
+              </button>
+              <button 
+                onClick={() => {
+                  setCurrentPage('calendar');
+                  setIsMenuOpen(false);
+                }}
+                className="text-slate-500 hover:text-slate-900 block px-3 py-2 text-base font-medium w-full text-left"
+              >
+                Calendar
+              </button>
               <a href="#" className="text-slate-500 hover:text-slate-900 block px-3 py-2 text-base font-medium">Analytics</a>
               <div className="pt-4 pb-3 border-t border-slate-200">
                 <div className="flex items-center px-3 space-y-2">
@@ -371,8 +405,11 @@ function App() {
                   <span className="text-slate-700 font-medium">Expiration alerts and reminders</span>
                 </div>
               </div>
-              <button className="text-blue-600 hover:text-blue-700 font-semibold flex items-center group">
-                Explore all features
+              <button 
+                onClick={() => setCurrentPage('calendar')}
+                className="text-blue-600 hover:text-blue-700 font-semibold flex items-center group"
+              >
+                View PTO Calendar
                 <ChevronRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
