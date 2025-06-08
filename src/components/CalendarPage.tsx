@@ -35,59 +35,51 @@ export default function CalendarPage({ onBack, currentPTO, accrualRate, payPerio
     let currentPayDate = new Date(startOfYear);
     let runningPTO = currentPTO;
     
+    // Calculate all pay periods from start of year to current month
+    const allEvents: PayPeriodEvent[] = [];
+    
     // For semi-monthly, use 1st and 15th of each month
     if (payPeriod === 'semimonthly') {
       for (let month = 0; month < 12; month++) {
         // First pay period (1st of month)
         const firstPayDate = new Date(currentDate.getFullYear(), month, 1);
-        if (firstPayDate <= endOfMonth) {
-          events.push({
-            date: firstPayDate,
-            ptoAccrued: accrualRate,
-            totalPTO: runningPTO + accrualRate,
-            isPayDay: true
-          });
-          if (firstPayDate >= startOfMonth) {
-            runningPTO += accrualRate;
-          }
-        }
+        runningPTO += accrualRate;
+        allEvents.push({
+          date: firstPayDate,
+          ptoAccrued: accrualRate,
+          totalPTO: runningPTO,
+          isPayDay: true
+        });
         
         // Second pay period (15th of month)
         const secondPayDate = new Date(currentDate.getFullYear(), month, 15);
-        if (secondPayDate <= endOfMonth) {
-          events.push({
-            date: secondPayDate,
-            ptoAccrued: accrualRate,
-            totalPTO: runningPTO + accrualRate,
-            isPayDay: true
-          });
-          if (secondPayDate >= startOfMonth) {
-            runningPTO += accrualRate;
-          }
-        }
+        runningPTO += accrualRate;
+        allEvents.push({
+          date: secondPayDate,
+          ptoAccrued: accrualRate,
+          totalPTO: runningPTO,
+          isPayDay: true
+        });
       }
     } else {
       // For other pay periods, calculate based on interval
       const intervalDays = payPeriodOptions[payPeriod as keyof typeof payPeriodOptions]?.days || 30;
       
-      while (currentPayDate <= endOfMonth) {
-        if (currentPayDate >= startOfMonth) {
-          events.push({
-            date: new Date(currentPayDate),
-            ptoAccrued: accrualRate,
-            totalPTO: runningPTO + accrualRate,
-            isPayDay: true
-          });
-          runningPTO += accrualRate;
-        } else if (currentPayDate < startOfMonth) {
-          runningPTO += accrualRate;
-        }
+      while (currentPayDate.getFullYear() === currentDate.getFullYear()) {
+        runningPTO += accrualRate;
+        allEvents.push({
+          date: new Date(currentPayDate),
+          ptoAccrued: accrualRate,
+          totalPTO: runningPTO,
+          isPayDay: true
+        });
         
         currentPayDate.setDate(currentPayDate.getDate() + intervalDays);
       }
     }
     
-    return events.filter(event => 
+    // Filter to only show events in the current month
+    return allEvents.filter(event => 
       event.date >= startOfMonth && event.date <= endOfMonth
     );
   }, [currentDate, currentPTO, accrualRate, payPeriod]);
@@ -158,7 +150,7 @@ export default function CalendarPage({ onBack, currentPTO, accrualRate, payPerio
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold text-slate-900">PTO Calendar</h1>
-                  <p className="text-slate-600">Track your pay periods and PTO accrual</p>
+                  <p className="text-slate-600">Track your pay periods and PTO balance</p>
                 </div>
               </div>
             </div>
@@ -234,8 +226,8 @@ export default function CalendarPage({ onBack, currentPTO, accrualRate, payPerio
                               <DollarSign className="w-3 h-3" />
                               <span className="font-medium">Pay Day</span>
                             </div>
-                            <div className="text-xs opacity-90">
-                              +{event.ptoAccrued} PTO
+                            <div className="text-xs opacity-90 font-medium">
+                              {event.totalPTO.toFixed(1)} PTO
                             </div>
                           </div>
                         </div>
@@ -303,8 +295,8 @@ export default function CalendarPage({ onBack, currentPTO, accrualRate, payPerio
                       <div className="text-xs text-slate-600">Pay Day</div>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold text-emerald-600">+{event.ptoAccrued}</div>
-                      <div className="text-xs text-slate-600">{event.totalPTO.toFixed(1)} total</div>
+                      <div className="font-bold text-blue-600">{event.totalPTO.toFixed(1)}</div>
+                      <div className="text-xs text-slate-600">total PTO</div>
                     </div>
                   </div>
                 ))}
@@ -324,7 +316,7 @@ export default function CalendarPage({ onBack, currentPTO, accrualRate, payPerio
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
                   <div className="w-4 h-4 bg-gradient-to-r from-emerald-500 to-green-600 rounded"></div>
-                  <span className="text-sm text-slate-700">Pay Day + PTO Accrual</span>
+                  <span className="text-sm text-slate-700">Pay Day + Total PTO Balance</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-4 h-4 bg-blue-200 border-2 border-blue-400 rounded"></div>
