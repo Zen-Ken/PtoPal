@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Calendar, Clock, TrendingUp, Users, Shield, Sparkles, ChevronRight, CalendarDays, Zap } from 'lucide-react';
+import { Menu, X, Calendar, Clock, TrendingUp, Users, Shield, Sparkles, ChevronRight, CalendarDays, Zap, User } from 'lucide-react';
+import ProfilePage from './components/ProfilePage';
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState('home');
   const [currentPTO, setCurrentPTO] = useState(12);
   const [accrualRate, setAccrualRate] = useState(1.67); // days per month
+  const [payPeriod, setPayPeriod] = useState('monthly');
   const [futureDate, setFutureDate] = useState('');
   const [futurePTO, setFuturePTO] = useState(0);
 
@@ -22,6 +25,12 @@ function App() {
     const additionalPTO = accrualRate * 3;
     setFuturePTO(currentPTO + additionalPTO);
   }, [currentPTO, accrualRate]);
+
+  const handleUpdateSettings = (pto: number, accrual: number, period: string) => {
+    setCurrentPTO(pto);
+    setAccrualRate(accrual);
+    setPayPeriod(period);
+  };
 
   const features = [
     {
@@ -52,6 +61,17 @@ function App() {
     { number: "24/7", label: "Available" },
     { number: "0", label: "Hassle" }
   ];
+
+  if (currentPage === 'profile') {
+    return (
+      <ProfilePage 
+        onBack={() => setCurrentPage('home')}
+        currentPTO={currentPTO}
+        accrualRate={accrualRate}
+        onUpdateSettings={handleUpdateSettings}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
@@ -87,8 +107,12 @@ function App() {
             </div>
             <div className="hidden md:block">
               <div className="flex items-center space-x-4">
-                <button className="text-slate-500 hover:text-slate-900 px-3 py-2 text-sm font-medium transition-colors">
-                  Sign In
+                <button 
+                  onClick={() => setCurrentPage('profile')}
+                  className="text-slate-500 hover:text-slate-900 px-3 py-2 text-sm font-medium transition-colors flex items-center space-x-2"
+                >
+                  <User className="w-4 h-4" />
+                  <span>Profile</span>
                 </button>
                 <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-xl flex items-center">
                   Get Started
@@ -117,8 +141,15 @@ function App() {
               <a href="#" className="text-slate-500 hover:text-slate-900 block px-3 py-2 text-base font-medium">Analytics</a>
               <div className="pt-4 pb-3 border-t border-slate-200">
                 <div className="flex items-center px-3 space-y-2">
-                  <button className="w-full text-left text-slate-500 hover:text-slate-900 block px-0 py-2 text-base font-medium">
-                    Sign In
+                  <button 
+                    onClick={() => {
+                      setCurrentPage('profile');
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full text-left text-slate-500 hover:text-slate-900 block px-0 py-2 text-base font-medium flex items-center space-x-2"
+                  >
+                    <User className="w-4 h-4" />
+                    <span>Profile</span>
                   </button>
                   <button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-xl text-base font-medium transition-all duration-200">
                     Get Started
@@ -230,9 +261,12 @@ function App() {
                 </div>
 
                 <div className="text-center">
-                  <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-10 py-4 rounded-xl text-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center mx-auto">
-                    Start Tracking with PTOPal
-                    <Calendar className="ml-3 w-5 h-5" />
+                  <button 
+                    onClick={() => setCurrentPage('profile')}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-10 py-4 rounded-xl text-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center mx-auto"
+                  >
+                    Customize Your Settings
+                    <User className="ml-3 w-5 h-5" />
                   </button>
                 </div>
               </div>
