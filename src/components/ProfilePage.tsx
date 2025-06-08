@@ -28,15 +28,29 @@ export default function ProfilePage({ onBack, currentPTO, accrualRate, onUpdateS
   };
 
   const payPeriodOptions = [
-    { value: 'weekly', label: 'Weekly', multiplier: 4.33 },
-    { value: 'biweekly', label: 'Bi-weekly', multiplier: 2.17 },
-    { value: 'semimonthly', label: 'Semi-monthly', multiplier: 2 },
-    { value: 'monthly', label: 'Monthly', multiplier: 1 }
+    { value: 'weekly', label: 'Weekly', periodsPerMonth: 4.33 },
+    { value: 'biweekly', label: 'Bi-weekly', periodsPerMonth: 2.17 },
+    { value: 'semimonthly', label: 'Semi-monthly', periodsPerMonth: 2 },
+    { value: 'monthly', label: 'Monthly', periodsPerMonth: 1 }
   ];
 
-  const getAdjustedAccrual = () => {
+  const getMonthlyAccrual = () => {
     const selectedPeriod = payPeriodOptions.find(p => p.value === formData.payPeriod);
-    return selectedPeriod ? formData.accrualRate * selectedPeriod.multiplier : formData.accrualRate;
+    if (!selectedPeriod) return formData.accrualRate;
+    
+    // Convert the accrual rate to monthly based on the selected pay period
+    return formData.accrualRate * selectedPeriod.periodsPerMonth;
+  };
+
+  const getAccrualForPeriod = (periodType: string) => {
+    const period = payPeriodOptions.find(p => p.value === periodType);
+    if (!period) return 0;
+    
+    // Get the monthly accrual rate
+    const monthlyAccrual = getMonthlyAccrual();
+    
+    // Convert monthly rate to the specific period
+    return monthlyAccrual / period.periodsPerMonth;
   };
 
   return (
@@ -135,26 +149,6 @@ export default function ProfilePage({ onBack, currentPTO, accrualRate, onUpdateS
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-3">
-                    Accrual Rate
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      value={formData.accrualRate}
-                      onChange={(e) => setFormData({...formData, accrualRate: Number(e.target.value)})}
-                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 backdrop-blur-sm transition-all duration-200"
-                      min="0"
-                      step="0.1"
-                      placeholder="1.67"
-                    />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-medium">
-                      days per period
-                    </span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-3">
                     Pay Period
                   </label>
                   <select
@@ -168,6 +162,26 @@ export default function ProfilePage({ onBack, currentPTO, accrualRate, onUpdateS
                       </option>
                     ))}
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-3">
+                    Accrual Rate per {payPeriodOptions.find(p => p.value === formData.payPeriod)?.label || 'Period'}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      value={formData.accrualRate}
+                      onChange={(e) => setFormData({...formData, accrualRate: Number(e.target.value)})}
+                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 backdrop-blur-sm transition-all duration-200"
+                      min="0"
+                      step="0.1"
+                      placeholder="1.67"
+                    />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-medium">
+                      days
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -243,7 +257,7 @@ export default function ProfilePage({ onBack, currentPTO, accrualRate, onUpdateS
                 
                 <div className="flex justify-between items-center">
                   <span className="text-slate-600">Monthly Accrual</span>
-                  <span className="font-bold text-emerald-600">+{getAdjustedAccrual().toFixed(2)} days</span>
+                  <span className="font-bold text-emerald-600">+{getMonthlyAccrual().toFixed(2)} days</span>
                 </div>
                 
                 <div className="flex justify-between items-center">
@@ -287,10 +301,16 @@ export default function ProfilePage({ onBack, currentPTO, accrualRate, onUpdateS
                     <span className={`text-sm font-bold ${
                       formData.payPeriod === period.value ? 'text-blue-700' : 'text-slate-900'
                     }`}>
-                      {(formData.accrualRate / period.multiplier).toFixed(2)} days
+                      {getAccrualForPeriod(period.value).toFixed(2)} days
                     </span>
                   </div>
                 ))}
+              </div>
+              
+              <div className="mt-4 pt-4 border-t border-slate-200">
+                <div className="text-xs text-slate-500 text-center">
+                  Based on your current {payPeriodOptions.find(p => p.value === formData.payPeriod)?.label.toLowerCase()} rate of {formData.accrualRate} days
+                </div>
               </div>
             </div>
 
