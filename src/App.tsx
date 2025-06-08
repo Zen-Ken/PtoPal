@@ -9,28 +9,88 @@ function App() {
   const [currentPTO, setCurrentPTO] = useState(12);
   const [accrualRate, setAccrualRate] = useState(1.67); // days per month
   const [payPeriod, setPayPeriod] = useState('monthly');
-  const [futureDate, setFutureDate] = useState('');
-  const [futurePTO, setFuturePTO] = useState(0);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [calculatedPTO, setCalculatedPTO] = useState(0);
 
   useEffect(() => {
-    // Calculate date 3 months from now
+    // Calculate date 3 months from now as default
     const today = new Date();
     const threeMonthsFromNow = new Date(today.getFullYear(), today.getMonth() + 3, today.getDate());
-    setFutureDate(threeMonthsFromNow.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    }));
+    const defaultDate = threeMonthsFromNow.toISOString().split('T')[0];
+    setSelectedDate(defaultDate);
+  }, []);
+
+  useEffect(() => {
+    if (selectedDate) {
+      calculatePTOForDate(selectedDate);
+    }
+  }, [selectedDate, currentPTO, accrualRate, payPeriod]);
+
+  const calculatePTOForDate = (dateString: string) => {
+    const targetDate = new Date(dateString);
+    const today = new Date();
     
-    // Calculate PTO in 3 months
-    const additionalPTO = accrualRate * 3;
-    setFuturePTO(currentPTO + additionalPTO);
-  }, [currentPTO, accrualRate]);
+    // If the target date is in the past or today, return current PTO
+    if (targetDate <= today) {
+      setCalculatedPTO(currentPTO);
+      return;
+    }
+
+    // Calculate how many pay periods will occur between now and the target date
+    const payPeriodOptions = {
+      weekly: 7,
+      biweekly: 14,
+      semimonthly: 15, // Approximate
+      monthly: 30 // Approximate
+    };
+
+    let payPeriodsCount = 0;
+    
+    if (payPeriod === 'semimonthly') {
+      // For semi-monthly, count 1st and 15th of each month
+      const currentDate = new Date(today);
+      currentDate.setDate(1); // Start from first of current month
+      
+      while (currentDate <= targetDate) {
+        // Check if 1st of month is between now and target
+        if (currentDate >= today && currentDate <= targetDate) {
+          payPeriodsCount++;
+        }
+        
+        // Check if 15th of month is between now and target
+        const fifteenth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 15);
+        if (fifteenth >= today && fifteenth <= targetDate) {
+          payPeriodsCount++;
+        }
+        
+        // Move to next month
+        currentDate.setMonth(currentDate.getMonth() + 1);
+      }
+    } else {
+      // For other pay periods, calculate based on interval
+      const intervalDays = payPeriodOptions[payPeriod as keyof typeof payPeriodOptions] || 30;
+      const daysDifference = Math.ceil((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      payPeriodsCount = Math.floor(daysDifference / intervalDays);
+    }
+
+    const additionalPTO = payPeriodsCount * accrualRate;
+    setCalculatedPTO(currentPTO + additionalPTO);
+  };
 
   const handleUpdateSettings = (pto: number, accrual: number, period: string) => {
     setCurrentPTO(pto);
     setAccrualRate(accrual);
     setPayPeriod(period);
+  };
+
+  const formatSelectedDate = () => {
+    if (!selectedDate) return '';
+    const date = new Date(selectedDate);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
   };
 
   const features = [
@@ -238,7 +298,7 @@ function App() {
                     Your PTO Crystal Ball
                   </h2>
                   <p className="text-slate-600 text-lg">
-                    See exactly how much time off you'll have in 3 months
+                    See exactly how much time off you'll have on any future date
                   </p>
                 </div>
 
@@ -260,7 +320,7 @@ function App() {
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-slate-700 mb-3">
-                        Monthly Accrual Rate (days/month)
+                        Accrual Rate per Pay Period (days)
                       </label>
                       <input
                         type="number"
@@ -269,7 +329,19 @@ function App() {
                         className="w-full px-5 py-4 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg font-medium bg-white/50 backdrop-blur-sm transition-all duration-200"
                         min="0"
                         step="0.1"
-                        placeholder="How much PTO you earn monthly"
+                        placeholder="How much PTO you earn per pay period"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-slate-700 mb-3">
+                        Select Target Date
+                      </label>
+                      <input
+                        type="date"
+                        value={selectedDate}
+                        onChange={(e) => setSelectedDate(e.target.value)}
+                        className="w-full px-5 py-4 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg font-medium bg-white/50 backdrop-blur-sm transition-all duration-200"
+                        min={new Date().toISOString().split('T')[0]}
                       />
                     </div>
                   </div>
@@ -278,18 +350,26 @@ function App() {
                     <div className="absolute top-0 right-0 w-24 h-24 bg-blue-400/10 rounded-full blur-xl"></div>
                     <div className="relative text-center">
                       <div className="text-sm text-blue-700 font-semibold mb-3 uppercase tracking-wide">
-                        On {futureDate}
+                        On {formatSelectedDate()}
                       </div>
                       <div className="text-5xl sm:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-3">
-                        {futurePTO.toFixed(1)}
+                        {calculatedPTO.toFixed(1)}
                       </div>
                       <div className="text-slate-700 font-semibold text-lg mb-4">
                         days of PTO available
                       </div>
-                      <div className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
-                        <TrendingUp className="w-4 h-4 mr-1" />
-                        +{(accrualRate * 3).toFixed(1)} from accrual
-                      </div>
+                      {calculatedPTO > currentPTO && (
+                        <div className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
+                          <TrendingUp className="w-4 h-4 mr-1" />
+                          +{(calculatedPTO - currentPTO).toFixed(1)} from accrual
+                        </div>
+                      )}
+                      {calculatedPTO === currentPTO && selectedDate && (
+                        <div className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                          <Clock className="w-4 h-4 mr-1" />
+                          Current balance
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
