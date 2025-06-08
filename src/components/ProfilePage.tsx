@@ -38,19 +38,18 @@ export default function ProfilePage({ onBack, currentPTO, accrualRate, onUpdateS
     const selectedPeriod = payPeriodOptions.find(p => p.value === formData.payPeriod);
     if (!selectedPeriod) return formData.accrualRate;
     
-    // Convert the accrual rate to monthly based on the selected pay period
+    // The accrual rate is now per pay period, so convert to monthly
     return formData.accrualRate * selectedPeriod.periodsPerMonth;
   };
 
   const getAccrualForPeriod = (periodType: string) => {
     const period = payPeriodOptions.find(p => p.value === periodType);
-    if (!period) return 0;
+    const selectedPeriod = payPeriodOptions.find(p => p.value === formData.payPeriod);
+    if (!period || !selectedPeriod) return 0;
     
-    // Get the monthly accrual rate
-    const monthlyAccrual = getMonthlyAccrual();
-    
-    // Convert monthly rate to the specific period
-    return monthlyAccrual / period.periodsPerMonth;
+    // Convert from the current pay period to the requested period
+    const monthlyRate = formData.accrualRate * selectedPeriod.periodsPerMonth;
+    return monthlyRate / period.periodsPerMonth;
   };
 
   return (
@@ -182,6 +181,9 @@ export default function ProfilePage({ onBack, currentPTO, accrualRate, onUpdateS
                       days
                     </span>
                   </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    How many PTO days you earn each {formData.payPeriod === 'biweekly' ? 'bi-weekly' : formData.payPeriod === 'semimonthly' ? 'semi-monthly' : formData.payPeriod} pay period
+                  </p>
                 </div>
               </div>
             </div>
@@ -309,7 +311,7 @@ export default function ProfilePage({ onBack, currentPTO, accrualRate, onUpdateS
               
               <div className="mt-4 pt-4 border-t border-slate-200">
                 <div className="text-xs text-slate-500 text-center">
-                  Based on your current {payPeriodOptions.find(p => p.value === formData.payPeriod)?.label.toLowerCase()} rate of {formData.accrualRate} days
+                  Based on your {payPeriodOptions.find(p => p.value === formData.payPeriod)?.label.toLowerCase()} rate of {formData.accrualRate} days per pay period
                 </div>
               </div>
             </div>
