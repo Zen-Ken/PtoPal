@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Calendar, Clock, Save, ArrowLeft, Settings, TrendingUp, Calculator } from 'lucide-react';
+import { User, Calendar, Clock, Save, ArrowLeft, Settings, Calculator } from 'lucide-react';
 
 interface ProfilePageProps {
   onBack: () => void;
@@ -40,16 +40,6 @@ export default function ProfilePage({ onBack, currentPTO, accrualRate, onUpdateS
     
     // The accrual rate is now per pay period, so convert to monthly
     return formData.accrualRate * selectedPeriod.periodsPerMonth;
-  };
-
-  const getAccrualForPeriod = (periodType: string) => {
-    const period = payPeriodOptions.find(p => p.value === periodType);
-    const selectedPeriod = payPeriodOptions.find(p => p.value === formData.payPeriod);
-    if (!period || !selectedPeriod) return 0;
-    
-    // Convert from the current pay period to the requested period
-    const monthlyRate = formData.accrualRate * selectedPeriod.periodsPerMonth;
-    return monthlyRate / period.periodsPerMonth;
   };
 
   return (
@@ -274,44 +264,6 @@ export default function ProfilePage({ onBack, currentPTO, accrualRate, onUpdateS
                       {Math.round((formData.currentPTO / formData.annualAllowance) * 100)}%
                     </span>
                   </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Accrual Breakdown */}
-            <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-6">
-              <div className="flex items-center space-x-3 mb-4">
-                <TrendingUp className="w-6 h-6 text-emerald-600" />
-                <h3 className="text-lg font-bold text-slate-900">Accrual Breakdown</h3>
-              </div>
-              
-              <div className="space-y-3">
-                {payPeriodOptions.map((period) => (
-                  <div 
-                    key={period.value}
-                    className={`flex justify-between items-center p-3 rounded-xl transition-all ${
-                      formData.payPeriod === period.value 
-                        ? 'bg-blue-100 border-2 border-blue-300' 
-                        : 'bg-slate-50 border border-slate-200'
-                    }`}
-                  >
-                    <span className={`text-sm font-medium ${
-                      formData.payPeriod === period.value ? 'text-blue-700' : 'text-slate-600'
-                    }`}>
-                      {period.label}
-                    </span>
-                    <span className={`text-sm font-bold ${
-                      formData.payPeriod === period.value ? 'text-blue-700' : 'text-slate-900'
-                    }`}>
-                      {getAccrualForPeriod(period.value).toFixed(2)} days
-                    </span>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="mt-4 pt-4 border-t border-slate-200">
-                <div className="text-xs text-slate-500 text-center">
-                  Based on your {payPeriodOptions.find(p => p.value === formData.payPeriod)?.label.toLowerCase()} rate of {formData.accrualRate} days per pay period
                 </div>
               </div>
             </div>
