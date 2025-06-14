@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Menu, X, Calendar, Clock, TrendingUp, Users, Shield, Sparkles, ChevronRight, CalendarDays, Zap, User } from 'lucide-react';
 import ProfilePage from './components/ProfilePage';
 import CalendarPage from './components/CalendarPage';
+import OnboardingPage from './components/OnboardingPage';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { UserSettings, defaultUserSettings } from './types/UserSettings';
 
@@ -13,6 +14,7 @@ function App() {
   
   // Use localStorage for user settings
   const [userSettings, setUserSettings] = useLocalStorage<UserSettings>('ptopal-settings', defaultUserSettings);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useLocalStorage<boolean>('ptopal-onboarding-complete', false);
 
   useEffect(() => {
     // Calculate date 3 months from now as default
@@ -83,6 +85,20 @@ function App() {
     setUserSettings(prev => ({ ...prev, ...newSettings }));
   };
 
+  const handleOnboardingComplete = (settings: UserSettings) => {
+    setUserSettings(settings);
+    setHasCompletedOnboarding(true);
+    setCurrentPage('home');
+  };
+
+  const handleGetStarted = () => {
+    if (hasCompletedOnboarding) {
+      setCurrentPage('profile');
+    } else {
+      setCurrentPage('onboarding');
+    }
+  };
+
   const formatSelectedDate = () => {
     if (!selectedDate) return '';
     const date = new Date(selectedDate);
@@ -125,6 +141,15 @@ function App() {
     { number: "24/7", label: "Available" },
     { number: "0", label: "Hassle" }
   ];
+
+  if (currentPage === 'onboarding') {
+    return (
+      <OnboardingPage 
+        onComplete={handleOnboardingComplete}
+        onBack={() => setCurrentPage('home')}
+      />
+    );
+  }
 
   if (currentPage === 'profile') {
     return (
@@ -183,8 +208,11 @@ function App() {
                   <User className="w-4 h-4" />
                   <span>Profile</span>
                 </button>
-                <button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-xl flex items-center">
-                  Get Started
+                <button 
+                  onClick={handleGetStarted}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-xl flex items-center"
+                >
+                  {hasCompletedOnboarding ? 'Dashboard' : 'Get Started'}
                   <Sparkles className="ml-2 w-4 h-4" />
                 </button>
               </div>
@@ -226,8 +254,14 @@ function App() {
                     <User className="w-4 h-4" />
                     <span>Profile</span>
                   </button>
-                  <button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-xl text-base font-medium transition-all duration-200">
-                    Get Started
+                  <button 
+                    onClick={() => {
+                      handleGetStarted();
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-xl text-base font-medium transition-all duration-200"
+                  >
+                    {hasCompletedOnboarding ? 'Dashboard' : 'Get Started'}
                   </button>
                 </div>
               </div>
@@ -366,10 +400,10 @@ function App() {
 
                 <div className="text-center">
                   <button 
-                    onClick={() => setCurrentPage('profile')}
+                    onClick={handleGetStarted}
                     className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-10 py-4 rounded-xl text-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center mx-auto"
                   >
-                    Customize Your Settings
+                    {hasCompletedOnboarding ? 'Go to Dashboard' : 'Get Started - It\'s Free!'}
                     <User className="ml-3 w-5 h-5" />
                   </button>
                 </div>
