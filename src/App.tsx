@@ -166,20 +166,11 @@ function App() {
                     Home
                   </a>
                   <button 
-                    onClick={() => setCurrentPage('profile')}
-                    className="text-slate-500 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors"
-                  >
-                    Dashboard
-                  </button>
-                  <button 
                     onClick={() => setCurrentPage('calendar')}
                     className="text-slate-500 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors"
                   >
                     Calendar
                   </button>
-                  <a href="#" className="text-slate-500 hover:text-blue-600 px-3 py-2 text-sm font-medium transition-colors">
-                    Analytics
-                  </a>
                 </div>
               </div>
             </div>
@@ -216,15 +207,6 @@ function App() {
               <a href="#" className="text-slate-900 block px-3 py-2 text-base font-medium">Home</a>
               <button 
                 onClick={() => {
-                  setCurrentPage('profile');
-                  setIsMenuOpen(false);
-                }}
-                className="text-slate-500 hover:text-slate-900 block px-3 py-2 text-base font-medium w-full text-left"
-              >
-                Dashboard
-              </button>
-              <button 
-                onClick={() => {
                   setCurrentPage('calendar');
                   setIsMenuOpen(false);
                 }}
@@ -232,7 +214,6 @@ function App() {
               >
                 Calendar
               </button>
-              <a href="#" className="text-slate-500 hover:text-slate-900 block px-3 py-2 text-base font-medium">Analytics</a>
               <div className="pt-4 pb-3 border-t border-slate-200">
                 <div className="flex items-center px-3 space-y-2">
                   <button 
