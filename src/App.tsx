@@ -93,6 +93,9 @@ function App() {
     });
   };
 
+  // Helper function to convert hours to days for display
+  const hoursToDays = (hours: number) => (hours / 8).toFixed(1);
+
   const features = [
     {
       icon: Zap,
@@ -303,7 +306,7 @@ function App() {
                   <div className="space-y-6">
                     <div>
                       <label className="block text-sm font-semibold text-slate-700 mb-3">
-                        Current PTO Balance (days)
+                        Current PTO Balance (hours)
                       </label>
                       <input
                         type="number"
@@ -312,12 +315,15 @@ function App() {
                         className="w-full px-5 py-4 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg font-medium bg-white/50 backdrop-blur-sm transition-all duration-200"
                         min="0"
                         step="0.5"
-                        placeholder="Enter your current PTO"
+                        placeholder="Enter your current PTO in hours"
                       />
+                      <p className="text-xs text-slate-500 mt-2">
+                        Equivalent to {hoursToDays(userSettings.currentPTO)} days (8 hours = 1 day)
+                      </p>
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-slate-700 mb-3">
-                        Accrual Rate per Pay Period (days)
+                        Accrual Rate per Pay Period (hours)
                       </label>
                       <input
                         type="number"
@@ -326,8 +332,11 @@ function App() {
                         className="w-full px-5 py-4 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg font-medium bg-white/50 backdrop-blur-sm transition-all duration-200"
                         min="0"
                         step="0.1"
-                        placeholder="How much PTO you earn per pay period"
+                        placeholder="How many PTO hours you earn per pay period"
                       />
+                      <p className="text-xs text-slate-500 mt-2">
+                        Equivalent to {hoursToDays(userSettings.accrualRate)} days per pay period
+                      </p>
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-slate-700 mb-3">
@@ -349,16 +358,19 @@ function App() {
                       <div className="text-sm text-blue-700 font-semibold mb-3 uppercase tracking-wide">
                         On {formatSelectedDate()}
                       </div>
-                      <div className="text-5xl sm:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-3">
+                      <div className="text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mb-2">
                         {calculatedPTO.toFixed(1)}
                       </div>
-                      <div className="text-slate-700 font-semibold text-lg mb-4">
-                        days of PTO available
+                      <div className="text-slate-700 font-semibold text-base mb-2">
+                        hours of PTO available
+                      </div>
+                      <div className="text-sm text-slate-600 mb-4">
+                        ({hoursToDays(calculatedPTO)} days)
                       </div>
                       {calculatedPTO > userSettings.currentPTO && (
                         <div className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
                           <TrendingUp className="w-4 h-4 mr-1" />
-                          +{(calculatedPTO - userSettings.currentPTO).toFixed(1)} from accrual
+                          +{(calculatedPTO - userSettings.currentPTO).toFixed(1)} hours from accrual
                         </div>
                       )}
                       {calculatedPTO === userSettings.currentPTO && selectedDate && (
@@ -502,9 +514,14 @@ function App() {
                         <Calendar className="w-6 h-6 text-blue-600" />
                         <span className="font-semibold text-slate-900">Current Balance</span>
                       </div>
-                      <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-                        {userSettings.currentPTO} days
-                      </span>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                          {userSettings.currentPTO} hrs
+                        </div>
+                        <div className="text-sm text-slate-600">
+                          ({hoursToDays(userSettings.currentPTO)} days)
+                        </div>
+                      </div>
                     </div>
                     <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
                       <div 
@@ -523,7 +540,12 @@ function App() {
                         <TrendingUp className="w-6 h-6 text-emerald-600" />
                         <span className="font-semibold text-slate-900">Next Accrual</span>
                       </div>
-                      <span className="text-xl font-bold text-emerald-600">+{userSettings.accrualRate} days</span>
+                      <div className="text-right">
+                        <div className="text-xl font-bold text-emerald-600">+{userSettings.accrualRate} hrs</div>
+                        <div className="text-sm text-slate-600">
+                          (+{hoursToDays(userSettings.accrualRate)} days)
+                        </div>
+                      </div>
                     </div>
                     <div className="text-sm text-slate-600">
                       {new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-US', { 

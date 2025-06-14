@@ -24,6 +24,9 @@ export default function CalendarPage({ onBack, userSettings }: CalendarPageProps
     monthly: { days: 30, label: 'Monthly' } // Approximate
   };
 
+  // Helper function to convert hours to days for display
+  const hoursToDays = (hours: number) => (hours / 8).toFixed(1);
+
   const generatePayPeriods = useMemo(() => {
     const events: PayPeriodEvent[] = [];
     const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -226,7 +229,10 @@ export default function CalendarPage({ onBack, userSettings }: CalendarPageProps
                               <span className="font-medium">Pay Day</span>
                             </div>
                             <div className="text-xs opacity-90 font-medium">
-                              {event.totalPTO.toFixed(1)} PTO
+                              {event.totalPTO.toFixed(0)} hrs
+                            </div>
+                            <div className="text-xs opacity-75">
+                              ({hoursToDays(event.totalPTO)}d)
                             </div>
                           </div>
                         </div>
@@ -255,7 +261,10 @@ export default function CalendarPage({ onBack, userSettings }: CalendarPageProps
                 
                 <div className="flex justify-between items-center">
                   <span className="text-slate-600">PTO Earned</span>
-                  <span className="font-bold text-emerald-600">+{totalPTOThisMonth.toFixed(1)} days</span>
+                  <div className="text-right">
+                    <div className="font-bold text-emerald-600">+{totalPTOThisMonth.toFixed(1)} hrs</div>
+                    <div className="text-xs text-slate-600">(+{hoursToDays(totalPTOThisMonth)} days)</div>
+                  </div>
                 </div>
                 
                 <div className="flex justify-between items-center">
@@ -268,7 +277,10 @@ export default function CalendarPage({ onBack, userSettings }: CalendarPageProps
                 <div className="pt-4 border-t border-blue-200">
                   <div className="flex justify-between items-center">
                     <span className="text-slate-600">Rate per Period</span>
-                    <span className="font-bold text-blue-600">{userSettings.accrualRate} days</span>
+                    <div className="text-right">
+                      <div className="font-bold text-blue-600">{userSettings.accrualRate} hrs</div>
+                      <div className="text-xs text-slate-600">({hoursToDays(userSettings.accrualRate)} days)</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -294,8 +306,8 @@ export default function CalendarPage({ onBack, userSettings }: CalendarPageProps
                       <div className="text-xs text-slate-600">Pay Day</div>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold text-blue-600">{event.totalPTO.toFixed(1)}</div>
-                      <div className="text-xs text-slate-600">total PTO</div>
+                      <div className="font-bold text-blue-600">{event.totalPTO.toFixed(0)} hrs</div>
+                      <div className="text-xs text-slate-600">({hoursToDays(event.totalPTO)}d total)</div>
                     </div>
                   </div>
                 ))}
@@ -320,6 +332,9 @@ export default function CalendarPage({ onBack, userSettings }: CalendarPageProps
                 <div className="flex items-center space-x-3">
                   <div className="w-4 h-4 bg-blue-200 border-2 border-blue-400 rounded"></div>
                   <span className="text-sm text-slate-700">Today</span>
+                </div>
+                <div className="text-xs text-slate-600 mt-3 p-2 bg-slate-100 rounded">
+                  <strong>Note:</strong> Hours are displayed with days equivalent (8 hours = 1 day)
                 </div>
               </div>
             </div>

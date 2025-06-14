@@ -40,6 +40,9 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
     return formData.accrualRate * selectedPeriod.periodsPerMonth;
   };
 
+  // Helper function to convert hours to days for display
+  const hoursToDays = (hours: number) => (hours / 8).toFixed(1);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
       {/* Header */}
@@ -102,7 +105,7 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-3">
-                    Current PTO Balance
+                    Current PTO Balance (hours)
                   </label>
                   <div className="relative">
                     <input
@@ -112,17 +115,20 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 backdrop-blur-sm transition-all duration-200"
                       min="0"
                       step="0.5"
-                      placeholder="12.5"
+                      placeholder="96"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-medium">
-                      days
+                      hours
                     </span>
                   </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    Equivalent to {hoursToDays(formData.currentPTO)} days (8 hours = 1 day)
+                  </p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-3">
-                    Annual PTO Allowance
+                    Annual PTO Allowance (hours)
                   </label>
                   <div className="relative">
                     <input
@@ -131,12 +137,15 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                       onChange={(e) => handleInputChange('annualAllowance', Number(e.target.value))}
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 backdrop-blur-sm transition-all duration-200"
                       min="0"
-                      placeholder="25"
+                      placeholder="200"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-medium">
-                      days
+                      hours
                     </span>
                   </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    Equivalent to {hoursToDays(formData.annualAllowance)} days per year
+                  </p>
                 </div>
 
                 <div>
@@ -158,7 +167,7 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
 
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-3">
-                    Accrual Rate per {payPeriodOptions.find(p => p.value === formData.payPeriod)?.label || 'Period'}
+                    Accrual Rate per {payPeriodOptions.find(p => p.value === formData.payPeriod)?.label || 'Period'} (hours)
                   </label>
                   <div className="relative">
                     <input
@@ -168,14 +177,16 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 backdrop-blur-sm transition-all duration-200"
                       min="0"
                       step="0.1"
-                      placeholder="1.67"
+                      placeholder="13.36"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-medium">
-                      days
+                      hours
                     </span>
                   </div>
                   <p className="text-xs text-slate-500 mt-2">
-                    How many PTO days you earn each {formData.payPeriod === 'biweekly' ? 'bi-weekly' : formData.payPeriod === 'semimonthly' ? 'semi-monthly' : formData.payPeriod} pay period
+                    How many PTO hours you earn each {formData.payPeriod === 'biweekly' ? 'bi-weekly' : formData.payPeriod === 'semimonthly' ? 'semi-monthly' : formData.payPeriod} pay period
+                    <br />
+                    Equivalent to {hoursToDays(formData.accrualRate)} days per pay period
                   </p>
                 </div>
               </div>
@@ -247,17 +258,26 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span className="text-slate-600">PTO Balance</span>
-                  <span className="font-bold text-slate-900">{formData.currentPTO} days</span>
+                  <div className="text-right">
+                    <div className="font-bold text-slate-900">{formData.currentPTO} hours</div>
+                    <div className="text-xs text-slate-600">({hoursToDays(formData.currentPTO)} days)</div>
+                  </div>
                 </div>
                 
                 <div className="flex justify-between items-center">
                   <span className="text-slate-600">Monthly Accrual</span>
-                  <span className="font-bold text-emerald-600">+{getMonthlyAccrual().toFixed(2)} days</span>
+                  <div className="text-right">
+                    <div className="font-bold text-emerald-600">+{getMonthlyAccrual().toFixed(2)} hours</div>
+                    <div className="text-xs text-slate-600">(+{hoursToDays(getMonthlyAccrual())} days)</div>
+                  </div>
                 </div>
                 
                 <div className="flex justify-between items-center">
                   <span className="text-slate-600">Annual Allowance</span>
-                  <span className="font-bold text-slate-900">{formData.annualAllowance} days</span>
+                  <div className="text-right">
+                    <div className="font-bold text-slate-900">{formData.annualAllowance} hours</div>
+                    <div className="text-xs text-slate-600">({hoursToDays(formData.annualAllowance)} days)</div>
+                  </div>
                 </div>
                 
                 <div className="pt-4 border-t border-blue-200">
@@ -313,6 +333,10 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                 <li className="flex items-start space-x-2">
                   <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Consider PTO expiration policies</span>
+                </li>
+                <li className="flex items-start space-x-2">
+                  <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2 flex-shrink-0"></div>
+                  <span>8 hours typically equals 1 work day</span>
                 </li>
               </ul>
             </div>
