@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Calendar, Clock, Save, ArrowLeft, Settings, Calculator } from 'lucide-react';
+import { User, Calendar, Clock, Save, ArrowLeft, Settings, Calculator, Shield } from 'lucide-react';
 import { UserSettings } from '../types/UserSettings';
 
 interface ProfilePageProps {
