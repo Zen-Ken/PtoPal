@@ -588,16 +588,32 @@ function App() {
               </ul>
             </div>
           </div>
-          <div className="border-t border-slate-800 pt-8">
-            <div className="flex flex-col md:flex-row justify-between items-center">
+          
+          {/* Built with Bolt Badge */}
+          <div className="flex flex-col md:flex-row justify-between items-center border-t border-slate-800 pt-8">
+            <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-6">
               <p className="text-slate-400 text-sm">
                 © 2024 PTOPal. All rights reserved.
               </p>
-              <div className="flex space-x-6 mt-4 md:mt-0">
-                <a href="#" className="text-slate-400 hover:text-white text-sm transition-colors">Privacy Policy</a>
-                <a href="#" className="text-slate-400 hover:text-white text-sm transition-colors">Terms of Service</a>
-                <a href="#" className="text-slate-400 hover:text-white text-sm transition-colors">Cookie Policy</a>
-              </div>
+              <a 
+                href="https://bolt.new" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white text-sm font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 group"
+              >
+                <div className="w-5 h-5 mr-2 bg-white rounded-md flex items-center justify-center">
+                  <Zap className="w-3 h-3 text-violet-600" />
+                </div>
+                <span>Built with Bolt</span>
+                <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  ⚡
+                </div>
+              </a>
+            </div>
+            <div className="flex space-x-6 mt-4 md:mt-0">
+              <a href="#" className="text-slate-400 hover:text-white text-sm transition-colors">Privacy Policy</a>
+              <a href="#" className="text-slate-400 hover:text-white text-sm transition-colors">Terms of Service</a>
+              <a href="#" className="text-slate-400 hover:text-white text-sm transition-colors">Cookie Policy</a>
             </div>
           </div>
         </div>
