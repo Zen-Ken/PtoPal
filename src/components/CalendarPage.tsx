@@ -1,11 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { ArrowLeft, ChevronLeft, ChevronRight, Calendar, Clock, TrendingUp, DollarSign } from 'lucide-react';
+import { UserSettings } from '../types/UserSettings';
 
 interface CalendarPageProps {
   onBack: () => void;
-  currentPTO: number;
-  accrualRate: number;
-  payPeriod: string;
+  userSettings: UserSettings;
 }
 
 interface PayPeriodEvent {
@@ -15,7 +14,7 @@ interface PayPeriodEvent {
   isPayDay: boolean;
 }
 
-export default function CalendarPage({ onBack, currentPTO, accrualRate, payPeriod }: CalendarPageProps) {
+export default function CalendarPage({ onBack, userSettings }: CalendarPageProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   
   const payPeriodOptions = {
@@ -33,43 +32,43 @@ export default function CalendarPage({ onBack, currentPTO, accrualRate, payPerio
     // Start from the beginning of the year to get accurate running totals
     const startOfYear = new Date(currentDate.getFullYear(), 0, 1);
     let currentPayDate = new Date(startOfYear);
-    let runningPTO = currentPTO;
+    let runningPTO = userSettings.currentPTO;
     
     // Calculate all pay periods from start of year to current month
     const allEvents: PayPeriodEvent[] = [];
     
     // For semi-monthly, use 1st and 15th of each month
-    if (payPeriod === 'semimonthly') {
+    if (userSettings.payPeriod === 'semimonthly') {
       for (let month = 0; month < 12; month++) {
         // First pay period (1st of month)
         const firstPayDate = new Date(currentDate.getFullYear(), month, 1);
-        runningPTO += accrualRate;
+        runningPTO += userSettings.accrualRate;
         allEvents.push({
           date: firstPayDate,
-          ptoAccrued: accrualRate,
+          ptoAccrued: userSettings.accrualRate,
           totalPTO: runningPTO,
           isPayDay: true
         });
         
         // Second pay period (15th of month)
         const secondPayDate = new Date(currentDate.getFullYear(), month, 15);
-        runningPTO += accrualRate;
+        runningPTO += userSettings.accrualRate;
         allEvents.push({
           date: secondPayDate,
-          ptoAccrued: accrualRate,
+          ptoAccrued: userSettings.accrualRate,
           totalPTO: runningPTO,
           isPayDay: true
         });
       }
     } else {
       // For other pay periods, calculate based on interval
-      const intervalDays = payPeriodOptions[payPeriod as keyof typeof payPeriodOptions]?.days || 30;
+      const intervalDays = payPeriodOptions[userSettings.payPeriod as keyof typeof payPeriodOptions]?.days || 30;
       
       while (currentPayDate.getFullYear() === currentDate.getFullYear()) {
-        runningPTO += accrualRate;
+        runningPTO += userSettings.accrualRate;
         allEvents.push({
           date: new Date(currentPayDate),
-          ptoAccrued: accrualRate,
+          ptoAccrued: userSettings.accrualRate,
           totalPTO: runningPTO,
           isPayDay: true
         });
@@ -82,7 +81,7 @@ export default function CalendarPage({ onBack, currentPTO, accrualRate, payPerio
     return allEvents.filter(event => 
       event.date >= startOfMonth && event.date <= endOfMonth
     );
-  }, [currentDate, currentPTO, accrualRate, payPeriod]);
+  }, [currentDate, userSettings.currentPTO, userSettings.accrualRate, userSettings.payPeriod]);
 
   const getDaysInMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -262,14 +261,14 @@ export default function CalendarPage({ onBack, currentPTO, accrualRate, payPerio
                 <div className="flex justify-between items-center">
                   <span className="text-slate-600">Pay Period</span>
                   <span className="font-bold text-slate-900">
-                    {payPeriodOptions[payPeriod as keyof typeof payPeriodOptions]?.label || 'Monthly'}
+                    {payPeriodOptions[userSettings.payPeriod as keyof typeof payPeriodOptions]?.label || 'Monthly'}
                   </span>
                 </div>
                 
                 <div className="pt-4 border-t border-blue-200">
                   <div className="flex justify-between items-center">
                     <span className="text-slate-600">Rate per Period</span>
-                    <span className="font-bold text-blue-600">{accrualRate} days</span>
+                    <span className="font-bold text-blue-600">{userSettings.accrualRate} days</span>
                   </div>
                 </div>
               </div>

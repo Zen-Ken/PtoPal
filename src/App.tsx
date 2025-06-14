@@ -2,15 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { Menu, X, Calendar, Clock, TrendingUp, Users, Shield, Sparkles, ChevronRight, CalendarDays, Zap, User } from 'lucide-react';
 import ProfilePage from './components/ProfilePage';
 import CalendarPage from './components/CalendarPage';
+import { useLocalStorage } from './hooks/useLocalStorage';
+import { UserSettings, defaultUserSettings } from './types/UserSettings';
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState('home');
-  const [currentPTO, setCurrentPTO] = useState(12);
-  const [accrualRate, setAccrualRate] = useState(1.67); // days per month
-  const [payPeriod, setPayPeriod] = useState('monthly');
   const [selectedDate, setSelectedDate] = useState('');
   const [calculatedPTO, setCalculatedPTO] = useState(0);
+  
+  // Use localStorage for user settings
+  const [userSettings, setUserSettings] = useLocalStorage<UserSettings>('ptopal-settings', defaultUserSettings);
 
   useEffect(() => {
     // Calculate date 3 months from now as default
@@ -24,7 +26,7 @@ function App() {
     if (selectedDate) {
       calculatePTOForDate(selectedDate);
     }
-  }, [selectedDate, currentPTO, accrualRate, payPeriod]);
+  }, [selectedDate, userSettings.currentPTO, userSettings.accrualRate, userSettings.payPeriod]);
 
   const calculatePTOForDate = (dateString: string) => {
     const targetDate = new Date(dateString);
@@ -32,7 +34,7 @@ function App() {
     
     // If the target date is in the past or today, return current PTO
     if (targetDate <= today) {
-      setCalculatedPTO(currentPTO);
+      setCalculatedPTO(userSettings.currentPTO);
       return;
     }
 
@@ -46,7 +48,7 @@ function App() {
 
     let payPeriodsCount = 0;
     
-    if (payPeriod === 'semimonthly') {
+    if (userSettings.payPeriod === 'semimonthly') {
       // For semi-monthly, count 1st and 15th of each month
       const currentDate = new Date(today);
       currentDate.setDate(1); // Start from first of current month
@@ -68,19 +70,17 @@ function App() {
       }
     } else {
       // For other pay periods, calculate based on interval
-      const intervalDays = payPeriodOptions[payPeriod as keyof typeof payPeriodOptions] || 30;
+      const intervalDays = payPeriodOptions[userSettings.payPeriod as keyof typeof payPeriodOptions] || 30;
       const daysDifference = Math.ceil((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
       payPeriodsCount = Math.floor(daysDifference / intervalDays);
     }
 
-    const additionalPTO = payPeriodsCount * accrualRate;
-    setCalculatedPTO(currentPTO + additionalPTO);
+    const additionalPTO = payPeriodsCount * userSettings.accrualRate;
+    setCalculatedPTO(userSettings.currentPTO + additionalPTO);
   };
 
-  const handleUpdateSettings = (pto: number, accrual: number, period: string) => {
-    setCurrentPTO(pto);
-    setAccrualRate(accrual);
-    setPayPeriod(period);
+  const handleUpdateSettings = (newSettings: Partial<UserSettings>) => {
+    setUserSettings(prev => ({ ...prev, ...newSettings }));
   };
 
   const formatSelectedDate = () => {
@@ -127,8 +127,7 @@ function App() {
     return (
       <ProfilePage 
         onBack={() => setCurrentPage('home')}
-        currentPTO={currentPTO}
-        accrualRate={accrualRate}
+        userSettings={userSettings}
         onUpdateSettings={handleUpdateSettings}
       />
     );
@@ -138,9 +137,7 @@ function App() {
     return (
       <CalendarPage 
         onBack={() => setCurrentPage('home')}
-        currentPTO={currentPTO}
-        accrualRate={accrualRate}
-        payPeriod={payPeriod}
+        userSettings={userSettings}
       />
     );
   }
@@ -310,8 +307,8 @@ function App() {
                       </label>
                       <input
                         type="number"
-                        value={currentPTO}
-                        onChange={(e) => setCurrentPTO(Number(e.target.value))}
+                        value={userSettings.currentPTO}
+                        onChange={(e) => handleUpdateSettings({ currentPTO: Number(e.target.value) })}
                         className="w-full px-5 py-4 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg font-medium bg-white/50 backdrop-blur-sm transition-all duration-200"
                         min="0"
                         step="0.5"
@@ -324,8 +321,8 @@ function App() {
                       </label>
                       <input
                         type="number"
-                        value={accrualRate}
-                        onChange={(e) => setAccrualRate(Number(e.target.value))}
+                        value={userSettings.accrualRate}
+                        onChange={(e) => handleUpdateSettings({ accrualRate: Number(e.target.value) })}
                         className="w-full px-5 py-4 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg font-medium bg-white/50 backdrop-blur-sm transition-all duration-200"
                         min="0"
                         step="0.1"
@@ -358,13 +355,13 @@ function App() {
                       <div className="text-slate-700 font-semibold text-lg mb-4">
                         days of PTO available
                       </div>
-                      {calculatedPTO > currentPTO && (
+                      {calculatedPTO > userSettings.currentPTO && (
                         <div className="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">
                           <TrendingUp className="w-4 h-4 mr-1" />
-                          +{(calculatedPTO - currentPTO).toFixed(1)} from accrual
+                          +{(calculatedPTO - userSettings.currentPTO).toFixed(1)} from accrual
                         </div>
                       )}
-                      {calculatedPTO === currentPTO && selectedDate && (
+                      {calculatedPTO === userSettings.currentPTO && selectedDate && (
                         <div className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
                           <Clock className="w-4 h-4 mr-1" />
                           Current balance
@@ -506,17 +503,17 @@ function App() {
                         <span className="font-semibold text-slate-900">Current Balance</span>
                       </div>
                       <span className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-                        {currentPTO} days
+                        {userSettings.currentPTO} days
                       </span>
                     </div>
                     <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
                       <div 
                         className="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all duration-500" 
-                        style={{width: `${Math.min((currentPTO / 25) * 100, 100)}%`}}
+                        style={{width: `${Math.min((userSettings.currentPTO / userSettings.annualAllowance) * 100, 100)}%`}}
                       ></div>
                     </div>
                     <div className="text-sm text-slate-600 mt-2">
-                      {Math.round((currentPTO / 25) * 100)}% of annual allowance
+                      {Math.round((userSettings.currentPTO / userSettings.annualAllowance) * 100)}% of annual allowance
                     </div>
                   </div>
                   
@@ -526,7 +523,7 @@ function App() {
                         <TrendingUp className="w-6 h-6 text-emerald-600" />
                         <span className="font-semibold text-slate-900">Next Accrual</span>
                       </div>
-                      <span className="text-xl font-bold text-emerald-600">+{accrualRate} days</span>
+                      <span className="text-xl font-bold text-emerald-600">+{userSettings.accrualRate} days</span>
                     </div>
                     <div className="text-sm text-slate-600">
                       {new Date(new Date().getFullYear(), new Date().getMonth() + 1, 1).toLocaleDateString('en-US', { 
