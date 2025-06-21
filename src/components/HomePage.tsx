@@ -144,7 +144,7 @@ export default function HomePage({
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Select Target Date
+                      Future Date
                     </label>
                     <input
                       type="date"
