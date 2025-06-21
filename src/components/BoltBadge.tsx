@@ -51,4 +51,3 @@ export default function BoltBadge({ className = '' }: BoltBadgeProps) {
     </div>
   );
 }
-</boltBadge>
