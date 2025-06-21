@@ -68,15 +68,6 @@ export default function Navbar({
           <div className="hidden md:block">
             <div className="flex items-center space-x-4">
               <ThemeToggle />
-              {!hasCompletedOnboarding && (
-                <button 
-                  onClick={onGetStarted}
-                  className="bg-primary-600 hover:bg-primary-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-soft hover:shadow-medium flex items-center"
-                >
-                  Get Started
-                  <Sparkles className="ml-2 w-4 h-4" />
-                </button>
-              )}
             </div>
           </div>
           <div className="md:hidden flex items-center space-x-2">
@@ -116,21 +107,6 @@ export default function Navbar({
                 </button>
               );
             })}
-            
-            {!hasCompletedOnboarding && (
-              <div className="pt-4 pb-3 border-t border-gray-200 dark:border-gray-700">
-                <button 
-                  onClick={() => {
-                    onGetStarted();
-                    setIsMenuOpen(false);
-                  }}
-                  className="w-full bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-base font-medium transition-all duration-200 flex items-center justify-center"
-                >
-                  Get Started
-                  <Sparkles className="ml-2 w-4 h-4" />
-                </button>
-              </div>
-            )}
           </div>
         </div>
       )}
