@@ -83,6 +83,9 @@
 
   .fc-event-title {
     @apply font-medium text-xs;
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
   }
 
   /* Custom event styles */
@@ -92,6 +95,14 @@
 
   .fc-event.payday-event {
     @apply bg-gradient-to-r from-emerald-500 to-green-600 text-white;
+  }
+
+  .fc-event.payday-event .fc-event-title {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    line-height: 1.2 !important;
+    padding: 2px 4px !important;
   }
 
   /* Day cell content */
@@ -127,5 +138,33 @@
 
   .vacation-badge {
     @apply absolute inset-x-0 text-white text-xs px-2 py-1 rounded-md shadow-soft hover:shadow-medium transition-all duration-200 transform hover:scale-105 cursor-pointer;
+  }
+
+  /* Ensure event content is fully visible */
+  .fc-daygrid-event-harness {
+    margin-bottom: 2px !important;
+  }
+
+  .fc-event-main {
+    padding: 2px 4px !important;
+  }
+
+  /* Override FullCalendar's text truncation for payday events */
+  .fc-event.payday-event .fc-event-main {
+    overflow: visible !important;
+  }
+
+  .fc-event.payday-event .fc-event-title-container {
+    overflow: visible !important;
+  }
+
+  /* Increase day cell height to accommodate longer text */
+  .fc-daygrid-day-frame {
+    min-height: 100px !important;
+  }
+
+  /* Ensure proper spacing between events */
+  .fc-daygrid-event {
+    margin-bottom: 1px !important;
   }
 }
