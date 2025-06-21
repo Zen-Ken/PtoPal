@@ -215,6 +215,15 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
            currentDate.getFullYear() === today.getFullYear();
   };
 
+  const isFutureDate = (day: number) => {
+    const today = new Date();
+    const checkDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+    const todayNormalized = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const checkDateNormalized = new Date(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate());
+    
+    return checkDateNormalized >= todayNormalized;
+  };
+
   const handleDayClick = (day: number) => {
     const clickedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
     const year = clickedDate.getFullYear();
@@ -427,6 +436,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                   const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                   const dayInfo = dailyPTOBalances[dateKey];
                   const todayClass = isToday(day);
+                  const isFuture = isFutureDate(day);
 
                   return (
                     <div
@@ -444,8 +454,8 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                         {day}
                       </div>
                       
-                      {/* Pay Day Indicator with Total PTO Balance */}
-                      {dayInfo?.isPayDay && dayInfo.totalPTOOnPayDay !== undefined && (
+                      {/* Pay Day Indicator with Total PTO Balance - Only show for future dates */}
+                      {dayInfo?.isPayDay && dayInfo.totalPTOOnPayDay !== undefined && isFuture && (
                         <div className="bg-gradient-to-r from-emerald-500 to-green-600 text-white text-xs px-2 py-1 rounded-md shadow-soft mb-1">
                           <div className="flex items-center space-x-1 mb-1">
                             <DollarSign className="w-3 h-3" />
@@ -664,7 +674,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
                   <div className="w-4 h-4 bg-gradient-to-r from-emerald-500 to-green-600 rounded"></div>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Pay Day + Total PTO Balance</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Pay Day + Total PTO Balance (Future Only)</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-4 h-4 bg-gradient-to-r from-purple-500 to-pink-600 rounded"></div>
