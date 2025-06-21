@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, Clock, TrendingUp, Users, Shield, Sparkles, ChevronRight, CalendarDays, Zap, User } from 'lucide-react';
+import { Calendar, Clock, TrendingUp, Users, Shield, Sparkles, ChevronRight, CalendarDays, Zap, User, Calculator, Target, CheckCircle } from 'lucide-react';
 import { UserSettings } from '../types/UserSettings';
 
 interface HomePageProps {
@@ -60,11 +60,31 @@ export default function HomePage({
     }
   ];
 
-  const stats = [
-    { number: "10K+", label: "Happy Users" },
-    { number: "99.9%", label: "Accuracy" },
-    { number: "24/7", label: "Available" },
-    { number: "0", label: "Hassle" }
+  const howItWorksSteps = [
+    {
+      step: "01",
+      icon: User,
+      title: "Set Up Your Profile",
+      description: "Enter your current PTO balance, accrual rate, and pay schedule in just a few clicks."
+    },
+    {
+      step: "02",
+      icon: Calculator,
+      title: "Calculate Future Balance",
+      description: "Pick any future date and instantly see how much PTO you'll have available."
+    },
+    {
+      step: "03",
+      icon: Target,
+      title: "Plan Your Vacations",
+      description: "Use our calendar to schedule time off and see how it affects your balance."
+    },
+    {
+      step: "04",
+      icon: CheckCircle,
+      title: "Enjoy Peace of Mind",
+      description: "Never worry about PTO again with accurate tracking and smart planning."
+    }
   ];
 
   return (
@@ -206,18 +226,75 @@ export default function HomePage({
         </div>
       </section>
 
-      {/* Stats Section */}
+      {/* How It Works Section */}
       <section className="py-20 bg-gray-50 dark:bg-gray-800/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center group">
-                <div className="text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-500 group-hover:from-primary-500 group-hover:to-primary-600 transition-all duration-300">
-                  {stat.number}
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center px-4 py-2 bg-primary-50 dark:bg-primary-900/20 rounded-full text-sm font-medium text-primary-700 dark:text-primary-300 mb-6">
+              <Zap className="w-4 h-4 mr-2" />
+              Simple Process
+            </div>
+            <h2 className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+              How PTOPal
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-500">
+                works for you
+              </span>
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+              Get started in minutes and take control of your time off planning with our intuitive process.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {howItWorksSteps.map((step, index) => (
+              <div key={index} className="relative group">
+                {/* Connection Line (hidden on last item) */}
+                {index < howItWorksSteps.length - 1 && (
+                  <div className="hidden lg:block absolute top-16 left-full w-full h-0.5 bg-gradient-to-r from-primary-200 to-primary-300 dark:from-primary-700 dark:to-primary-600 z-0 transform translate-x-6"></div>
+                )}
+                
+                <div className="relative bg-white dark:bg-gray-800 p-8 rounded-xl shadow-soft hover:shadow-medium transition-all duration-300 border border-gray-100 dark:border-gray-700 hover:border-primary-200 dark:hover:border-primary-700 z-10">
+                  {/* Step Number */}
+                  <div className="absolute -top-4 left-8 bg-gradient-to-r from-primary-500 to-primary-600 text-white text-sm font-bold px-3 py-1 rounded-full shadow-soft">
+                    {step.step}
+                  </div>
+                  
+                  {/* Icon */}
+                  <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-soft mx-auto">
+                    <step.icon className="w-8 h-8 text-white" />
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="text-center">
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-300">
+                      {step.title}
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                      {step.description}
+                    </p>
+                  </div>
                 </div>
-                <div className="mt-2 text-sm font-medium text-gray-600 dark:text-gray-400">{stat.label}</div>
               </div>
             ))}
+          </div>
+
+          {/* Call to Action */}
+          <div className="text-center mt-16">
+            <div className="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 rounded-2xl p-8 border border-primary-200/50 dark:border-primary-700/50 max-w-2xl mx-auto">
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                Ready to take control of your PTO?
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">
+                Join thousands of professionals who never worry about their time off balance again.
+              </p>
+              <button 
+                onClick={onGetStarted}
+                className="bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-medium hover:shadow-large flex items-center justify-center mx-auto"
+              >
+                Start Planning Today
+                <ChevronRight className="ml-2 w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
       </section>
