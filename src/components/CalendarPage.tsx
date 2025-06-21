@@ -9,7 +9,9 @@ import {
   formatDateRange,
   calculateVacationHours,
   normalizeDate,
-  createDateFromString
+  createDateFromString,
+  getDaysInMonth,
+  getFirstDayOfMonth
 } from '../utils/dateUtils';
 
 interface CalendarPageProps {
@@ -247,14 +249,6 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
     
     return spans;
   }, [currentDate, userSettings.vacations]);
-
-  const getDaysInMonth = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-  };
-
-  const getFirstDayOfMonth = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-  };
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentDate(prev => {

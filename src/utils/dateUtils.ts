@@ -19,6 +19,20 @@ export const createDateFromString = (dateString: string): Date => {
 };
 
 /**
+ * Gets the number of days in a month
+ */
+export const getDaysInMonth = (date: Date): number => {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+};
+
+/**
+ * Gets the first day of the month (0 = Sunday, 1 = Monday, etc.)
+ */
+export const getFirstDayOfMonth = (date: Date): number => {
+  return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+};
+
+/**
  * Calculates the number of days between two dates, optionally excluding weekends
  */
 export const getDaysBetweenDates = (
