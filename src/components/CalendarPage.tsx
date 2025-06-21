@@ -224,33 +224,35 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
       const startDay = Math.max(1, vacationStart.getMonth() === currentDate.getMonth() ? vacationStart.getDate() : 1);
       const endDay = Math.min(daysInMonth, vacationEnd.getMonth() === currentDate.getMonth() ? vacationEnd.getDate() : daysInMonth);
       
-      // Calculate grid positions - account for the offset from the first day of the week
-      const startGridPosition = startDay + firstDay - 1; // -1 because days are 1-indexed but grid is 0-indexed
-      const endGridPosition = endDay + firstDay - 1;
-      
-      const startCol = (startGridPosition - 1) % 7; // -1 to convert to 0-indexed
-      const endCol = (endGridPosition - 1) % 7;
-      const startRow = Math.floor((startGridPosition - 1) / 7);
-      const endRow = Math.floor((endGridPosition - 1) / 7);
-      
-      // If vacation spans multiple weeks, create multiple spans
-      for (let row = startRow; row <= endRow; row++) {
-        const rowStartCol = row === startRow ? startCol : 0;
-        const rowEndCol = row === endRow ? endCol : 6;
-        const spanCols = rowEndCol - rowStartCol + 1;
+      // For each day in the vacation range, determine which calendar cell it belongs to
+      for (let day = startDay; day <= endDay; day++) {
+        // Calculate the position in the calendar grid
+        // firstDay is 0-6 (Sunday-Saturday), day is 1-based
+        const cellPosition = day + firstDay - 1; // Convert to 0-based position in grid
+        const row = Math.floor((cellPosition - 1) / 7); // Which week row (0-based)
+        const col = (cellPosition - 1) % 7; // Which day column (0-based)
         
-        // Calculate the actual day numbers for this row
-        const rowStartDay = row === startRow ? startDay : Math.max(1, (row * 7) - firstDay + 2);
-        const rowEndDay = row === endRow ? endDay : Math.min(daysInMonth, ((row + 1) * 7) - firstDay + 1);
+        // Check if we already have a span for this row
+        let existingSpan = spans.find(span => 
+          span.vacation.id === vacation.id && span.row === row
+        );
         
-        spans.push({
-          vacation,
-          startDay: rowStartDay,
-          endDay: rowEndDay,
-          startCol: rowStartCol,
-          spanCols,
-          row: row + 1 // +1 to account for header row
-        });
+        if (!existingSpan) {
+          // Create new span for this row
+          const span: VacationSpan = {
+            vacation,
+            startDay: day,
+            endDay: day,
+            startCol: col,
+            spanCols: 1,
+            row: row
+          };
+          spans.push(span);
+        } else {
+          // Extend existing span
+          existingSpan.endDay = day;
+          existingSpan.spanCols = col - existingSpan.startCol + 1;
+        }
       }
     });
     
@@ -540,14 +542,14 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                     ];
                     const colorClass = colors[index % colors.length];
                     
-                    // Calculate the exact position based on the calendar grid
+                    // Calculate position based on the calendar grid
                     const cellWidth = 100 / 7; // Each cell is 1/7 of the container width
-                    const cellHeight = 8.5; // Height in rem units (h-32 = 8rem + padding)
-                    const gapSize = 0.25; // gap-1 = 0.25rem
+                    const cellHeight = 8.5; // Height in rem (h-32 = 8rem + padding)
+                    const headerHeight = 3.5; // Height of the header row in rem
                     
                     const left = span.startCol * cellWidth;
-                    const width = span.spanCols * cellWidth - (gapSize * (span.spanCols - 1) / cellWidth * 100);
-                    const top = (span.row * cellHeight) + 2; // +2rem for header row and day number
+                    const width = span.spanCols * cellWidth - 0.5; // Subtract small gap
+                    const top = headerHeight + (span.row * cellHeight) + 2; // Position below day number
                     
                     return (
                       <div
