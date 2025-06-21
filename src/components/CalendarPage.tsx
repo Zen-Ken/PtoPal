@@ -397,7 +397,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
           <div className="lg:col-span-3">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-100 dark:border-gray-700 p-6">
               {/* Calendar Header */}
-              <div className="grid grid-cols-7 gap-1 mb-4">
+              <div className="grid grid-cols-7 gap-2 mb-4">
                 {dayNames.map((day) => (
                   <div key={day} className="p-3 text-center text-sm font-semibold text-gray-600 dark:text-gray-400">
                     {day}
@@ -406,10 +406,10 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
               </div>
 
               {/* Calendar Grid */}
-              <div className="grid grid-cols-7 gap-1">
+              <div className="grid grid-cols-7 gap-2">
                 {/* Empty cells for days before month starts */}
                 {Array.from({ length: firstDay }, (_, index) => (
-                  <div key={`empty-${index}`} className="p-3 h-32"></div>
+                  <div key={`empty-${index}`} className="h-40"></div>
                 ))}
 
                 {/* Days of the month */}
@@ -425,73 +425,77 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                     <div
                       key={day}
                       onClick={() => handleDayClick(day)}
-                      className={`p-2 h-32 border border-gray-100 dark:border-gray-700 rounded-lg relative transition-all duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                      className={`p-3 h-40 border border-gray-100 dark:border-gray-700 rounded-lg relative transition-all duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 overflow-hidden ${
                         todayClass 
                           ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700 ring-2 ring-primary-200 dark:ring-primary-700' 
                           : ''
                       }`}
                     >
-                      <div className={`text-sm font-medium mb-1 ${
+                      {/* Day Number */}
+                      <div className={`text-sm font-bold mb-2 ${
                         todayClass ? 'text-primary-700 dark:text-primary-300' : 'text-gray-900 dark:text-white'
                       }`}>
                         {day}
                       </div>
                       
-                      {/* Pay Day Indicator with Total PTO Balance */}
-                      {dayInfo?.isPayDay && dayInfo.totalPTOOnPayDay !== undefined && (
-                        <div className="bg-gradient-to-r from-emerald-500 to-green-600 text-white text-xs px-2 py-1 rounded-md shadow-soft mb-1">
-                          <div className="flex items-center space-x-1 mb-1">
-                            <DollarSign className="w-3 h-3" />
-                            <span className="font-medium">Pay Day</span>
-                          </div>
-                          <div className="text-xs opacity-90 font-medium">
-                            {dayInfo.totalPTOOnPayDay.toFixed(2)} hrs total
-                          </div>
-                          <div className="text-xs opacity-75">
-                            ({hoursToDays(dayInfo.totalPTOOnPayDay)}d)
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Vacation Indicators */}
-                      {dayInfo?.vacations && dayInfo.vacations.length > 0 && (
-                        <div className="space-y-1">
-                          {dayInfo.vacations.slice(0, 2).map((vacation, vacIndex) => {
-                            const colors = [
-                              'from-purple-500 to-pink-600',
-                              'from-blue-500 to-indigo-600',
-                              'from-green-500 to-emerald-600',
-                              'from-orange-500 to-red-600',
-                              'from-teal-500 to-cyan-600',
-                              'from-rose-500 to-pink-600'
-                            ];
-                            const colorClass = colors[vacIndex % colors.length];
-                            
-                            return (
-                              <div
-                                key={vacation.id}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditVacation(vacation);
-                                }}
-                                className={`bg-gradient-to-r ${colorClass} text-white text-xs px-2 py-1 rounded-md shadow-soft cursor-pointer hover:shadow-medium transition-all duration-200 transform hover:scale-105`}
-                              >
-                                <div className="flex items-center space-x-1 truncate">
-                                  <MapPin className="w-3 h-3 flex-shrink-0" />
-                                  <span className="font-medium truncate">
-                                    {vacation.description || 'Vacation'}
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })}
-                          {dayInfo.vacations.length > 2 && (
-                            <div className="text-xs text-gray-500 dark:text-gray-400 px-2">
-                              +{dayInfo.vacations.length - 2} more
+                      {/* Content Area */}
+                      <div className="space-y-1 h-32 overflow-y-auto">
+                        {/* Pay Day Indicator */}
+                        {dayInfo?.isPayDay && dayInfo.totalPTOOnPayDay !== undefined && (
+                          <div className="bg-gradient-to-r from-emerald-500 to-green-600 text-white text-xs px-2 py-1.5 rounded-md shadow-soft">
+                            <div className="flex items-center space-x-1 mb-1">
+                              <DollarSign className="w-3 h-3 flex-shrink-0" />
+                              <span className="font-semibold text-xs">Pay Day</span>
                             </div>
-                          )}
-                        </div>
-                      )}
+                            <div className="text-xs font-medium leading-tight">
+                              {dayInfo.totalPTOOnPayDay.toFixed(1)} hrs
+                            </div>
+                            <div className="text-xs opacity-90 leading-tight">
+                              ({hoursToDays(dayInfo.totalPTOOnPayDay)}d)
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Vacation Indicators */}
+                        {dayInfo?.vacations && dayInfo.vacations.length > 0 && (
+                          <>
+                            {dayInfo.vacations.slice(0, 3).map((vacation, vacIndex) => {
+                              const colors = [
+                                'from-purple-500 to-pink-600',
+                                'from-blue-500 to-indigo-600',
+                                'from-green-500 to-emerald-600',
+                                'from-orange-500 to-red-600',
+                                'from-teal-500 to-cyan-600',
+                                'from-rose-500 to-pink-600'
+                              ];
+                              const colorClass = colors[vacIndex % colors.length];
+                              
+                              return (
+                                <div
+                                  key={vacation.id}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditVacation(vacation);
+                                  }}
+                                  className={`bg-gradient-to-r ${colorClass} text-white text-xs px-2 py-1.5 rounded-md shadow-soft cursor-pointer hover:shadow-medium transition-all duration-200 transform hover:scale-105`}
+                                >
+                                  <div className="flex items-center space-x-1">
+                                    <MapPin className="w-3 h-3 flex-shrink-0" />
+                                    <span className="font-medium truncate text-xs leading-tight">
+                                      {vacation.description || 'Vacation'}
+                                    </span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                            {dayInfo.vacations.length > 3 && (
+                              <div className="text-xs text-gray-500 dark:text-gray-400 px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded-md">
+                                +{dayInfo.vacations.length - 3} more
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
