@@ -258,19 +258,6 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
 
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                    Employee ID
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.employeeId}
-                    onChange={(e) => handleInputChange('employeeId', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 transition-all duration-200 text-gray-900 dark:text-white"
-                    placeholder="EMP001"
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                     Employment Start Date
                   </label>
                   <input

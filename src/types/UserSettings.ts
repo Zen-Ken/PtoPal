@@ -7,7 +7,6 @@ export interface UserSettings {
   annualAllowance: number; // Now in hours
   startDate: string;
   companyName: string;
-  employeeId: string;
   vacations: VacationEntry[]; // Array of vacation entries
 }
 
@@ -18,6 +17,5 @@ export const defaultUserSettings: UserSettings = {
   annualAllowance: 200.00, // 25 days * 8 hours = 200 hours
   startDate: new Date().toISOString().split('T')[0],
   companyName: '',
-  employeeId: '',
   vacations: [] // Initialize with empty array
 };
