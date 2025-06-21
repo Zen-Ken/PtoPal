@@ -399,17 +399,18 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                         {day}
                       </div>
                       
-                      {/* PTO Balance */}
-                      <div className="text-xs text-slate-600 mb-1">
-                        {dayInfo?.ptoBalance.toFixed(0)} hrs
-                      </div>
-                      
-                      {/* Pay Day Indicator */}
+                      {/* Pay Day Indicator with Total PTO */}
                       {dayInfo?.isPayDay && (
-                        <div className="bg-gradient-to-r from-emerald-500 to-green-600 text-white text-xs px-1 py-0.5 rounded mb-1">
-                          <div className="flex items-center space-x-1">
-                            <DollarSign className="w-2 h-2" />
-                            <span className="font-medium">Pay</span>
+                        <div className="bg-gradient-to-r from-emerald-500 to-green-600 text-white text-xs px-2 py-1 rounded-md shadow-sm mb-1">
+                          <div className="flex items-center space-x-1 mb-1">
+                            <DollarSign className="w-3 h-3" />
+                            <span className="font-medium">Pay Day</span>
+                          </div>
+                          <div className="text-xs opacity-90 font-medium">
+                            {dayInfo.ptoBalance.toFixed(0)} hrs total
+                          </div>
+                          <div className="text-xs opacity-75">
+                            ({hoursToDays(dayInfo.ptoBalance)}d)
                           </div>
                         </div>
                       )}
@@ -516,7 +517,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
                   <div className="w-4 h-4 bg-gradient-to-r from-emerald-500 to-green-600 rounded"></div>
-                  <span className="text-sm text-slate-700">Pay Day</span>
+                  <span className="text-sm text-slate-700">Pay Day + Total PTO Balance</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-4 h-4 bg-gradient-to-r from-purple-500 to-pink-600 rounded"></div>
