@@ -33,6 +33,15 @@ export default function CalendarGrid({
   const daysInMonth = getDaysInMonth(currentDate);
   const firstDay = getFirstDayOfMonth(currentDate);
 
+  // Helper function to check if a date is in the future
+  const isFutureDate = (day: number) => {
+    const today = new Date();
+    const checkDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+    today.setHours(0, 0, 0, 0);
+    checkDate.setHours(0, 0, 0, 0);
+    return checkDate > today;
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-100 dark:border-gray-700 p-6">
       {/* Calendar Header */}
@@ -59,6 +68,7 @@ export default function CalendarGrid({
           const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
           const dayInfo = dailyPTOBalances[dateKey];
           const todayClass = isToday(day);
+          const isFuture = isFutureDate(day);
 
           return (
             <div
@@ -76,8 +86,8 @@ export default function CalendarGrid({
                 {day}
               </div>
               
-              {/* Pay Day Indicator with Total PTO Balance */}
-              {dayInfo?.isPayDay && dayInfo.totalPTOOnPayDay !== undefined && (
+              {/* Pay Day Indicator with Total PTO Balance - Only show for future dates */}
+              {dayInfo?.isPayDay && dayInfo.totalPTOOnPayDay !== undefined && isFuture && (
                 <div className="bg-gradient-to-r from-emerald-500 to-green-600 text-white text-xs px-2 py-1 rounded-md shadow-soft mb-1 z-10 relative">
                   <div className="flex items-center space-x-1 mb-1">
                     <DollarSign className="w-3 h-3" />
