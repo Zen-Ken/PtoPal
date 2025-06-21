@@ -23,6 +23,9 @@ export default function BoltBadge({ className = '' }: BoltBadgeProps) {
           
           {/* Hover gradient overlay */}
           <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-purple-600 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+          
+          {/* Dark mode glow effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-0 dark:group-hover:opacity-20 transition-opacity duration-300 blur-sm"></div>
         </div>
       </a>
     </div>

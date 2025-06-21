@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Calendar, Clock, ArrowLeft, Settings, Calculator, Shield, Check } from 'lucide-react';
 import BoltBadge from './BoltBadge';
+import ThemeToggle from './ThemeToggle';
 import { UserSettings } from '../types/UserSettings';
 
 interface ProfilePageProps {
@@ -67,7 +68,7 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-blue-900 transition-colors duration-300">
       {/* Bolt Badge */}
       <BoltBadge />
 
@@ -86,28 +87,29 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
       </div>
 
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-200/50">
+      <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm border-b border-slate-200/50 dark:border-slate-700/50 transition-colors duration-300">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button
                 onClick={onBack}
-                className="p-2 hover:bg-slate-100 rounded-xl transition-colors flex items-center justify-center"
+                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors flex items-center justify-center"
               >
-                <ArrowLeft className="w-5 h-5 text-slate-600" />
+                <ArrowLeft className="w-5 h-5 text-slate-600 dark:text-slate-400" />
               </button>
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
                   <User className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-slate-900">Profile Settings</h1>
-                  <p className="text-slate-600">Manage your PTO preferences and accrual settings</p>
+                  <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">Profile Settings</h1>
+                  <p className="text-slate-600 dark:text-slate-400 transition-colors duration-300">Manage your PTO preferences and accrual settings</p>
                 </div>
               </div>
             </div>
             <div className="flex items-center space-x-3">
-              <div className="text-xs text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200 flex items-center space-x-2">
+              <ThemeToggle />
+              <div className="text-xs text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-3 py-1 rounded-full border border-green-200 dark:border-green-700 flex items-center space-x-2 transition-colors duration-300">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span>Auto-saving</span>
               </div>
@@ -121,20 +123,20 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
           {/* Main Settings */}
           <div className="lg:col-span-2 space-y-8">
             {/* PTO Configuration */}
-            <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-8">
+            <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 dark:border-slate-700/20 p-8 transition-colors duration-300">
               <div className="flex items-center space-x-3 mb-6">
                 <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
                   <Calendar className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900">PTO Configuration</h2>
-                  <p className="text-slate-600">Set up your time off accrual and balance</p>
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">PTO Configuration</h2>
+                  <p className="text-slate-600 dark:text-slate-400 transition-colors duration-300">Set up your time off accrual and balance</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-3">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 transition-colors duration-300">
                     Current PTO Balance (hours)
                   </label>
                   <div className="relative">
@@ -142,22 +144,22 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                       type="number"
                       value={formData.currentPTO}
                       onChange={(e) => handleInputChange('currentPTO', e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 backdrop-blur-sm transition-all duration-200"
+                      className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 dark:bg-slate-700/50 backdrop-blur-sm transition-all duration-200 text-slate-900 dark:text-slate-100"
                       min="0"
                       step="0.5"
                       placeholder="96"
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-medium">
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 text-sm font-medium transition-colors duration-300">
                       hours
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-2">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 transition-colors duration-300">
                     Equivalent to {hoursToDays(formData.currentPTO)} days (8 hours = 1 day)
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-3">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 transition-colors duration-300">
                     Annual PTO Allowance (hours)
                   </label>
                   <div className="relative">
@@ -165,27 +167,27 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                       type="number"
                       value={formData.annualAllowance}
                       onChange={(e) => handleInputChange('annualAllowance', e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 backdrop-blur-sm transition-all duration-200"
+                      className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 dark:bg-slate-700/50 backdrop-blur-sm transition-all duration-200 text-slate-900 dark:text-slate-100"
                       min="0"
                       placeholder="200"
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-medium">
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 text-sm font-medium transition-colors duration-300">
                       hours
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-2">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 transition-colors duration-300">
                     Equivalent to {hoursToDays(formData.annualAllowance)} days per year
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-3">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 transition-colors duration-300">
                     Pay Period
                   </label>
                   <select
                     value={formData.payPeriod}
                     onChange={(e) => handleInputChange('payPeriod', e.target.value as UserSettings['payPeriod'])}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 backdrop-blur-sm transition-all duration-200"
+                    className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 dark:bg-slate-700/50 backdrop-blur-sm transition-all duration-200 text-slate-900 dark:text-slate-100"
                   >
                     {payPeriodOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -196,7 +198,7 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-3">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 transition-colors duration-300">
                     Accrual Rate per {payPeriodOptions.find(p => p.value === formData.payPeriod)?.label || 'Period'} (hours)
                   </label>
                   <div className="relative">
@@ -204,16 +206,16 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                       type="number"
                       value={formData.accrualRate}
                       onChange={(e) => handleInputChange('accrualRate', e.target.value)}
-                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 backdrop-blur-sm transition-all duration-200"
+                      className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 dark:bg-slate-700/50 backdrop-blur-sm transition-all duration-200 text-slate-900 dark:text-slate-100"
                       min="0"
                       step="0.1"
                       placeholder="13.36"
                     />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-medium">
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 text-sm font-medium transition-colors duration-300">
                       hours
                     </span>
                   </div>
-                  <p className="text-xs text-slate-500 mt-2">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 transition-colors duration-300">
                     How many PTO hours you earn each {formData.payPeriod === 'biweekly' ? 'bi-weekly' : formData.payPeriod === 'semimonthly' ? 'semi-monthly' : formData.payPeriod} pay period
                     <br />
                     Equivalent to {hoursToDays(formData.accrualRate)} days per pay period
@@ -223,53 +225,53 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
             </div>
 
             {/* Company Information */}
-            <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-8">
+            <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 dark:border-slate-700/20 p-8 transition-colors duration-300">
               <div className="flex items-center space-x-3 mb-6">
                 <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
                   <Settings className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900">Company Information</h2>
-                  <p className="text-slate-600">Optional details for better tracking</p>
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">Company Information</h2>
+                  <p className="text-slate-600 dark:text-slate-400 transition-colors duration-300">Optional details for better tracking</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-3">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 transition-colors duration-300">
                     Company Name
                   </label>
                   <input
                     type="text"
                     value={formData.companyName}
                     onChange={(e) => handleInputChange('companyName', e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 backdrop-blur-sm transition-all duration-200"
+                    className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 dark:bg-slate-700/50 backdrop-blur-sm transition-all duration-200 text-slate-900 dark:text-slate-100"
                     placeholder="Acme Corporation"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-3">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 transition-colors duration-300">
                     Employee ID
                   </label>
                   <input
                     type="text"
                     value={formData.employeeId}
                     onChange={(e) => handleInputChange('employeeId', e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 backdrop-blur-sm transition-all duration-200"
+                    className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 dark:bg-slate-700/50 backdrop-blur-sm transition-all duration-200 text-slate-900 dark:text-slate-100"
                     placeholder="EMP001"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-slate-700 mb-3">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 transition-colors duration-300">
                     Employment Start Date
                   </label>
                   <input
                     type="date"
                     value={formData.startDate}
                     onChange={(e) => handleInputChange('startDate', e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 backdrop-blur-sm transition-all duration-200"
+                    className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 dark:bg-slate-700/50 backdrop-blur-sm transition-all duration-200 text-slate-900 dark:text-slate-100"
                   />
                 </div>
               </div>
@@ -279,41 +281,41 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
           {/* Summary Sidebar */}
           <div className="space-y-6">
             {/* Current Summary */}
-            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-200/50">
+            <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 rounded-2xl p-6 border border-blue-200/50 dark:border-blue-700/50 transition-colors duration-300">
               <div className="flex items-center space-x-3 mb-4">
-                <Calculator className="w-6 h-6 text-blue-600" />
-                <h3 className="text-lg font-bold text-slate-900">Current Summary</h3>
+                <Calculator className="w-6 h-6 text-blue-600 dark:text-blue-400 transition-colors duration-300" />
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">Current Summary</h3>
               </div>
               
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-600">PTO Balance</span>
+                  <span className="text-slate-600 dark:text-slate-400 transition-colors duration-300">PTO Balance</span>
                   <div className="text-right">
-                    <div className="font-bold text-slate-900">{formData.currentPTO === '' ? 0 : formData.currentPTO} hours</div>
-                    <div className="text-xs text-slate-600">({hoursToDays(formData.currentPTO)} days)</div>
+                    <div className="font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">{formData.currentPTO === '' ? 0 : formData.currentPTO} hours</div>
+                    <div className="text-xs text-slate-600 dark:text-slate-400 transition-colors duration-300">({hoursToDays(formData.currentPTO)} days)</div>
                   </div>
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-600">Monthly Accrual</span>
+                  <span className="text-slate-600 dark:text-slate-400 transition-colors duration-300">Monthly Accrual</span>
                   <div className="text-right">
-                    <div className="font-bold text-emerald-600">+{getMonthlyAccrual().toFixed(2)} hours</div>
-                    <div className="text-xs text-slate-600">(+{hoursToDays(getMonthlyAccrual())} days)</div>
+                    <div className="font-bold text-emerald-600 dark:text-emerald-400 transition-colors duration-300">+{getMonthlyAccrual().toFixed(2)} hours</div>
+                    <div className="text-xs text-slate-600 dark:text-slate-400 transition-colors duration-300">(+{hoursToDays(getMonthlyAccrual())} days)</div>
                   </div>
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-600">Annual Allowance</span>
+                  <span className="text-slate-600 dark:text-slate-400 transition-colors duration-300">Annual Allowance</span>
                   <div className="text-right">
-                    <div className="font-bold text-slate-900">{formData.annualAllowance === '' ? 0 : formData.annualAllowance} hours</div>
-                    <div className="text-xs text-slate-600">({hoursToDays(formData.annualAllowance)} days)</div>
+                    <div className="font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">{formData.annualAllowance === '' ? 0 : formData.annualAllowance} hours</div>
+                    <div className="text-xs text-slate-600 dark:text-slate-400 transition-colors duration-300">({hoursToDays(formData.annualAllowance)} days)</div>
                   </div>
                 </div>
                 
-                <div className="pt-4 border-t border-blue-200">
+                <div className="pt-4 border-t border-blue-200 dark:border-blue-700 transition-colors duration-300">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-600">Usage Rate</span>
-                    <span className="font-bold text-blue-600">
+                    <span className="text-slate-600 dark:text-slate-400 transition-colors duration-300">Usage Rate</span>
+                    <span className="font-bold text-blue-600 dark:text-blue-400 transition-colors duration-300">
                       {Math.round(((formData.currentPTO === '' ? 0 : Number(formData.currentPTO)) / (formData.annualAllowance === '' ? 1 : Number(formData.annualAllowance))) * 100)}%
                     </span>
                   </div>
@@ -322,13 +324,13 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
             </div>
 
             {/* Data Storage Info */}
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200/50">
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 rounded-2xl p-6 border border-green-200/50 dark:border-green-700/50 transition-colors duration-300">
               <div className="flex items-center space-x-3 mb-4">
-                <Shield className="w-6 h-6 text-green-600" />
-                <h3 className="text-lg font-bold text-slate-900">Data Storage</h3>
+                <Shield className="w-6 h-6 text-green-600 dark:text-green-400 transition-colors duration-300" />
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">Data Storage</h3>
               </div>
               
-              <div className="space-y-3 text-sm text-slate-700">
+              <div className="space-y-3 text-sm text-slate-700 dark:text-slate-300 transition-colors duration-300">
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   <span>Stored locally in your browser</span>
@@ -345,13 +347,13 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
             </div>
 
             {/* Quick Tips */}
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-200/50">
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 rounded-2xl p-6 border border-amber-200/50 dark:border-amber-700/50 transition-colors duration-300">
               <div className="flex items-center space-x-3 mb-4">
-                <Clock className="w-6 h-6 text-amber-600" />
-                <h3 className="text-lg font-bold text-slate-900">Quick Tips</h3>
+                <Clock className="w-6 h-6 text-amber-600 dark:text-amber-400 transition-colors duration-300" />
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">Quick Tips</h3>
               </div>
               
-              <ul className="space-y-2 text-sm text-slate-700">
+              <ul className="space-y-2 text-sm text-slate-700 dark:text-slate-300 transition-colors duration-300">
                 <li className="flex items-start space-x-2">
                   <div className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-2 flex-shrink-0"></div>
                   <span>Update your balance after taking time off</span>

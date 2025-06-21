@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { ArrowLeft, ChevronLeft, ChevronRight, Calendar, Clock, TrendingUp, DollarSign, Plus, X, Edit3, Trash2, MapPin, Save, List } from 'lucide-react';
 import BoltBadge from './BoltBadge';
+import ThemeToggle from './ThemeToggle';
 import { UserSettings } from '../types/UserSettings';
 import { VacationEntry } from '../types/VacationEntry';
 import { 
@@ -365,34 +366,35 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 dark:from-slate-900 dark:via-slate-800 dark:to-blue-900 transition-colors duration-300">
       {/* Bolt Badge */}
       <BoltBadge />
 
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-200/50">
+      <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-sm border-b border-slate-200/50 dark:border-slate-700/50 transition-colors duration-300">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button
                 onClick={onBack}
-                className="p-2 hover:bg-slate-100 rounded-xl transition-colors flex items-center justify-center"
+                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors flex items-center justify-center"
               >
-                <ArrowLeft className="w-5 h-5 text-slate-600" />
+                <ArrowLeft className="w-5 h-5 text-slate-600 dark:text-slate-400" />
               </button>
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
                   <Calendar className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-slate-900">PTO Calendar</h1>
-                  <p className="text-slate-600">Track your pay periods and plan vacations</p>
+                  <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">PTO Calendar</h1>
+                  <p className="text-slate-600 dark:text-slate-400 transition-colors duration-300">Track your pay periods and plan vacations</p>
                 </div>
               </div>
             </div>
             
             {/* Actions */}
             <div className="flex items-center space-x-4">
+              <ThemeToggle />
               <button
                 onClick={handleAddVacation}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2"
@@ -402,18 +404,18 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
               </button>
               <button
                 onClick={() => navigateMonth('prev')}
-                className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
               >
-                <ChevronLeft className="w-5 h-5 text-slate-600" />
+                <ChevronLeft className="w-5 h-5 text-slate-600 dark:text-slate-400" />
               </button>
-              <h2 className="text-xl font-bold text-slate-900 min-w-[200px] text-center">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 min-w-[200px] text-center transition-colors duration-300">
                 {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
               </h2>
               <button
                 onClick={() => navigateMonth('next')}
-                className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+                className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
               >
-                <ChevronRight className="w-5 h-5 text-slate-600" />
+                <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-400" />
               </button>
             </div>
           </div>
@@ -424,11 +426,11 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Calendar */}
           <div className="lg:col-span-3">
-            <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-6">
+            <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 dark:border-slate-700/20 p-6 transition-colors duration-300">
               {/* Calendar Header */}
               <div className="grid grid-cols-7 gap-1 mb-4">
                 {dayNames.map((day) => (
-                  <div key={day} className="p-3 text-center text-sm font-semibold text-slate-600">
+                  <div key={day} className="p-3 text-center text-sm font-semibold text-slate-600 dark:text-slate-400 transition-colors duration-300">
                     {day}
                   </div>
                 ))}
@@ -459,14 +461,14 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                     <div
                       key={day}
                       onClick={() => handleDayClick(day)}
-                      className={`p-2 h-32 border border-slate-100 rounded-lg relative transition-all duration-200 cursor-pointer hover:bg-slate-50 ${
+                      className={`p-2 h-32 border border-slate-100 dark:border-slate-700 rounded-lg relative transition-all duration-200 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 ${
                         todayClass 
-                          ? 'bg-blue-50 border-blue-200 ring-2 ring-blue-200' 
+                          ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700 ring-2 ring-blue-200 dark:ring-blue-700' 
                           : ''
                       }`}
                     >
-                      <div className={`text-sm font-medium mb-1 ${
-                        todayClass ? 'text-blue-700' : 'text-slate-900'
+                      <div className={`text-sm font-medium mb-1 transition-colors duration-300 ${
+                        todayClass ? 'text-blue-700 dark:text-blue-300' : 'text-slate-900 dark:text-slate-100'
                       }`}>
                         {day}
                       </div>
@@ -508,25 +510,25 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
           {/* Sidebar - Vacation Management */}
           <div className="space-y-6">
             {/* Upcoming Vacations */}
-            <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-6">
+            <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 dark:border-slate-700/20 p-6 transition-colors duration-300">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
-                  <MapPin className="w-6 h-6 text-purple-600" />
-                  <h3 className="text-lg font-bold text-slate-900">Upcoming Vacations</h3>
+                  <MapPin className="w-6 h-6 text-purple-600 dark:text-purple-400 transition-colors duration-300" />
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">Upcoming Vacations</h3>
                 </div>
-                <span className="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full font-medium">
+                <span className="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-xs px-2 py-1 rounded-full font-medium transition-colors duration-300">
                   {upcomingVacations.length}
                 </span>
               </div>
               
               <div className="space-y-3 max-h-64 overflow-y-auto">
                 {upcomingVacations.length === 0 ? (
-                  <div className="text-center py-6 text-slate-500">
-                    <MapPin className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                  <div className="text-center py-6 text-slate-500 dark:text-slate-400 transition-colors duration-300">
+                    <MapPin className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2 transition-colors duration-300" />
                     <p className="text-sm">No upcoming vacations</p>
                     <button
                       onClick={handleAddVacation}
-                      className="text-blue-600 hover:text-blue-700 text-sm font-medium mt-1"
+                      className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-sm font-medium mt-1 transition-colors duration-300"
                     >
                       Plan your next getaway
                     </button>
@@ -535,28 +537,28 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                   upcomingVacations.map((vacation) => (
                     <div 
                       key={vacation.id} 
-                      className="p-3 bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200/50 rounded-xl hover:shadow-md cursor-pointer transition-all duration-200"
+                      className="p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200/50 dark:border-purple-700/50 rounded-xl hover:shadow-md cursor-pointer transition-all duration-200"
                       onClick={() => handleEditVacation(vacation)}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h4 className="font-semibold text-slate-900 mb-1">
+                          <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-1 transition-colors duration-300">
                             {vacation.description || 'Vacation'}
                           </h4>
-                          <div className="text-sm text-slate-600 mb-2">
+                          <div className="text-sm text-slate-600 dark:text-slate-400 mb-2 transition-colors duration-300">
                             {formatDateRange(vacation.startDate, vacation.endDate)}
                           </div>
-                          <div className="flex items-center space-x-3 text-xs text-slate-500">
+                          <div className="flex items-center space-x-3 text-xs text-slate-500 dark:text-slate-500 transition-colors duration-300">
                             <span>{vacation.totalHours} hrs</span>
                             <span>({hoursToDays(vacation.totalHours)}d)</span>
                             {vacation.includeWeekends && (
-                              <span className="bg-amber-100 text-amber-700 px-1 py-0.5 rounded text-xs">
+                              <span className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-1 py-0.5 rounded text-xs transition-colors duration-300">
                                 +weekends
                               </span>
                             )}
                           </div>
                         </div>
-                        <Edit3 className="w-4 h-4 text-slate-400 hover:text-slate-600 transition-colors" />
+                        <Edit3 className="w-4 h-4 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-400 transition-colors" />
                       </div>
                     </div>
                   ))
@@ -566,13 +568,13 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
 
             {/* Past Vacations */}
             {pastVacations.length > 0 && (
-              <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-6">
+              <div className="bg-white/70 dark:bg-slate-800/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 dark:border-slate-700/20 p-6 transition-colors duration-300">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
-                    <Clock className="w-6 h-6 text-slate-600" />
-                    <h3 className="text-lg font-bold text-slate-900">Past Vacations</h3>
+                    <Clock className="w-6 h-6 text-slate-600 dark:text-slate-400 transition-colors duration-300" />
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">Past Vacations</h3>
                   </div>
-                  <span className="bg-slate-100 text-slate-700 text-xs px-2 py-1 rounded-full font-medium">
+                  <span className="bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs px-2 py-1 rounded-full font-medium transition-colors duration-300">
                     {pastVacations.length}
                   </span>
                 </div>
@@ -581,29 +583,29 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                   {pastVacations.slice(0, 5).map((vacation) => (
                     <div 
                       key={vacation.id} 
-                      className="p-3 bg-slate-50 border border-slate-200 rounded-xl hover:bg-slate-100 cursor-pointer transition-all duration-200"
+                      className="p-3 bg-slate-50 dark:bg-slate-700/50 border border-slate-200 dark:border-slate-600 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 cursor-pointer transition-all duration-200"
                       onClick={() => handleEditVacation(vacation)}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h4 className="font-medium text-slate-700 mb-1">
+                          <h4 className="font-medium text-slate-700 dark:text-slate-300 mb-1 transition-colors duration-300">
                             {vacation.description || 'Vacation'}
                           </h4>
-                          <div className="text-sm text-slate-500 mb-1">
+                          <div className="text-sm text-slate-500 dark:text-slate-400 mb-1 transition-colors duration-300">
                             {formatDateRange(vacation.startDate, vacation.endDate)}
                           </div>
-                          <div className="text-xs text-slate-400">
+                          <div className="text-xs text-slate-400 dark:text-slate-500 transition-colors duration-300">
                             {vacation.totalHours} hrs ({hoursToDays(vacation.totalHours)}d)
                           </div>
                         </div>
-                        <Edit3 className="w-3 h-3 text-slate-400" />
+                        <Edit3 className="w-3 h-3 text-slate-400 dark:text-slate-500" />
                       </div>
                     </div>
                   ))}
                   
                   {pastVacations.length > 5 && (
                     <div className="text-center py-2">
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs text-slate-500 dark:text-slate-400 transition-colors duration-300">
                         +{pastVacations.length - 5} more past vacations
                       </span>
                     </div>
@@ -613,41 +615,41 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
             )}
 
             {/* Quick Summary */}
-            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-200/50">
+            <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 rounded-2xl p-6 border border-blue-200/50 dark:border-blue-700/50 transition-colors duration-300">
               <div className="flex items-center space-x-3 mb-4">
-                <TrendingUp className="w-6 h-6 text-blue-600" />
-                <h3 className="text-lg font-bold text-slate-900">Summary</h3>
+                <TrendingUp className="w-6 h-6 text-blue-600 dark:text-blue-400 transition-colors duration-300" />
+                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">Summary</h3>
               </div>
               
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-600">Current PTO</span>
+                  <span className="text-slate-600 dark:text-slate-400 transition-colors duration-300">Current PTO</span>
                   <div className="text-right">
-                    <div className="font-bold text-blue-600">{userSettings.currentPTO} hrs</div>
-                    <div className="text-xs text-slate-600">({hoursToDays(userSettings.currentPTO)} days)</div>
+                    <div className="font-bold text-blue-600 dark:text-blue-400 transition-colors duration-300">{userSettings.currentPTO} hrs</div>
+                    <div className="text-xs text-slate-600 dark:text-slate-400 transition-colors duration-300">({hoursToDays(userSettings.currentPTO)} days)</div>
                   </div>
                 </div>
                 
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-600">Total Planned</span>
+                  <span className="text-slate-600 dark:text-slate-400 transition-colors duration-300">Total Planned</span>
                   <div className="text-right">
-                    <div className="font-bold text-purple-600">
+                    <div className="font-bold text-purple-600 dark:text-purple-400 transition-colors duration-300">
                       {userSettings.vacations.reduce((sum, v) => sum + v.totalHours, 0)} hrs
                     </div>
-                    <div className="text-xs text-slate-600">
+                    <div className="text-xs text-slate-600 dark:text-slate-400 transition-colors duration-300">
                       ({hoursToDays(userSettings.vacations.reduce((sum, v) => sum + v.totalHours, 0))} days)
                     </div>
                   </div>
                 </div>
                 
-                <div className="pt-3 border-t border-blue-200">
+                <div className="pt-3 border-t border-blue-200 dark:border-blue-700 transition-colors duration-300">
                   <div className="flex justify-between items-center">
-                    <span className="text-slate-600">Remaining After Vacations</span>
+                    <span className="text-slate-600 dark:text-slate-400 transition-colors duration-300">Remaining After Vacations</span>
                     <div className="text-right">
-                      <div className="font-bold text-emerald-600">
+                      <div className="font-bold text-emerald-600 dark:text-emerald-400 transition-colors duration-300">
                         {Math.max(0, userSettings.currentPTO - userSettings.vacations.reduce((sum, v) => sum + v.totalHours, 0))} hrs
                       </div>
-                      <div className="text-xs text-slate-600">
+                      <div className="text-xs text-slate-600 dark:text-slate-400 transition-colors duration-300">
                         ({hoursToDays(Math.max(0, userSettings.currentPTO - userSettings.vacations.reduce((sum, v) => sum + v.totalHours, 0)))} days)
                       </div>
                     </div>
@@ -657,23 +659,23 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
             </div>
 
             {/* Legend */}
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-200/50">
-              <h3 className="text-lg font-bold text-slate-900 mb-4">Legend</h3>
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 rounded-2xl p-6 border border-amber-200/50 dark:border-amber-700/50 transition-colors duration-300">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4 transition-colors duration-300">Legend</h3>
               
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
                   <div className="w-4 h-4 bg-gradient-to-r from-emerald-500 to-green-600 rounded"></div>
-                  <span className="text-sm text-slate-700">Pay Day + PTO Balance</span>
+                  <span className="text-sm text-slate-700 dark:text-slate-300 transition-colors duration-300">Pay Day + PTO Balance</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-4 h-4 bg-gradient-to-r from-purple-500 to-pink-600 rounded"></div>
-                  <span className="text-sm text-slate-700">Vacation</span>
+                  <span className="text-sm text-slate-700 dark:text-slate-300 transition-colors duration-300">Vacation</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-blue-200 border-2 border-blue-400 rounded"></div>
-                  <span className="text-sm text-slate-700">Today</span>
+                  <div className="w-4 h-4 bg-blue-200 dark:bg-blue-800 border-2 border-blue-400 dark:border-blue-600 rounded transition-colors duration-300"></div>
+                  <span className="text-sm text-slate-700 dark:text-slate-300 transition-colors duration-300">Today</span>
                 </div>
-                <div className="text-xs text-slate-600 mt-3 p-2 bg-slate-100 rounded">
+                <div className="text-xs text-slate-600 dark:text-slate-400 mt-3 p-2 bg-slate-100 dark:bg-slate-700 rounded transition-colors duration-300">
                   <strong>Tip:</strong> Click on any day to add or edit vacations
                 </div>
               </div>
@@ -685,56 +687,56 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
       {/* Vacation Modal */}
       {isAddVacationModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto transition-colors duration-300">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-slate-900">
+                <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 transition-colors duration-300">
                   {editingVacation ? 'Edit Vacation' : 'Add Vacation'}
                 </h3>
                 <button
                   onClick={() => setIsAddVacationModalOpen(false)}
-                  className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+                  className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl transition-colors"
                 >
-                  <X className="w-5 h-5 text-slate-600" />
+                  <X className="w-5 h-5 text-slate-600 dark:text-slate-400" />
                 </button>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 transition-colors duration-300">
                     Description (Optional)
                   </label>
                   <input
                     type="text"
                     value={vacationForm.description}
                     onChange={(e) => setVacationForm(prev => ({ ...prev, description: e.target.value }))}
-                    className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                    className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
                     placeholder="e.g., Hawaii Trip, Family Visit"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 transition-colors duration-300">
                       Start Date
                     </label>
                     <input
                       type="date"
                       value={vacationForm.startDate}
                       onChange={(e) => setVacationForm(prev => ({ ...prev, startDate: e.target.value }))}
-                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                      className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2 transition-colors duration-300">
                       End Date
                     </label>
                     <input
                       type="date"
                       value={vacationForm.endDate}
                       onChange={(e) => setVacationForm(prev => ({ ...prev, endDate: e.target.value }))}
-                      className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                      className="w-full px-4 py-3 border-2 border-slate-200 dark:border-slate-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100"
                       min={vacationForm.startDate}
                     />
                   </div>
@@ -746,23 +748,23 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                     id="includeWeekends"
                     checked={vacationForm.includeWeekends}
                     onChange={(e) => setVacationForm(prev => ({ ...prev, includeWeekends: e.target.checked }))}
-                    className="w-5 h-5 text-blue-600 border-2 border-slate-300 rounded focus:ring-blue-500"
+                    className="w-5 h-5 text-blue-600 border-2 border-slate-300 dark:border-slate-600 rounded focus:ring-blue-500 bg-white dark:bg-slate-700"
                   />
-                  <label htmlFor="includeWeekends" className="text-sm font-medium text-slate-700">
+                  <label htmlFor="includeWeekends" className="text-sm font-medium text-slate-700 dark:text-slate-300 transition-colors duration-300">
                     Include weekends in PTO calculation
                   </label>
                 </div>
 
                 {vacationForm.startDate && vacationForm.endDate && (
-                  <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-4 rounded-xl border border-blue-200/50">
+                  <div className="bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/30 dark:to-purple-900/30 p-4 rounded-xl border border-blue-200/50 dark:border-blue-700/50 transition-colors duration-300">
                     <div className="text-center">
-                      <div className="text-sm text-blue-700 font-semibold mb-1">
+                      <div className="text-sm text-blue-700 dark:text-blue-300 font-semibold mb-1 transition-colors duration-300">
                         Total PTO Required
                       </div>
                       <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
                         {calculateFormHours()} hours
                       </div>
-                      <div className="text-sm text-slate-600">
+                      <div className="text-sm text-slate-600 dark:text-slate-400 transition-colors duration-300">
                         ({hoursToDays(calculateFormHours())} days)
                       </div>
                     </div>
@@ -770,11 +772,11 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                 )}
               </div>
 
-              <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-200">
+              <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-200 dark:border-slate-700 transition-colors duration-300">
                 {editingVacation && (
                   <button
                     onClick={() => handleDeleteVacation(editingVacation.id)}
-                    className="flex items-center space-x-2 text-red-600 hover:text-red-700 font-medium transition-colors"
+                    className="flex items-center space-x-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
                     <span>Delete</span>
@@ -784,7 +786,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                 <div className="flex items-center space-x-3 ml-auto">
                   <button
                     onClick={() => setIsAddVacationModalOpen(false)}
-                    className="px-6 py-2.5 text-slate-600 hover:text-slate-900 font-medium transition-colors"
+                    className="px-6 py-2.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 font-medium transition-colors"
                   >
                     Cancel
                   </button>
