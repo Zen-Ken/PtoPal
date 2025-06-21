@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ArrowLeft, ArrowRight, Calendar, Clock, Briefcase, CheckCircle, Sparkles, User, Building } from 'lucide-react';
+import BoltBadge from './BoltBadge';
 import { UserSettings, defaultUserSettings } from '../types/UserSettings';
 
 interface OnboardingPageProps {
@@ -287,26 +288,8 @@ export default function OnboardingPage({ onComplete, onBack }: OnboardingPagePro
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 relative overflow-hidden">
-      {/* Bolt Badge - Fixed Position Bottom Right */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <a 
-          href="https://bolt.new" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="group relative"
-        >
-          <div className="bg-white border-2 border-black rounded-full p-3 shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105">
-            <div className="w-12 h-12 flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-xs font-bold text-black leading-tight">POWERED BY</div>
-                <div className="text-lg font-black text-black leading-none">b</div>
-                <div className="text-xs font-bold text-black leading-tight">BOLT.NEW MADE IN BOLT</div>
-              </div>
-            </div>
-          </div>
-          <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-purple-600 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
-        </a>
-      </div>
+      {/* Bolt Badge */}
+      <BoltBadge />
 
       {/* Background decoration */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-purple-50/30 to-indigo-50/50"></div>

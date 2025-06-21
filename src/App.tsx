@@ -3,6 +3,7 @@ import { Menu, X, Calendar, Clock, TrendingUp, Users, Shield, Sparkles, ChevronR
 import ProfilePage from './components/ProfilePage';
 import CalendarPage from './components/CalendarPage';
 import OnboardingPage from './components/OnboardingPage';
+import BoltBadge from './components/BoltBadge';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { UserSettings, defaultUserSettings } from './types/UserSettings';
 
@@ -195,26 +196,8 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
-      {/* Bolt Badge - Fixed Position Bottom Right */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <a 
-          href="https://bolt.new" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="group relative"
-        >
-          <div className="bg-white border-2 border-black rounded-full p-3 shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105">
-            <div className="w-12 h-12 flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-xs font-bold text-black leading-tight">POWERED BY</div>
-                <div className="text-lg font-black text-black leading-none">b</div>
-                <div className="text-xs font-bold text-black leading-tight">BOLT.NEW MADE IN BOLT</div>
-              </div>
-            </div>
-          </div>
-          <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-purple-600 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
-        </a>
-      </div>
+      {/* Bolt Badge */}
+      <BoltBadge />
 
       {/* Navigation */}
       <nav className="bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-200/50 sticky top-0 z-40">
