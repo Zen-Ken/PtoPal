@@ -71,6 +71,15 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
   // Helper function to convert hours to days for display
   const hoursToDays = (hours: number) => (hours / 8).toFixed(2);
 
+  // Helper functions - moved before useMemo hooks that use them
+  const getDaysInMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+  };
+
+  const getFirstDayOfMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+  };
+
   const generatePayPeriods = useMemo(() => {
     const events: PayPeriodEvent[] = [];
     const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
@@ -247,14 +256,6 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
     
     return spans;
   }, [currentDate, userSettings.vacations]);
-
-  const getDaysInMonth = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-  };
-
-  const getFirstDayOfMonth = (date: Date) => {
-    return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-  };
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentDate(prev => {
