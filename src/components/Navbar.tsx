@@ -1,5 +1,5 @@
 import React from 'react';
-import { Menu, X, Sparkles, Home, Calendar, User } from 'lucide-react';
+import { Menu, X, Sparkles, Home, Calendar, User, CalendarDays } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 
 interface NavbarProps {
@@ -23,6 +23,7 @@ export default function Navbar({
   const navigationItems = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'calendar', label: 'Calendar', icon: Calendar },
+    { id: 'fullcalendar', label: 'Full Calendar', icon: CalendarDays },
     { id: 'profile', label: 'Profile', icon: User }
   ];
 
