@@ -12,9 +12,22 @@ function App() {
   const [selectedDate, setSelectedDate] = useState('');
   const [calculatedPTO, setCalculatedPTO] = useState(0);
   
+  // Local input states for better UX
+  const [currentPTOInputValue, setCurrentPTOInputValue] = useState('');
+  const [accrualRateInputValue, setAccrualRateInputValue] = useState('');
+  
   // Use localStorage for user settings
   const [userSettings, setUserSettings] = useLocalStorage<UserSettings>('ptopal-settings', defaultUserSettings);
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useLocalStorage<boolean>('ptopal-onboarding-complete', false);
+
+  // Sync input values with userSettings
+  useEffect(() => {
+    setCurrentPTOInputValue(userSettings.currentPTO.toString());
+  }, [userSettings.currentPTO]);
+
+  useEffect(() => {
+    setAccrualRateInputValue(userSettings.accrualRate.toString());
+  }, [userSettings.accrualRate]);
 
   useEffect(() => {
     // Calculate date 3 months from now as default
@@ -83,6 +96,16 @@ function App() {
 
   const handleUpdateSettings = (newSettings: Partial<UserSettings>) => {
     setUserSettings(prev => ({ ...prev, ...newSettings }));
+  };
+
+  const handleCurrentPTOBlur = () => {
+    const numericValue = currentPTOInputValue === '' ? 0 : Number(currentPTOInputValue);
+    handleUpdateSettings({ currentPTO: numericValue });
+  };
+
+  const handleAccrualRateBlur = () => {
+    const numericValue = accrualRateInputValue === '' ? 0 : Number(accrualRateInputValue);
+    handleUpdateSettings({ accrualRate: numericValue });
   };
 
   const handleOnboardingComplete = (settings: UserSettings) => {
@@ -325,8 +348,9 @@ function App() {
                       </label>
                       <input
                         type="number"
-                        value={userSettings.currentPTO}
-                        onChange={(e) => handleUpdateSettings({ currentPTO: Number(e.target.value) })}
+                        value={currentPTOInputValue}
+                        onChange={(e) => setCurrentPTOInputValue(e.target.value)}
+                        onBlur={handleCurrentPTOBlur}
                         className="w-full px-5 py-4 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg font-medium bg-white/50 backdrop-blur-sm transition-all duration-200"
                         min="0"
                         step="0.5"
@@ -342,8 +366,9 @@ function App() {
                       </label>
                       <input
                         type="number"
-                        value={userSettings.accrualRate}
-                        onChange={(e) => handleUpdateSettings({ accrualRate: Number(e.target.value) })}
+                        value={accrualRateInputValue}
+                        onChange={(e) => setAccrualRateInputValue(e.target.value)}
+                        onBlur={handleAccrualRateBlur}
                         className="w-full px-5 py-4 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-lg font-medium bg-white/50 backdrop-blur-sm transition-all duration-200"
                         min="0"
                         step="0.1"

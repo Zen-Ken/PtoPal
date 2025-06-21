@@ -13,16 +13,40 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
   const [isSaved, setIsSaved] = useState(false);
 
   const handleSave = () => {
-    onUpdateSettings(formData);
+    // Convert any empty string number fields to 0 before saving
+    const sanitizedData = {
+      ...formData,
+      currentPTO: formData.currentPTO === '' ? 0 : Number(formData.currentPTO),
+      accrualRate: formData.accrualRate === '' ? 0 : Number(formData.accrualRate),
+      annualAllowance: formData.annualAllowance === '' ? 0 : Number(formData.annualAllowance)
+    };
+    
+    onUpdateSettings(sanitizedData);
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 2000);
   };
 
   const handleInputChange = (field: keyof UserSettings, value: any) => {
-    const updatedData = { ...formData, [field]: value };
+    let processedValue = value;
+    
+    // For number fields, allow empty string for better UX
+    if (field === 'currentPTO' || field === 'accrualRate' || field === 'annualAllowance') {
+      if (value === '') {
+        processedValue = '';
+      } else {
+        processedValue = Number(value);
+      }
+    }
+    
+    const updatedData = { ...formData, [field]: processedValue };
     setFormData(updatedData);
-    // Auto-save to localStorage on every change
-    onUpdateSettings({ [field]: value });
+    
+    // Auto-save to localStorage on every change, but convert empty strings to 0 for storage
+    const valueForStorage = (field === 'currentPTO' || field === 'accrualRate' || field === 'annualAllowance') && value === '' 
+      ? 0 
+      : processedValue;
+    
+    onUpdateSettings({ [field]: valueForStorage });
   };
 
   const payPeriodOptions = [
@@ -37,11 +61,15 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
     if (!selectedPeriod) return formData.accrualRate;
     
     // The accrual rate is now per pay period, so convert to monthly
-    return formData.accrualRate * selectedPeriod.periodsPerMonth;
+    const accrualValue = formData.accrualRate === '' ? 0 : Number(formData.accrualRate);
+    return accrualValue * selectedPeriod.periodsPerMonth;
   };
 
   // Helper function to convert hours to days for display
-  const hoursToDays = (hours: number) => (hours / 8).toFixed(1);
+  const hoursToDays = (hours: number | string) => {
+    const numHours = hours === '' ? 0 : Number(hours);
+    return (numHours / 8).toFixed(1);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
@@ -111,7 +139,7 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                     <input
                       type="number"
                       value={formData.currentPTO}
-                      onChange={(e) => handleInputChange('currentPTO', Number(e.target.value))}
+                      onChange={(e) => handleInputChange('currentPTO', e.target.value)}
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 backdrop-blur-sm transition-all duration-200"
                       min="0"
                       step="0.5"
@@ -134,7 +162,7 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                     <input
                       type="number"
                       value={formData.annualAllowance}
-                      onChange={(e) => handleInputChange('annualAllowance', Number(e.target.value))}
+                      onChange={(e) => handleInputChange('annualAllowance', e.target.value)}
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 backdrop-blur-sm transition-all duration-200"
                       min="0"
                       placeholder="200"
@@ -173,7 +201,7 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                     <input
                       type="number"
                       value={formData.accrualRate}
-                      onChange={(e) => handleInputChange('accrualRate', Number(e.target.value))}
+                      onChange={(e) => handleInputChange('accrualRate', e.target.value)}
                       className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/50 backdrop-blur-sm transition-all duration-200"
                       min="0"
                       step="0.1"
@@ -259,7 +287,7 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                 <div className="flex justify-between items-center">
                   <span className="text-slate-600">PTO Balance</span>
                   <div className="text-right">
-                    <div className="font-bold text-slate-900">{formData.currentPTO} hours</div>
+                    <div className="font-bold text-slate-900">{formData.currentPTO === '' ? 0 : formData.currentPTO} hours</div>
                     <div className="text-xs text-slate-600">({hoursToDays(formData.currentPTO)} days)</div>
                   </div>
                 </div>
@@ -275,7 +303,7 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                 <div className="flex justify-between items-center">
                   <span className="text-slate-600">Annual Allowance</span>
                   <div className="text-right">
-                    <div className="font-bold text-slate-900">{formData.annualAllowance} hours</div>
+                    <div className="font-bold text-slate-900">{formData.annualAllowance === '' ? 0 : formData.annualAllowance} hours</div>
                     <div className="text-xs text-slate-600">({hoursToDays(formData.annualAllowance)} days)</div>
                   </div>
                 </div>
@@ -284,7 +312,7 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                   <div className="flex justify-between items-center">
                     <span className="text-slate-600">Usage Rate</span>
                     <span className="font-bold text-blue-600">
-                      {Math.round((formData.currentPTO / formData.annualAllowance) * 100)}%
+                      {Math.round(((formData.currentPTO === '' ? 0 : Number(formData.currentPTO)) / (formData.annualAllowance === '' ? 1 : Number(formData.annualAllowance))) * 100)}%
                     </span>
                   </div>
                 </div>

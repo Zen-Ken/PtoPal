@@ -10,6 +10,26 @@ interface OnboardingPageProps {
 export default function OnboardingPage({ onComplete, onBack }: OnboardingPageProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [formData, setFormData] = useState<UserSettings>(defaultUserSettings);
+  
+  // Local input states for better UX
+  const [currentPTOInputValue, setCurrentPTOInputValue] = useState(defaultUserSettings.currentPTO.toString());
+  const [accrualRateInputValue, setAccrualRateInputValue] = useState(defaultUserSettings.accrualRate.toString());
+  const [annualAllowanceInputValue, setAnnualAllowanceInputValue] = useState(defaultUserSettings.annualAllowance.toString());
+
+  const handleCurrentPTOBlur = () => {
+    const numericValue = currentPTOInputValue === '' ? 0 : Number(currentPTOInputValue);
+    setFormData(prev => ({ ...prev, currentPTO: numericValue }));
+  };
+
+  const handleAccrualRateBlur = () => {
+    const numericValue = accrualRateInputValue === '' ? 0 : Number(accrualRateInputValue);
+    setFormData(prev => ({ ...prev, accrualRate: numericValue }));
+  };
+
+  const handleAnnualAllowanceBlur = () => {
+    const numericValue = annualAllowanceInputValue === '' ? 0 : Number(annualAllowanceInputValue);
+    setFormData(prev => ({ ...prev, annualAllowance: numericValue }));
+  };
 
   const slides = [
     {
@@ -53,8 +73,9 @@ export default function OnboardingPage({ onComplete, onBack }: OnboardingPagePro
             <div className="relative">
               <input
                 type="number"
-                value={formData.currentPTO}
-                onChange={(e) => setFormData(prev => ({ ...prev, currentPTO: Number(e.target.value) }))}
+                value={currentPTOInputValue}
+                onChange={(e) => setCurrentPTOInputValue(e.target.value)}
+                onBlur={handleCurrentPTOBlur}
                 className="w-full px-6 py-4 text-2xl font-bold text-center border-2 border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-lg transition-all duration-200"
                 min="0"
                 step="0.5"
@@ -112,8 +133,9 @@ export default function OnboardingPage({ onComplete, onBack }: OnboardingPagePro
               <div className="relative">
                 <input
                   type="number"
-                  value={formData.accrualRate}
-                  onChange={(e) => setFormData(prev => ({ ...prev, accrualRate: Number(e.target.value) }))}
+                  value={accrualRateInputValue}
+                  onChange={(e) => setAccrualRateInputValue(e.target.value)}
+                  onBlur={handleAccrualRateBlur}
                   className="w-full px-4 py-4 text-lg text-center border-2 border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-lg transition-all duration-200"
                   min="0"
                   step="0.1"
@@ -167,8 +189,9 @@ export default function OnboardingPage({ onComplete, onBack }: OnboardingPagePro
               <div className="relative">
                 <input
                   type="number"
-                  value={formData.annualAllowance}
-                  onChange={(e) => setFormData(prev => ({ ...prev, annualAllowance: Number(e.target.value) }))}
+                  value={annualAllowanceInputValue}
+                  onChange={(e) => setAnnualAllowanceInputValue(e.target.value)}
+                  onBlur={handleAnnualAllowanceBlur}
                   className="w-full px-6 py-4 text-lg text-center border-2 border-slate-200 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white shadow-lg transition-all duration-200"
                   min="0"
                   placeholder="200"
