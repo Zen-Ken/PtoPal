@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowLeft, ChevronLeft, ChevronRight, Calendar, Clock, TrendingUp, DollarSign, Plus, X, Edit3, Trash2, MapPin, Save } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Calendar, Clock, TrendingUp, DollarSign, Plus, X, Edit3, Trash2, MapPin, Save, List } from 'lucide-react';
 import BoltBadge from './BoltBadge';
 import { UserSettings } from '../types/UserSettings';
 import { VacationEntry } from '../types/VacationEntry';
@@ -45,6 +45,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isAddVacationModalOpen, setIsAddVacationModalOpen] = useState(false);
   const [editingVacation, setEditingVacation] = useState<VacationEntry | null>(null);
+  const [showVacationsList, setShowVacationsList] = useState(false);
   const [vacationForm, setVacationForm] = useState<VacationFormData>({
     startDate: '',
     endDate: '',
@@ -267,6 +268,18 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
     setIsAddVacationModalOpen(true);
   };
 
+  const handleEditVacation = (vacation: VacationEntry) => {
+    setEditingVacation(vacation);
+    setVacationForm({
+      startDate: vacation.startDate,
+      endDate: vacation.endDate,
+      includeWeekends: vacation.includeWeekends,
+      description: vacation.description || ''
+    });
+    setIsAddVacationModalOpen(true);
+    setShowVacationsList(false);
+  };
+
   const handleSaveVacation = () => {
     if (!vacationForm.startDate || !vacationForm.endDate) return;
     
@@ -338,7 +351,11 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
 
   const daysInMonth = getDaysInMonth(currentDate);
   const firstDay = getFirstDayOfMonth(currentDate);
-  const totalPTOThisMonth = generatePayPeriods.reduce((sum, event) => sum + event.ptoAccrued, 0);
+
+  // Sort vacations by start date
+  const sortedVacations = [...userSettings.vacations].sort((a, b) => 
+    createDateFromString(a.startDate).getTime() - createDateFromString(b.startDate).getTime()
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
@@ -367,8 +384,15 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
               </div>
             </div>
             
-            {/* Month Navigation */}
+            {/* Actions */}
             <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setShowVacationsList(!showVacationsList)}
+                className="bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg flex items-center space-x-2 border border-slate-200"
+              >
+                <List className="w-4 h-4" />
+                <span>View Vacations</span>
+              </button>
               <button
                 onClick={handleAddVacation}
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-xl flex items-center space-x-2"
@@ -483,103 +507,188 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Monthly Summary */}
-            <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-200/50">
-              <div className="flex items-center space-x-3 mb-4">
-                <TrendingUp className="w-6 h-6 text-blue-600" />
-                <h3 className="text-lg font-bold text-slate-900">This Month</h3>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-600">Pay Periods</span>
-                  <span className="font-bold text-slate-900">{generatePayPeriods.length}</span>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-600">PTO Earned</span>
-                  <div className="text-right">
-                    <div className="font-bold text-emerald-600">+{totalPTOThisMonth.toFixed(1)} hrs</div>
-                    <div className="text-xs text-slate-600">(+{hoursToDays(totalPTOThisMonth)} days)</div>
+            {/* Vacations List */}
+            {showVacationsList ? (
+              <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <MapPin className="w-6 h-6 text-purple-600" />
+                    <h3 className="text-lg font-bold text-slate-900">All Vacations</h3>
                   </div>
+                  <button
+                    onClick={() => setShowVacationsList(false)}
+                    className="p-1 hover:bg-slate-100 rounded-lg transition-colors"
+                  >
+                    <X className="w-4 h-4 text-slate-600" />
+                  </button>
                 </div>
                 
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-600">Planned Vacations</span>
-                  <span className="font-bold text-slate-900">{userSettings.vacations.length}</span>
-                </div>
-                
-                <div className="pt-4 border-t border-blue-200">
-                  <div className="flex justify-between items-center">
-                    <span className="text-slate-600">Rate per Period</span>
-                    <div className="text-right">
-                      <div className="font-bold text-blue-600">{userSettings.accrualRate} hrs</div>
-                      <div className="text-xs text-slate-600">({hoursToDays(userSettings.accrualRate)} days)</div>
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {sortedVacations.length === 0 ? (
+                    <div className="text-center py-8 text-slate-500">
+                      <MapPin className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                      <p className="text-sm">No vacations planned yet</p>
+                      <button
+                        onClick={handleAddVacation}
+                        className="text-blue-600 hover:text-blue-700 text-sm font-medium mt-2"
+                      >
+                        Add your first vacation
+                      </button>
                     </div>
-                  </div>
+                  ) : (
+                    sortedVacations.map((vacation) => {
+                      const isUpcoming = createDateFromString(vacation.endDate) >= new Date();
+                      return (
+                        <div 
+                          key={vacation.id} 
+                          className={`p-4 rounded-xl border transition-all duration-200 hover:shadow-md cursor-pointer ${
+                            isUpcoming 
+                              ? 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200/50' 
+                              : 'bg-slate-50 border-slate-200'
+                          }`}
+                          onClick={() => handleEditVacation(vacation)}
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2 mb-2">
+                                <h4 className="font-semibold text-slate-900">
+                                  {vacation.description || 'Vacation'}
+                                </h4>
+                                {isUpcoming && (
+                                  <span className="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full font-medium">
+                                    Upcoming
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-sm text-slate-600 mb-2">
+                                {formatDateRange(vacation.startDate, vacation.endDate)}
+                              </div>
+                              <div className="flex items-center space-x-4 text-xs text-slate-500">
+                                <span>{vacation.totalHours} hours</span>
+                                <span>({hoursToDays(vacation.totalHours)} days)</span>
+                                {vacation.includeWeekends && (
+                                  <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded">
+                                    Includes weekends
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <Edit3 className="w-4 h-4 text-slate-400 hover:text-slate-600 transition-colors" />
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
-            </div>
-
-            {/* Upcoming Vacations */}
-            <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-6">
-              <div className="flex items-center space-x-3 mb-4">
-                <MapPin className="w-6 h-6 text-purple-600" />
-                <h3 className="text-lg font-bold text-slate-900">Upcoming Vacations</h3>
-              </div>
-              
-              <div className="space-y-3">
-                {userSettings.vacations
-                  .filter(vacation => createDateFromString(vacation.endDate) >= new Date())
-                  .sort((a, b) => createDateFromString(a.startDate).getTime() - createDateFromString(b.startDate).getTime())
-                  .slice(0, 3)
-                  .map((vacation) => (
-                    <div key={vacation.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                      <div>
-                        <div className="font-medium text-slate-900">
-                          {vacation.description || 'Vacation'}
+            ) : (
+              <>
+                {/* Quick Stats */}
+                <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 border border-blue-200/50">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <TrendingUp className="w-6 h-6 text-blue-600" />
+                    <h3 className="text-lg font-bold text-slate-900">Quick Stats</h3>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-600">Current PTO</span>
+                      <div className="text-right">
+                        <div className="font-bold text-blue-600">{userSettings.currentPTO} hrs</div>
+                        <div className="text-xs text-slate-600">({hoursToDays(userSettings.currentPTO)} days)</div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-600">Planned Vacations</span>
+                      <span className="font-bold text-slate-900">{userSettings.vacations.length}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-600">Total Vacation Hours</span>
+                      <div className="text-right">
+                        <div className="font-bold text-purple-600">
+                          {userSettings.vacations.reduce((sum, v) => sum + v.totalHours, 0)} hrs
                         </div>
                         <div className="text-xs text-slate-600">
-                          {formatDateRange(vacation.startDate, vacation.endDate)}
+                          ({hoursToDays(userSettings.vacations.reduce((sum, v) => sum + v.totalHours, 0))} days)
                         </div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-bold text-purple-600">{vacation.totalHours} hrs</div>
-                        <div className="text-xs text-slate-600">({hoursToDays(vacation.totalHours)}d)</div>
-                      </div>
                     </div>
-                  ))}
-                
-                {userSettings.vacations.filter(vacation => createDateFromString(vacation.endDate) >= new Date()).length === 0 && (
-                  <div className="text-center py-4 text-slate-500">
-                    No upcoming vacations
                   </div>
-                )}
-              </div>
-            </div>
+                </div>
 
-            {/* Legend */}
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-200/50">
-              <h3 className="text-lg font-bold text-slate-900 mb-4">Legend</h3>
-              
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-gradient-to-r from-emerald-500 to-green-600 rounded"></div>
-                  <span className="text-sm text-slate-700">Pay Day + PTO Balance</span>
+                {/* Upcoming Vacations */}
+                <div className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-lg border border-white/20 p-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <MapPin className="w-6 h-6 text-purple-600" />
+                    <h3 className="text-lg font-bold text-slate-900">Next Vacations</h3>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {userSettings.vacations
+                      .filter(vacation => createDateFromString(vacation.endDate) >= new Date())
+                      .sort((a, b) => createDateFromString(a.startDate).getTime() - createDateFromString(b.startDate).getTime())
+                      .slice(0, 3)
+                      .map((vacation) => (
+                        <div 
+                          key={vacation.id} 
+                          className="flex items-center justify-between p-3 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer"
+                          onClick={() => handleEditVacation(vacation)}
+                        >
+                          <div>
+                            <div className="font-medium text-slate-900">
+                              {vacation.description || 'Vacation'}
+                            </div>
+                            <div className="text-xs text-slate-600">
+                              {formatDateRange(vacation.startDate, vacation.endDate)}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="font-bold text-purple-600">{vacation.totalHours} hrs</div>
+                            <div className="text-xs text-slate-600">({hoursToDays(vacation.totalHours)}d)</div>
+                          </div>
+                        </div>
+                      ))}
+                    
+                    {userSettings.vacations.filter(vacation => createDateFromString(vacation.endDate) >= new Date()).length === 0 && (
+                      <div className="text-center py-4 text-slate-500">
+                        <p className="text-sm">No upcoming vacations</p>
+                        <button
+                          onClick={handleAddVacation}
+                          className="text-blue-600 hover:text-blue-700 text-sm font-medium mt-1"
+                        >
+                          Plan your next getaway
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-gradient-to-r from-purple-500 to-pink-600 rounded"></div>
-                  <span className="text-sm text-slate-700">Vacation</span>
+
+                {/* Legend */}
+                <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-200/50">
+                  <h3 className="text-lg font-bold text-slate-900 mb-4">Legend</h3>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-4 h-4 bg-gradient-to-r from-emerald-500 to-green-600 rounded"></div>
+                      <span className="text-sm text-slate-700">Pay Day + PTO Balance</span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-4 h-4 bg-gradient-to-r from-purple-500 to-pink-600 rounded"></div>
+                      <span className="text-sm text-slate-700">Vacation</span>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-4 h-4 bg-blue-200 border-2 border-blue-400 rounded"></div>
+                      <span className="text-sm text-slate-700">Today</span>
+                    </div>
+                    <div className="text-xs text-slate-600 mt-3 p-2 bg-slate-100 rounded">
+                      <strong>Tip:</strong> Click on any day to add or edit vacations
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-blue-200 border-2 border-blue-400 rounded"></div>
-                  <span className="text-sm text-slate-700">Today</span>
-                </div>
-                <div className="text-xs text-slate-600 mt-3 p-2 bg-slate-100 rounded">
-                  <strong>Tip:</strong> Click on any day to add or edit vacations
-                </div>
-              </div>
-            </div>
+              </>
+            )}
           </div>
         </div>
       </div>
