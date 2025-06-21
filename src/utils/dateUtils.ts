@@ -81,6 +81,133 @@ export const getVacationsForDate = (date: Date, vacations: VacationEntry[]): Vac
 };
 
 /**
+ * Calculates how many pay periods have occurred between two dates
+ */
+export const calculatePayPeriodsBetweenDates = (
+  startDate: Date,
+  endDate: Date,
+  payPeriod: 'weekly' | 'biweekly' | 'semimonthly' | 'monthly'
+): number => {
+  const start = normalizeDate(startDate);
+  const end = normalizeDate(endDate);
+  
+  if (end <= start) return 0;
+  
+  let payPeriodsCount = 0;
+  
+  if (payPeriod === 'semimonthly') {
+    // For semi-monthly, count 1st and 15th of each month between dates
+    const currentDate = new Date(start);
+    currentDate.setDate(1); // Start from first of start month
+    
+    while (currentDate <= end) {
+      // Check if 1st of month is between start and end (exclusive of start, inclusive of end)
+      const firstOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      if (firstOfMonth > start && firstOfMonth <= end) {
+        payPeriodsCount++;
+      }
+      
+      // Check if 15th of month is between start and end (exclusive of start, inclusive of end)
+      const fifteenthOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 15);
+      if (fifteenthOfMonth > start && fifteenthOfMonth <= end) {
+        payPeriodsCount++;
+      }
+      
+      // Move to next month
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
+  } else {
+    // For other pay periods, calculate based on interval
+    const intervalDays = {
+      weekly: 7,
+      biweekly: 14,
+      monthly: 30
+    }[payPeriod] || 30;
+    
+    const daysDifference = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
+    payPeriodsCount = Math.floor(daysDifference / intervalDays);
+  }
+  
+  return payPeriodsCount;
+};
+
+/**
+ * Calculates PTO accrued between two dates based on pay period and accrual rate
+ */
+export const calculateAccruedPTO = (
+  startDate: Date,
+  endDate: Date,
+  accrualRate: number,
+  payPeriod: 'weekly' | 'biweekly' | 'semimonthly' | 'monthly'
+): number => {
+  const payPeriods = calculatePayPeriodsBetweenDates(startDate, endDate, payPeriod);
+  return Math.round(payPeriods * accrualRate * 100) / 100;
+};
+
+/**
+ * Calculates total vacation hours used between two dates
+ */
+export const calculateVacationHoursUsedBetweenDates = (
+  startDate: Date,
+  endDate: Date,
+  vacations: VacationEntry[]
+): number => {
+  const start = normalizeDate(startDate);
+  const end = normalizeDate(endDate);
+  
+  return vacations.reduce((total, vacation) => {
+    const vacationStart = normalizeDate(createDateFromString(vacation.startDate));
+    const vacationEnd = normalizeDate(createDateFromString(vacation.endDate));
+    
+    // Check if vacation overlaps with the date range (exclusive of start, inclusive of end)
+    if (vacationEnd > start && vacationStart <= end) {
+      return total + vacation.totalHours;
+    }
+    
+    return total;
+  }, 0);
+};
+
+/**
+ * Updates PTO balance based on time passed since last update
+ */
+export const updatePTOBalanceForTimePassed = (
+  lastKnownBalance: number,
+  lastUpdateDate: string,
+  currentDate: Date,
+  accrualRate: number,
+  payPeriod: 'weekly' | 'biweekly' | 'semimonthly' | 'monthly',
+  vacations: VacationEntry[]
+): { newBalance: number; accruedHours: number; vacationHoursUsed: number } => {
+  const lastUpdate = normalizeDate(createDateFromString(lastUpdateDate));
+  const today = normalizeDate(currentDate);
+  
+  // If no time has passed, return current balance
+  if (today <= lastUpdate) {
+    return {
+      newBalance: lastKnownBalance,
+      accruedHours: 0,
+      vacationHoursUsed: 0
+    };
+  }
+  
+  // Calculate PTO accrued since last update
+  const accruedHours = calculateAccruedPTO(lastUpdate, today, accrualRate, payPeriod);
+  
+  // Calculate vacation hours used since last update
+  const vacationHoursUsed = calculateVacationHoursUsedBetweenDates(lastUpdate, today, vacations);
+  
+  // Calculate new balance
+  const newBalance = Math.max(0, Math.round((lastKnownBalance + accruedHours - vacationHoursUsed) * 100) / 100);
+  
+  return {
+    newBalance,
+    accruedHours,
+    vacationHoursUsed
+  };
+};
+
+/**
  * Calculates PTO balance for a specific target date, accounting for accruals and vacations
  */
 export const calculatePTOForTargetDate = (

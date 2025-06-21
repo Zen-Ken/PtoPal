@@ -6,6 +6,7 @@ import HomePage from './components/HomePage';
 import Navbar from './components/Navbar';
 import BoltBadge from './components/BoltBadge';
 import { useLocalStorage } from './hooks/useLocalStorage';
+import { useAutomaticPTOAccrual } from './hooks/useAutomaticPTOAccrual';
 import { useDarkMode } from './hooks/useDarkMode';
 import { UserSettings, defaultUserSettings } from './types/UserSettings';
 import { calculatePTOForTargetDate } from './utils/dateUtils';
@@ -26,6 +27,9 @@ function App() {
 
   // Initialize dark mode
   const { isDarkMode } = useDarkMode();
+
+  // Use automatic PTO accrual hook
+  useAutomaticPTOAccrual(userSettings, handleUpdateSettings);
 
   // Sync input values with userSettings
   useEffect(() => {
@@ -62,7 +66,7 @@ function App() {
     setCalculatedPTO(Math.round(calculatedBalance * 100) / 100); // Round to 2 decimal places
   };
 
-  const handleUpdateSettings = (newSettings: Partial<UserSettings>) => {
+  function handleUpdateSettings(newSettings: Partial<UserSettings>) {
     // Round numeric values to 2 decimal places
     const processedSettings = { ...newSettings };
     if (typeof processedSettings.currentPTO === 'number') {
@@ -75,8 +79,15 @@ function App() {
       processedSettings.annualAllowance = Math.round(processedSettings.annualAllowance * 100) / 100;
     }
     
+    // Update tracking fields when PTO balance changes manually
+    if (typeof processedSettings.currentPTO === 'number' && processedSettings.currentPTO !== userSettings.currentPTO) {
+      const today = new Date().toISOString().split('T')[0];
+      processedSettings.lastKnownPTOBalance = processedSettings.currentPTO;
+      processedSettings.lastAccrualUpdateDate = today;
+    }
+    
     setUserSettings(prev => ({ ...prev, ...processedSettings }));
-  };
+  }
 
   const handleCurrentPTOBlur = () => {
     const numericValue = currentPTOInputValue === '' ? 0 : Number(currentPTOInputValue);
@@ -91,7 +102,13 @@ function App() {
   };
 
   const handleOnboardingComplete = (settings: UserSettings) => {
-    setUserSettings(settings);
+    const today = new Date().toISOString().split('T')[0];
+    const settingsWithTracking = {
+      ...settings,
+      lastKnownPTOBalance: settings.currentPTO,
+      lastAccrualUpdateDate: today
+    };
+    setUserSettings(settingsWithTracking);
     setHasCompletedOnboarding(true);
     setCurrentPage('home');
   };
