@@ -34,6 +34,16 @@ export default function CalendarGrid({
 }: CalendarGridProps) {
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+  // Color variations for vacation badges
+  const vacationColors = [
+    'from-purple-500 to-pink-600',
+    'from-blue-500 to-indigo-600',
+    'from-green-500 to-emerald-600',
+    'from-orange-500 to-red-600',
+    'from-teal-500 to-cyan-600',
+    'from-rose-500 to-pink-600'
+  ];
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-100 dark:border-gray-700 p-6">
       {/* Calendar Header */}
@@ -65,13 +75,13 @@ export default function CalendarGrid({
             <div
               key={day}
               onClick={() => handleDayClick(day)}
-              className={`p-2 h-32 border border-gray-100 dark:border-gray-700 rounded-lg relative transition-all duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${
+              className={`p-2 h-32 border border-gray-100 dark:border-gray-700 rounded-lg relative transition-all duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 overflow-hidden ${
                 todayClass 
                   ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700 ring-2 ring-primary-200 dark:ring-primary-700' 
                   : ''
               }`}
             >
-              <div className={`text-sm font-medium mb-1 ${
+              <div className={`text-sm font-medium mb-1 relative z-20 ${
                 todayClass ? 'text-primary-700 dark:text-primary-300' : 'text-gray-900 dark:text-white'
               }`}>
                 {day}
@@ -79,7 +89,7 @@ export default function CalendarGrid({
               
               {/* Pay Day Indicator with Total PTO Balance */}
               {dayInfo?.isPayDay && dayInfo.totalPTOOnPayDay !== undefined && (
-                <div className="bg-gradient-to-r from-emerald-500 to-green-600 text-white text-xs px-2 py-1 rounded-md shadow-soft mb-1">
+                <div className="bg-gradient-to-r from-emerald-500 to-green-600 text-white text-xs px-2 py-1 rounded-md shadow-soft mb-1 relative z-20">
                   <div className="flex items-center space-x-1 mb-1">
                     <DollarSign className="w-3 h-3" />
                     <span className="font-medium">Pay Day</span>
@@ -93,29 +103,51 @@ export default function CalendarGrid({
                 </div>
               )}
 
-              {/* Vacation Indicators */}
+              {/* Overlapping Vacation Indicators */}
               {dayInfo?.vacations && dayInfo.vacations.length > 0 && (
-                <div className="space-y-1">
-                  {dayInfo.vacations.slice(0, 2).map((vacation, index) => (
-                    <div
-                      key={vacation.id}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditVacation(vacation);
-                      }}
-                      className="bg-gradient-to-r from-purple-500 to-pink-600 text-white text-xs px-2 py-1 rounded-md shadow-soft hover:shadow-medium transition-all duration-200 transform hover:scale-105 cursor-pointer"
-                    >
-                      <div className="flex items-center space-x-1">
-                        <MapPin className="w-3 h-3" />
-                        <span className="font-medium truncate">
-                          {vacation.description || 'Vacation'}
-                        </span>
+                <div className="absolute inset-x-1 bottom-1">
+                  {/* Render vacation badges in reverse order so first vacation appears on top */}
+                  {dayInfo.vacations.slice(0, 3).reverse().map((vacation, reverseIndex) => {
+                    const index = dayInfo.vacations.length - 1 - reverseIndex;
+                    const colorClass = vacationColors[index % vacationColors.length];
+                    const zIndex = 10 + index; // Higher index = higher z-index (on top)
+                    const bottomOffset = index * 3; // 3px offset for each badge
+                    
+                    return (
+                      <div
+                        key={vacation.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditVacation(vacation);
+                        }}
+                        className={`absolute inset-x-0 bg-gradient-to-r ${colorClass} text-white text-xs px-2 py-1 rounded-md shadow-soft hover:shadow-medium transition-all duration-200 transform hover:scale-105 cursor-pointer`}
+                        style={{
+                          bottom: `${bottomOffset}px`,
+                          zIndex: zIndex
+                        }}
+                      >
+                        <div className="flex items-center space-x-1">
+                          <MapPin className="w-3 h-3 flex-shrink-0" />
+                          <span className="font-medium truncate">
+                            {vacation.description || 'Vacation'}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                  {dayInfo.vacations.length > 2 && (
-                    <div className="text-xs text-gray-500 dark:text-gray-400 px-2">
-                      +{dayInfo.vacations.length - 2} more
+                    );
+                  })}
+                  
+                  {/* "More" indicator if there are more than 3 vacations */}
+                  {dayInfo.vacations.length > 3 && (
+                    <div 
+                      className="absolute inset-x-0 bg-gray-600 dark:bg-gray-500 text-white text-xs px-2 py-1 rounded-md shadow-soft"
+                      style={{
+                        bottom: `${3 * 3}px`, // Position below the 3rd badge
+                        zIndex: 13
+                      }}
+                    >
+                      <div className="text-center font-medium">
+                        +{dayInfo.vacations.length - 3} more
+                      </div>
                     </div>
                   )}
                 </div>
