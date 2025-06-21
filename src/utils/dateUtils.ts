@@ -1,12 +1,21 @@
 import { VacationEntry } from '../types/VacationEntry';
 
 /**
- * Normalizes a date by setting time components to zero
+ * Normalizes a date by setting time components to zero and ensuring consistent timezone handling
  */
 export const normalizeDate = (date: Date): Date => {
   const normalized = new Date(date);
   normalized.setHours(0, 0, 0, 0);
   return normalized;
+};
+
+/**
+ * Creates a date from a date string ensuring consistent parsing
+ */
+export const createDateFromString = (dateString: string): Date => {
+  // Parse the date string as local date to avoid timezone issues
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day); // month is 0-indexed
 };
 
 /**
@@ -47,8 +56,8 @@ export const calculateVacationHours = (
   endDateStr: string,
   includeWeekends: boolean
 ): number => {
-  const startDate = new Date(startDateStr);
-  const endDate = new Date(endDateStr);
+  const startDate = createDateFromString(startDateStr);
+  const endDate = createDateFromString(endDateStr);
   const days = getDaysBetweenDates(startDate, endDate, includeWeekends);
   return days * 8; // 8 hours per day
 };
@@ -58,8 +67,8 @@ export const calculateVacationHours = (
  */
 export const isDateInVacation = (date: Date, vacation: VacationEntry): boolean => {
   const checkDate = normalizeDate(date);
-  const startDate = normalizeDate(new Date(vacation.startDate));
-  const endDate = normalizeDate(new Date(vacation.endDate));
+  const startDate = normalizeDate(createDateFromString(vacation.startDate));
+  const endDate = normalizeDate(createDateFromString(vacation.endDate));
   
   return checkDate >= startDate && checkDate <= endDate;
 };
@@ -89,7 +98,7 @@ export const calculatePTOForTargetDate = (
   if (target <= today) {
     // Find vacations that have already been taken (end date is before or on today)
     const completedVacations = vacations.filter(vacation => {
-      const vacationEnd = normalizeDate(new Date(vacation.endDate));
+      const vacationEnd = normalizeDate(createDateFromString(vacation.endDate));
       return vacationEnd <= today;
     });
     
@@ -138,7 +147,7 @@ export const calculatePTOForTargetDate = (
   
   // Calculate vacation hours that will be used by the target date
   const vacationsBeforeTarget = vacations.filter(vacation => {
-    const vacationEnd = normalizeDate(new Date(vacation.endDate));
+    const vacationEnd = normalizeDate(createDateFromString(vacation.endDate));
     return vacationEnd <= target;
   });
   
@@ -158,8 +167,8 @@ export const generateVacationId = (): string => {
  * Formats a date range for display
  */
 export const formatDateRange = (startDate: string, endDate: string): string => {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  const start = createDateFromString(startDate);
+  const end = createDateFromString(endDate);
   
   const startFormatted = start.toLocaleDateString('en-US', { 
     month: 'short', 

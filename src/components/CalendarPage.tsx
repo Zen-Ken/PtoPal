@@ -9,7 +9,8 @@ import {
   generateVacationId, 
   formatDateRange,
   calculateVacationHours,
-  normalizeDate
+  normalizeDate,
+  createDateFromString
 } from '../utils/dateUtils';
 
 interface CalendarPageProps {
@@ -82,7 +83,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
         
         // Calculate PTO balance for this pay day, accounting for vacations that end before this date
         const vacationsBeforePayDay = userSettings.vacations.filter(vacation => {
-          const vacationEnd = normalizeDate(new Date(vacation.endDate));
+          const vacationEnd = normalizeDate(createDateFromString(vacation.endDate));
           return vacationEnd < normalizeDate(firstPayDate);
         });
         const vacationHoursUsed = vacationsBeforePayDay.reduce((sum, vacation) => sum + vacation.totalHours, 0);
@@ -101,7 +102,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
         
         // Calculate PTO balance for this pay day, accounting for vacations that end before this date
         const vacationsBeforeSecondPayDay = userSettings.vacations.filter(vacation => {
-          const vacationEnd = normalizeDate(new Date(vacation.endDate));
+          const vacationEnd = normalizeDate(createDateFromString(vacation.endDate));
           return vacationEnd < normalizeDate(secondPayDate);
         });
         const vacationHoursUsedSecond = vacationsBeforeSecondPayDay.reduce((sum, vacation) => sum + vacation.totalHours, 0);
@@ -125,7 +126,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
         
         // Calculate PTO balance for this pay day, accounting for vacations that end before this date
         const vacationsBeforePayDay = userSettings.vacations.filter(vacation => {
-          const vacationEnd = normalizeDate(new Date(vacation.endDate));
+          const vacationEnd = normalizeDate(createDateFromString(vacation.endDate));
           return vacationEnd < normalizeDate(currentPayDate);
         });
         const vacationHoursUsed = vacationsBeforePayDay.reduce((sum, vacation) => sum + vacation.totalHours, 0);
@@ -157,7 +158,12 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
     
     const currentDay = new Date(startOfMonth);
     while (currentDay <= endOfMonth) {
-      const dateKey = currentDay.toISOString().split('T')[0];
+      // Create a proper date key that matches the calendar day
+      const year = currentDay.getFullYear();
+      const month = currentDay.getMonth();
+      const day = currentDay.getDate();
+      const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      
       const ptoBalance = calculatePTOForTargetDate(
         userSettings.currentPTO,
         userSettings.accrualRate,
@@ -172,7 +178,9 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
         event.date.getFullYear() === currentDay.getFullYear()
       );
       
-      const vacationsForDay = getVacationsForDate(new Date(currentDay), userSettings.vacations);
+      // Create a date object for this specific day to check vacations
+      const dayDate = new Date(year, month, day);
+      const vacationsForDay = getVacationsForDate(dayDate, userSettings.vacations);
       
       balances[dateKey] = {
         date: new Date(currentDay),
@@ -217,7 +225,10 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
 
   const handleDayClick = (day: number) => {
     const clickedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
-    const dateKey = clickedDate.toISOString().split('T')[0];
+    const year = clickedDate.getFullYear();
+    const month = clickedDate.getMonth();
+    const dayNum = clickedDate.getDate();
+    const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
     const dayInfo = dailyPTOBalances[dateKey];
     
     if (dayInfo && dayInfo.vacations.length > 0) {
@@ -245,10 +256,11 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
 
   const handleAddVacation = () => {
     setEditingVacation(null);
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date();
+    const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
     setVacationForm({
-      startDate: today,
-      endDate: today,
+      startDate: todayKey,
+      endDate: todayKey,
       includeWeekends: false,
       description: ''
     });
@@ -408,7 +420,9 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                 {/* Days of the month */}
                 {Array.from({ length: daysInMonth }, (_, index) => {
                   const day = index + 1;
-                  const dateKey = new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toISOString().split('T')[0];
+                  const year = currentDate.getFullYear();
+                  const month = currentDate.getMonth();
+                  const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                   const dayInfo = dailyPTOBalances[dateKey];
                   const payPeriodEvent = generatePayPeriods.find(event => 
                     event.date.getDate() === day &&
@@ -516,8 +530,8 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
               
               <div className="space-y-3">
                 {userSettings.vacations
-                  .filter(vacation => new Date(vacation.endDate) >= new Date())
-                  .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+                  .filter(vacation => createDateFromString(vacation.endDate) >= new Date())
+                  .sort((a, b) => createDateFromString(a.startDate).getTime() - createDateFromString(b.startDate).getTime())
                   .slice(0, 3)
                   .map((vacation) => (
                     <div key={vacation.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
@@ -536,7 +550,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                     </div>
                   ))}
                 
-                {userSettings.vacations.filter(vacation => new Date(vacation.endDate) >= new Date()).length === 0 && (
+                {userSettings.vacations.filter(vacation => createDateFromString(vacation.endDate) >= new Date()).length === 0 && (
                   <div className="text-center py-4 text-slate-500">
                     No upcoming vacations
                   </div>
