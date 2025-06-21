@@ -79,7 +79,16 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
       for (let month = 0; month < 12; month++) {
         // First pay period (1st of month)
         const firstPayDate = new Date(currentDate.getFullYear(), month, 1);
-        runningPTO += userSettings.accrualRate;
+        
+        // Calculate PTO balance for this pay day, accounting for vacations that end before this date
+        const vacationsBeforePayDay = userSettings.vacations.filter(vacation => {
+          const vacationEnd = normalizeDate(new Date(vacation.endDate));
+          return vacationEnd < normalizeDate(firstPayDate);
+        });
+        const vacationHoursUsed = vacationsBeforePayDay.reduce((sum, vacation) => sum + vacation.totalHours, 0);
+        
+        runningPTO = userSettings.currentPTO + userSettings.accrualRate - vacationHoursUsed;
+        
         allEvents.push({
           date: firstPayDate,
           ptoAccrued: userSettings.accrualRate,
@@ -89,7 +98,16 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
         
         // Second pay period (15th of month)
         const secondPayDate = new Date(currentDate.getFullYear(), month, 15);
-        runningPTO += userSettings.accrualRate;
+        
+        // Calculate PTO balance for this pay day, accounting for vacations that end before this date
+        const vacationsBeforeSecondPayDay = userSettings.vacations.filter(vacation => {
+          const vacationEnd = normalizeDate(new Date(vacation.endDate));
+          return vacationEnd < normalizeDate(secondPayDate);
+        });
+        const vacationHoursUsedSecond = vacationsBeforeSecondPayDay.reduce((sum, vacation) => sum + vacation.totalHours, 0);
+        
+        runningPTO = userSettings.currentPTO + (userSettings.accrualRate * 2) - vacationHoursUsedSecond;
+        
         allEvents.push({
           date: secondPayDate,
           ptoAccrued: userSettings.accrualRate,
@@ -100,9 +118,20 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
     } else {
       // For other pay periods, calculate based on interval
       const intervalDays = payPeriodOptions[userSettings.payPeriod as keyof typeof payPeriodOptions]?.days || 30;
+      let payPeriodCount = 0;
       
       while (currentPayDate.getFullYear() === currentDate.getFullYear()) {
-        runningPTO += userSettings.accrualRate;
+        payPeriodCount++;
+        
+        // Calculate PTO balance for this pay day, accounting for vacations that end before this date
+        const vacationsBeforePayDay = userSettings.vacations.filter(vacation => {
+          const vacationEnd = normalizeDate(new Date(vacation.endDate));
+          return vacationEnd < normalizeDate(currentPayDate);
+        });
+        const vacationHoursUsed = vacationsBeforePayDay.reduce((sum, vacation) => sum + vacation.totalHours, 0);
+        
+        runningPTO = userSettings.currentPTO + (userSettings.accrualRate * payPeriodCount) - vacationHoursUsed;
+        
         allEvents.push({
           date: new Date(currentPayDate),
           ptoAccrued: userSettings.accrualRate,
@@ -118,7 +147,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
     return allEvents.filter(event => 
       event.date >= startOfMonth && event.date <= endOfMonth
     );
-  }, [currentDate, userSettings.currentPTO, userSettings.accrualRate, userSettings.payPeriod]);
+  }, [currentDate, userSettings.currentPTO, userSettings.accrualRate, userSettings.payPeriod, userSettings.vacations]);
 
   // Calculate daily PTO balances for the entire month
   const dailyPTOBalances = useMemo(() => {
@@ -381,6 +410,11 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                   const day = index + 1;
                   const dateKey = new Date(currentDate.getFullYear(), currentDate.getMonth(), day).toISOString().split('T')[0];
                   const dayInfo = dailyPTOBalances[dateKey];
+                  const payPeriodEvent = generatePayPeriods.find(event => 
+                    event.date.getDate() === day &&
+                    event.date.getMonth() === currentDate.getMonth() &&
+                    event.date.getFullYear() === currentDate.getFullYear()
+                  );
                   const todayClass = isToday(day);
 
                   return (
@@ -399,18 +433,18 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                         {day}
                       </div>
                       
-                      {/* Pay Day Indicator with Total PTO */}
-                      {dayInfo?.isPayDay && (
+                      {/* Pay Day Indicator with Total PTO (only shows PTO affected by vacations before this date) */}
+                      {payPeriodEvent && (
                         <div className="bg-gradient-to-r from-emerald-500 to-green-600 text-white text-xs px-2 py-1 rounded-md shadow-sm mb-1">
                           <div className="flex items-center space-x-1 mb-1">
                             <DollarSign className="w-3 h-3" />
                             <span className="font-medium">Pay Day</span>
                           </div>
                           <div className="text-xs opacity-90 font-medium">
-                            {dayInfo.ptoBalance.toFixed(0)} hrs total
+                            {payPeriodEvent.totalPTO.toFixed(0)} hrs total
                           </div>
                           <div className="text-xs opacity-75">
-                            ({hoursToDays(dayInfo.ptoBalance)}d)
+                            ({hoursToDays(payPeriodEvent.totalPTO)}d)
                           </div>
                         </div>
                       )}
@@ -517,7 +551,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
                   <div className="w-4 h-4 bg-gradient-to-r from-emerald-500 to-green-600 rounded"></div>
-                  <span className="text-sm text-slate-700">Pay Day + Total PTO Balance</span>
+                  <span className="text-sm text-slate-700">Pay Day + PTO Balance</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-4 h-4 bg-gradient-to-r from-purple-500 to-pink-600 rounded"></div>
