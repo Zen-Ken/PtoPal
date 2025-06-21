@@ -18,14 +18,14 @@ export default function BoltBadge({ className = '' }: BoltBadgeProps) {
           <img 
             src="/white_circle_360x360.png"
             alt="Powered by Bolt.new - Made in Bolt"
-            className="w-16 h-16 shadow-2xl hover:shadow-3xl transition-shadow duration-300 rounded-full"
+            className="w-14 h-14 shadow-large hover:shadow-xl transition-shadow duration-300 rounded-full"
           />
           
           {/* Hover gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-purple-600 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-600 to-primary-500 rounded-full opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
           
           {/* Dark mode glow effect */}
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-purple-400 rounded-full opacity-0 dark:group-hover:opacity-20 transition-opacity duration-300 blur-sm"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-400 to-primary-300 rounded-full opacity-0 dark:group-hover:opacity-20 transition-opacity duration-300 blur-sm"></div>
         </div>
       </a>
     </div>
