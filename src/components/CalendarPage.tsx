@@ -41,15 +41,6 @@ interface VacationFormData {
   description: string;
 }
 
-interface VacationSpan {
-  vacation: VacationEntry;
-  startDay: number;
-  endDay: number;
-  startCol: number;
-  spanCols: number;
-  row: number;
-}
-
 export default function CalendarPage({ onBack, userSettings, onUpdateSettings }: CalendarPageProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isAddVacationModalOpen, setIsAddVacationModalOpen] = useState(false);
@@ -204,58 +195,6 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
     
     return balances;
   }, [currentDate, userSettings, generatePayPeriods]);
-
-  // Calculate vacation spans for the calendar
-  const vacationSpans = useMemo(() => {
-    const spans: VacationSpan[] = [];
-    const daysInMonth = getDaysInMonth(currentDate);
-    const firstDay = getFirstDayOfMonth(currentDate);
-    
-    // Filter vacations that overlap with current month
-    const monthVacations = userSettings.vacations.filter(vacation => {
-      const vacationStart = createDateFromString(vacation.startDate);
-      const vacationEnd = createDateFromString(vacation.endDate);
-      const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-      const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-      
-      return vacationStart <= monthEnd && vacationEnd >= monthStart;
-    });
-
-    monthVacations.forEach((vacation, vacationIndex) => {
-      const vacationStart = createDateFromString(vacation.startDate);
-      const vacationEnd = createDateFromString(vacation.endDate);
-      const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-      const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
-      
-      // Calculate the start and end days within the current month
-      const startDay = Math.max(1, vacationStart.getMonth() === currentDate.getMonth() ? vacationStart.getDate() : 1);
-      const endDay = Math.min(daysInMonth, vacationEnd.getMonth() === currentDate.getMonth() ? vacationEnd.getDate() : daysInMonth);
-      
-      // Calculate grid positions
-      const startCol = (startDay + firstDay - 2) % 7;
-      const endCol = (endDay + firstDay - 2) % 7;
-      const startRow = Math.floor((startDay + firstDay - 2) / 7);
-      const endRow = Math.floor((endDay + firstDay - 2) / 7);
-      
-      // If vacation spans multiple weeks, create multiple spans
-      for (let row = startRow; row <= endRow; row++) {
-        const rowStartCol = row === startRow ? startCol : 0;
-        const rowEndCol = row === endRow ? endCol : 6;
-        const spanCols = rowEndCol - rowStartCol + 1;
-        
-        spans.push({
-          vacation,
-          startDay: row === startRow ? startDay : (row * 7 - firstDay + 2),
-          endDay: row === endRow ? endDay : ((row + 1) * 7 - firstDay + 1),
-          startCol: rowStartCol,
-          spanCols,
-          row: row + 1 // +1 to account for header row
-        });
-      }
-    });
-    
-    return spans;
-  }, [currentDate, userSettings.vacations]);
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentDate(prev => {
@@ -463,7 +402,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Calendar */}
           <div className="lg:col-span-3">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-100 dark:border-gray-700 p-6 relative">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-100 dark:border-gray-700 p-6">
               {/* Calendar Header */}
               <div className="grid grid-cols-7 gap-1 mb-4">
                 {dayNames.map((day) => (
@@ -473,98 +412,96 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                 ))}
               </div>
 
-              {/* Calendar Grid Container */}
-              <div className="relative">
-                {/* Calendar Grid */}
-                <div className="grid grid-cols-7 gap-1">
-                  {/* Empty cells for days before month starts */}
-                  {Array.from({ length: firstDay }, (_, index) => (
-                    <div key={`empty-${index}`} className="p-3 h-32"></div>
-                  ))}
+              {/* Calendar Grid */}
+              <div className="grid grid-cols-7 gap-1">
+                {/* Empty cells for days before month starts */}
+                {Array.from({ length: firstDay }, (_, index) => (
+                  <div key={`empty-${index}`} className="p-3 h-32"></div>
+                ))}
 
-                  {/* Days of the month */}
-                  {Array.from({ length: daysInMonth }, (_, index) => {
-                    const day = index + 1;
-                    const year = currentDate.getFullYear();
-                    const month = currentDate.getMonth();
-                    const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                    const dayInfo = dailyPTOBalances[dateKey];
-                    const todayClass = isToday(day);
+                {/* Days of the month */}
+                {Array.from({ length: daysInMonth }, (_, index) => {
+                  const day = index + 1;
+                  const year = currentDate.getFullYear();
+                  const month = currentDate.getMonth();
+                  const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                  const dayInfo = dailyPTOBalances[dateKey];
+                  const todayClass = isToday(day);
 
-                    return (
-                      <div
-                        key={day}
-                        onClick={() => handleDayClick(day)}
-                        className={`p-2 h-32 border border-gray-100 dark:border-gray-700 rounded-lg relative transition-all duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${
-                          todayClass 
-                            ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700 ring-2 ring-primary-200 dark:ring-primary-700' 
-                            : ''
-                        }`}
-                      >
-                        <div className={`text-sm font-medium mb-1 ${
-                          todayClass ? 'text-primary-700 dark:text-primary-300' : 'text-gray-900 dark:text-white'
-                        }`}>
-                          {day}
-                        </div>
-                        
-                        {/* Pay Day Indicator with Total PTO Balance */}
-                        {dayInfo?.isPayDay && dayInfo.totalPTOOnPayDay !== undefined && (
-                          <div className="bg-gradient-to-r from-emerald-500 to-green-600 text-white text-xs px-2 py-1 rounded-md shadow-soft mb-1 z-10 relative">
-                            <div className="flex items-center space-x-1 mb-1">
-                              <DollarSign className="w-3 h-3" />
-                              <span className="font-medium">Pay Day</span>
-                            </div>
-                            <div className="text-xs opacity-90 font-medium">
-                              {dayInfo.totalPTOOnPayDay.toFixed(2)} hrs total
-                            </div>
-                            <div className="text-xs opacity-75">
-                              ({hoursToDays(dayInfo.totalPTOOnPayDay)}d)
-                            </div>
+                  return (
+                    <div
+                      key={day}
+                      onClick={() => handleDayClick(day)}
+                      className={`p-2 h-32 border border-gray-100 dark:border-gray-700 rounded-lg relative transition-all duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                        todayClass 
+                          ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700 ring-2 ring-primary-200 dark:ring-primary-700' 
+                          : ''
+                      }`}
+                    >
+                      <div className={`text-sm font-medium mb-1 ${
+                        todayClass ? 'text-primary-700 dark:text-primary-300' : 'text-gray-900 dark:text-white'
+                      }`}>
+                        {day}
+                      </div>
+                      
+                      {/* Pay Day Indicator with Total PTO Balance */}
+                      {dayInfo?.isPayDay && dayInfo.totalPTOOnPayDay !== undefined && (
+                        <div className="bg-gradient-to-r from-emerald-500 to-green-600 text-white text-xs px-2 py-1 rounded-md shadow-soft mb-1">
+                          <div className="flex items-center space-x-1 mb-1">
+                            <DollarSign className="w-3 h-3" />
+                            <span className="font-medium">Pay Day</span>
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Vacation Spans Overlay */}
-                <div className="absolute inset-0 pointer-events-none">
-                  {vacationSpans.map((span, index) => {
-                    const colors = [
-                      'from-purple-500 to-pink-600',
-                      'from-blue-500 to-indigo-600',
-                      'from-green-500 to-emerald-600',
-                      'from-orange-500 to-red-600',
-                      'from-teal-500 to-cyan-600',
-                      'from-rose-500 to-pink-600'
-                    ];
-                    const colorClass = colors[index % colors.length];
-                    
-                    return (
-                      <div
-                        key={`${span.vacation.id}-${span.row}-${span.startCol}`}
-                        className={`absolute bg-gradient-to-r ${colorClass} text-white text-xs px-2 py-1 rounded-md shadow-soft z-20 pointer-events-auto cursor-pointer hover:shadow-medium transition-all duration-200 transform hover:scale-105`}
-                        style={{
-                          top: `${span.row * 8.5 + 3.5}rem`, // Adjust based on row height and header
-                          left: `${span.startCol * 14.28571}%`, // 100% / 7 columns
-                          width: `${span.spanCols * 14.28571 - 0.5}%`, // Account for gap
-                          height: '1.5rem'
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditVacation(span.vacation);
-                        }}
-                      >
-                        <div className="flex items-center space-x-1 truncate">
-                          <MapPin className="w-3 h-3 flex-shrink-0" />
-                          <span className="font-medium truncate">
-                            {span.vacation.description || 'Vacation'}
-                          </span>
+                          <div className="text-xs opacity-90 font-medium">
+                            {dayInfo.totalPTOOnPayDay.toFixed(2)} hrs total
+                          </div>
+                          <div className="text-xs opacity-75">
+                            ({hoursToDays(dayInfo.totalPTOOnPayDay)}d)
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      )}
+
+                      {/* Individual Vacation Indicators */}
+                      {dayInfo?.vacations && dayInfo.vacations.length > 0 && (
+                        <div className="space-y-1">
+                          {dayInfo.vacations.slice(0, 2).map((vacation, index) => {
+                            const colors = [
+                              'from-purple-500 to-pink-600',
+                              'from-blue-500 to-indigo-600',
+                              'from-green-500 to-emerald-600',
+                              'from-orange-500 to-red-600',
+                              'from-teal-500 to-cyan-600',
+                              'from-rose-500 to-pink-600'
+                            ];
+                            const colorClass = colors[index % colors.length];
+                            
+                            return (
+                              <div
+                                key={vacation.id}
+                                className={`bg-gradient-to-r ${colorClass} text-white text-xs px-2 py-1 rounded-md shadow-soft cursor-pointer hover:shadow-medium transition-all duration-200 transform hover:scale-105`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditVacation(vacation);
+                                }}
+                              >
+                                <div className="flex items-center space-x-1 truncate">
+                                  <MapPin className="w-3 h-3 flex-shrink-0" />
+                                  <span className="font-medium truncate">
+                                    {vacation.description || 'Vacation'}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                          {dayInfo.vacations.length > 2 && (
+                            <div className="text-xs text-gray-500 dark:text-gray-400 px-2">
+                              +{dayInfo.vacations.length - 2} more
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -731,14 +668,14 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-4 h-4 bg-gradient-to-r from-purple-500 to-pink-600 rounded"></div>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Vacation Period</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Vacation Day</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-4 h-4 bg-primary-200 dark:bg-primary-800 border-2 border-primary-400 dark:border-primary-600 rounded"></div>
                   <span className="text-sm text-gray-700 dark:text-gray-300">Today</span>
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 mt-3 p-2 bg-gray-100 dark:bg-gray-700 rounded">
-                  <strong>Tip:</strong> Click on vacation bars to edit, or click on any day to add new vacations
+                  <strong>Tip:</strong> Click on vacation indicators to edit, or click on any day to add new vacations
                 </div>
               </div>
             </div>
