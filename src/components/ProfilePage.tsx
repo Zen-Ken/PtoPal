@@ -64,6 +64,56 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
     return Math.round(accrualValue * selectedPeriod.periodsPerMonth * 100) / 100;
   };
 
+  // Calculate projected date to reach annual allowance cap
+  const getProjectedCapDate = () => {
+    const currentPTO = formData.currentPTO === '' ? 0 : Number(formData.currentPTO);
+    const annualAllowance = formData.annualAllowance === '' ? 0 : Number(formData.annualAllowance);
+    const accrualRate = formData.accrualRate === '' ? 0 : Number(formData.accrualRate);
+    
+    // If already at or above cap
+    if (currentPTO >= annualAllowance) {
+      return 'Already at cap';
+    }
+    
+    // If no accrual rate, will never reach cap
+    if (accrualRate <= 0) {
+      return 'Never (no accrual)';
+    }
+    
+    // Calculate how many hours needed to reach cap
+    const hoursNeeded = annualAllowance - currentPTO;
+    
+    // Calculate how many pay periods needed
+    const payPeriodsNeeded = Math.ceil(hoursNeeded / accrualRate);
+    
+    // Calculate the projected date based on pay period
+    const today = new Date();
+    let projectedDate = new Date(today);
+    
+    const selectedPeriod = payPeriodOptions.find(p => p.value === formData.payPeriod);
+    if (!selectedPeriod) return 'Unable to calculate';
+    
+    if (formData.payPeriod === 'semimonthly') {
+      // For semi-monthly, add pay periods (each is ~15 days)
+      projectedDate.setDate(projectedDate.getDate() + (payPeriodsNeeded * 15));
+    } else {
+      // For other pay periods, calculate based on interval
+      const intervalDays = {
+        weekly: 7,
+        biweekly: 14,
+        monthly: 30
+      }[formData.payPeriod] || 30;
+      
+      projectedDate.setDate(projectedDate.getDate() + (payPeriodsNeeded * intervalDays));
+    }
+    
+    return projectedDate.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
   // Helper function to convert hours to days for display
   const hoursToDays = (hours: number | string) => {
     const numHours = hours === '' ? 0 : Number(hours);
@@ -285,11 +335,16 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                 </div>
                 
                 <div className="pt-4 border-t border-primary-200 dark:border-primary-700">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600 dark:text-gray-400">Usage Rate</span>
-                    <span className="font-bold text-primary-600 dark:text-primary-400">
-                      {Math.round(((formData.currentPTO === '' ? 0 : Number(formData.currentPTO)) / (formData.annualAllowance === '' ? 1 : Number(formData.annualAllowance))) * 100)}%
-                    </span>
+                  <div className="flex justify-between items-start">
+                    <span className="text-gray-600 dark:text-gray-400">Projected Cap Date</span>
+                    <div className="text-right">
+                      <div className="font-bold text-primary-600 dark:text-primary-400 text-sm leading-tight">
+                        {getProjectedCapDate()}
+                      </div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                        When you'll reach max PTO
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
