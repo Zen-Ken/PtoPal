@@ -70,9 +70,9 @@ export default function HomePage({
   return (
     <>
       {/* Hero Section with PTO Calculator */}
-      <section className="relative py-20 sm:py-32 overflow-hidden">
+      <section className="relative py-16 sm:py-24 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16 animate-fade-in">
+          <div className="text-center mb-12 animate-fade-in">
             <div className="inline-flex items-center px-4 py-2 bg-primary-50 dark:bg-primary-900/20 rounded-full text-sm font-medium text-primary-700 dark:text-primary-300 mb-6">
               <Sparkles className="w-4 h-4 mr-2" />
               Your Personal PTO Assistant
@@ -91,23 +91,23 @@ export default function HomePage({
 
           {/* PTO Calculator Card */}
           <div className="max-w-5xl mx-auto animate-slide-up">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-large border border-gray-100 dark:border-gray-700 p-8 sm:p-12 transition-all duration-300">
-              <div className="text-center mb-10">
-                <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center mx-auto mb-6 shadow-medium">
-                  <CalendarDays className="w-8 h-8 text-white" />
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-large border border-gray-100 dark:border-gray-700 p-6 sm:p-8 transition-all duration-300">
+              <div className="text-center mb-8">
+                <div className="w-14 h-14 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-medium">
+                  <CalendarDays className="w-7 h-7 text-white" />
                 </div>
-                <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-3">
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
                   Your PTO Crystal Ball
                 </h2>
-                <p className="text-gray-600 dark:text-gray-300 text-lg">
+                <p className="text-gray-600 dark:text-gray-300 text-base">
                   See exactly how much time off you'll have on any future date
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 mb-10">
-                <div className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div className="space-y-5">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                       Current PTO Balance (hours)
                     </label>
                     <input
@@ -120,12 +120,12 @@ export default function HomePage({
                       step="0.01"
                       placeholder="Enter your current PTO in hours"
                     />
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       Equivalent to {hoursToDays(userSettings.currentPTO)} days (8 hours = 1 day)
                     </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                       Accrual Rate per Pay Period (hours)
                     </label>
                     <input
@@ -138,12 +138,12 @@ export default function HomePage({
                       step="0.01"
                       placeholder="How many PTO hours you earn per pay period"
                     />
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       Equivalent to {hoursToDays(userSettings.accrualRate)} days per pay period
                     </p>
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
                       Select Target Date
                     </label>
                     <input
@@ -156,18 +156,18 @@ export default function HomePage({
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 rounded-xl p-8 flex flex-col justify-center relative overflow-hidden">
+                <div className="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 rounded-xl p-6 flex flex-col justify-center relative overflow-hidden">
                   <div className="text-center">
-                    <div className="text-sm text-primary-700 dark:text-primary-300 font-semibold mb-3 uppercase tracking-wide">
+                    <div className="text-sm text-primary-700 dark:text-primary-300 font-semibold mb-2 uppercase tracking-wide">
                       On {formatSelectedDate()}
                     </div>
-                    <div className="text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-500 mb-2">
+                    <div className="text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-500 mb-2">
                       {calculatedPTO.toFixed(2)}
                     </div>
                     <div className="text-gray-700 dark:text-gray-300 font-semibold text-base mb-2">
                       hours of PTO available
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                       ({hoursToDays(calculatedPTO)} days)
                     </div>
                     {calculatedPTO > userSettings.currentPTO && (
@@ -195,10 +195,10 @@ export default function HomePage({
               <div className="text-center">
                 <button 
                   onClick={onGetStarted}
-                  className="bg-primary-600 hover:bg-primary-700 text-white px-10 py-4 rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-medium hover:shadow-large flex items-center justify-center mx-auto"
+                  className="bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-medium hover:shadow-large flex items-center justify-center mx-auto"
                 >
                   {hasCompletedOnboarding ? 'Go to Dashboard' : 'Get Started - It\'s Free!'}
-                  <User className="ml-3 w-5 h-5" />
+                  <User className="ml-2 w-5 h-5" />
                 </button>
               </div>
             </div>
