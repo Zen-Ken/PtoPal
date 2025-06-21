@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { ArrowLeft, ArrowRight, Calendar, Clock, Briefcase, CheckCircle, Sparkles, User, Building } from 'lucide-react';
-import BoltBadge from './BoltBadge';
 import ThemeToggle from './ThemeToggle';
 import { UserSettings, defaultUserSettings } from '../types/UserSettings';
 
@@ -294,9 +293,6 @@ export default function OnboardingPage({ onComplete, onBack }: OnboardingPagePro
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 relative overflow-hidden transition-colors duration-300">
-      {/* Bolt Badge */}
-      <BoltBadge />
-
       {/* Header */}
       <div className="relative bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

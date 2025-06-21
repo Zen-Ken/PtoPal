@@ -1,7 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowLeft, ChevronLeft, ChevronRight, Calendar, Clock, TrendingUp, DollarSign, Plus, X, Edit3, Trash2, MapPin, Save, List } from 'lucide-react';
-import BoltBadge from './BoltBadge';
-import ThemeToggle from './ThemeToggle';
+import { ChevronLeft, ChevronRight, Calendar, Clock, TrendingUp, DollarSign, Plus, X, Edit3, Trash2, MapPin, Save, List } from 'lucide-react';
 import { UserSettings } from '../types/UserSettings';
 import { VacationEntry } from '../types/VacationEntry';
 import { 
@@ -367,34 +365,21 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
-      {/* Bolt Badge */}
-      <BoltBadge />
-
-      {/* Header */}
-      <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={onBack}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors flex items-center justify-center"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-              </button>
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
-                  <Calendar className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">PTO Calendar</h1>
-                  <p className="text-gray-600 dark:text-gray-400">Track your pay periods and plan vacations</p>
-                </div>
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
+                <Calendar className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">PTO Calendar</h1>
+                <p className="text-gray-600 dark:text-gray-400">Track your pay periods and plan vacations</p>
               </div>
             </div>
             
             {/* Actions */}
             <div className="flex items-center space-x-4">
-              <ThemeToggle />
               <button
                 onClick={handleAddVacation}
                 className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-soft hover:shadow-medium flex items-center space-x-2"
@@ -420,9 +405,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Calendar */}
           <div className="lg:col-span-3">

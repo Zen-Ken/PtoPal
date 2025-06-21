@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Calendar, Clock, ArrowLeft, Settings, Calculator, Shield, Check } from 'lucide-react';
-import BoltBadge from './BoltBadge';
-import ThemeToggle from './ThemeToggle';
+import { User, Calendar, Clock, Settings, Calculator, Shield, Check } from 'lucide-react';
 import { UserSettings } from '../types/UserSettings';
 
 interface ProfilePageProps {
@@ -74,9 +72,6 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
-      {/* Bolt Badge */}
-      <BoltBadge />
-
       {/* Auto-save Notification */}
       <div className={`fixed top-20 right-4 z-40 transition-all duration-300 transform ${
         showSavedNotification 
@@ -91,39 +86,23 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
         </div>
       </div>
 
-      {/* Header */}
-      <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-b border-gray-100 dark:border-gray-800">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={onBack}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors flex items-center justify-center"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-              </button>
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
-                  <User className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Profile Settings</h1>
-                  <p className="text-gray-600 dark:text-gray-400">Manage your PTO preferences and accrual settings</p>
-                </div>
-              </div>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="mb-8">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
+              <User className="w-6 h-6 text-white" />
             </div>
-            <div className="flex items-center space-x-3">
-              <ThemeToggle />
-              <div className="text-xs text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-3 py-1 rounded-full border border-green-200 dark:border-green-700 flex items-center space-x-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span>Auto-saving</span>
-              </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Profile Settings</h1>
+              <p className="text-gray-600 dark:text-gray-400">Manage your PTO preferences and accrual settings</p>
             </div>
           </div>
+          <div className="text-xs text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 px-3 py-1 rounded-full border border-green-200 dark:border-green-700 flex items-center space-x-2 w-fit">
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span>Auto-saving</span>
+          </div>
         </div>
-      </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Settings */}
           <div className="lg:col-span-2 space-y-8">
