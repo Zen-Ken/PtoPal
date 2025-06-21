@@ -195,8 +195,30 @@ function App() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+      {/* Bolt Badge - Fixed Position */}
+      <div className="fixed top-4 right-4 z-50">
+        <a 
+          href="https://bolt.new" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="group relative"
+        >
+          <div className="bg-black text-white px-6 py-3 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 border border-gray-800">
+            <div className="flex items-center space-x-3">
+              <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                <svg viewBox="0 0 24 24" className="w-4 h-4 text-black" fill="currentColor">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                </svg>
+              </div>
+              <span className="font-bold text-sm tracking-wide">BUILT WITH BOLT</span>
+            </div>
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-purple-600 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+        </a>
+      </div>
+
       {/* Navigation */}
-      <nav className="bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-200/50 sticky top-0 z-50">
+      <nav className="bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-200/50 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
@@ -648,28 +670,11 @@ function App() {
             </div>
           </div>
           
-          {/* Built with Bolt Badge - Following Hackathon Guidelines */}
           <div className="flex flex-col md:flex-row justify-between items-center border-t border-slate-800 pt-8">
             <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-6">
               <p className="text-slate-400 text-sm">
                 © 2024 PTOPal. All rights reserved.
               </p>
-              <a 
-                href="https://bolt.new" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 group"
-              >
-                <div className="w-6 h-6 mr-3 bg-white rounded-lg flex items-center justify-center">
-                  <svg viewBox="0 0 24 24" className="w-4 h-4 text-violet-600" fill="currentColor">
-                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-                  </svg>
-                </div>
-                <span>Built with Bolt</span>
-                <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  ⚡
-                </div>
-              </a>
               <p className="text-xs text-slate-500">
                 Created for World's Largest Hackathon 2024
               </p>

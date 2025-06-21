@@ -287,6 +287,28 @@ export default function OnboardingPage({ onComplete, onBack }: OnboardingPagePro
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 relative overflow-hidden">
+      {/* Bolt Badge - Fixed Position */}
+      <div className="fixed top-4 right-4 z-50">
+        <a 
+          href="https://bolt.new" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="group relative"
+        >
+          <div className="bg-black text-white px-6 py-3 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 border border-gray-800">
+            <div className="flex items-center space-x-3">
+              <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                <svg viewBox="0 0 24 24" className="w-4 h-4 text-black" fill="currentColor">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                </svg>
+              </div>
+              <span className="font-bold text-sm tracking-wide">BUILT WITH BOLT</span>
+            </div>
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-purple-600 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+        </a>
+      </div>
+
       {/* Background decoration */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-purple-50/30 to-indigo-50/50"></div>
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-6xl">

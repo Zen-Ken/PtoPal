@@ -135,6 +135,28 @@ export default function CalendarPage({ onBack, userSettings }: CalendarPageProps
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+      {/* Bolt Badge - Fixed Position */}
+      <div className="fixed top-4 right-4 z-50">
+        <a 
+          href="https://bolt.new" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="group relative"
+        >
+          <div className="bg-black text-white px-6 py-3 rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 border border-gray-800">
+            <div className="flex items-center space-x-3">
+              <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
+                <svg viewBox="0 0 24 24" className="w-4 h-4 text-black" fill="currentColor">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                </svg>
+              </div>
+              <span className="font-bold text-sm tracking-wide">BUILT WITH BOLT</span>
+            </div>
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-purple-600 rounded-full opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+        </a>
+      </div>
+
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-md shadow-sm border-b border-slate-200/50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
