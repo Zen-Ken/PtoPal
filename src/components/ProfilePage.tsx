@@ -34,10 +34,15 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
     const updatedData = { ...formData, [field]: processedValue };
     setFormData(updatedData);
     
-    // Auto-save to localStorage on every change, but convert empty strings to 0 for storage
-    const valueForStorage = (field === 'currentPTO' || field === 'accrualRate' || field === 'annualAllowance') && value === '' 
-      ? 0 
-      : processedValue;
+    // Auto-save to localStorage on every change, but convert empty strings to 0 for storage and round to 2 decimal places
+    let valueForStorage = processedValue;
+    if (field === 'currentPTO' || field === 'accrualRate' || field === 'annualAllowance') {
+      if (value === '') {
+        valueForStorage = 0;
+      } else {
+        valueForStorage = Math.round(Number(value) * 100) / 100;
+      }
+    }
     
     onUpdateSettings({ [field]: valueForStorage });
     
@@ -58,13 +63,13 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
     
     // The accrual rate is now per pay period, so convert to monthly
     const accrualValue = formData.accrualRate === '' ? 0 : Number(formData.accrualRate);
-    return accrualValue * selectedPeriod.periodsPerMonth;
+    return Math.round(accrualValue * selectedPeriod.periodsPerMonth * 100) / 100;
   };
 
   // Helper function to convert hours to days for display
   const hoursToDays = (hours: number | string) => {
     const numHours = hours === '' ? 0 : Number(hours);
-    return (numHours / 8).toFixed(1);
+    return (numHours / 8).toFixed(2);
   };
 
   return (
@@ -146,8 +151,8 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                       onChange={(e) => handleInputChange('currentPTO', e.target.value)}
                       className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 transition-all duration-200 text-gray-900 dark:text-white"
                       min="0"
-                      step="0.5"
-                      placeholder="96"
+                      step="0.01"
+                      placeholder="96.00"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm font-medium">
                       hours
@@ -169,7 +174,8 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                       onChange={(e) => handleInputChange('annualAllowance', e.target.value)}
                       className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 transition-all duration-200 text-gray-900 dark:text-white"
                       min="0"
-                      placeholder="200"
+                      step="0.01"
+                      placeholder="200.00"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm font-medium">
                       hours
@@ -208,7 +214,7 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                       onChange={(e) => handleInputChange('accrualRate', e.target.value)}
                       className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 transition-all duration-200 text-gray-900 dark:text-white"
                       min="0"
-                      step="0.1"
+                      step="0.01"
                       placeholder="13.36"
                     />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm font-medium">
@@ -291,7 +297,7 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600 dark:text-gray-400">PTO Balance</span>
                   <div className="text-right">
-                    <div className="font-bold text-gray-900 dark:text-white">{formData.currentPTO === '' ? 0 : formData.currentPTO} hours</div>
+                    <div className="font-bold text-gray-900 dark:text-white">{(formData.currentPTO === '' ? 0 : Number(formData.currentPTO)).toFixed(2)} hours</div>
                     <div className="text-xs text-gray-600 dark:text-gray-400">({hoursToDays(formData.currentPTO)} days)</div>
                   </div>
                 </div>
@@ -307,7 +313,7 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600 dark:text-gray-400">Annual Allowance</span>
                   <div className="text-right">
-                    <div className="font-bold text-gray-900 dark:text-white">{formData.annualAllowance === '' ? 0 : formData.annualAllowance} hours</div>
+                    <div className="font-bold text-gray-900 dark:text-white">{(formData.annualAllowance === '' ? 0 : Number(formData.annualAllowance)).toFixed(2)} hours</div>
                     <div className="text-xs text-gray-600 dark:text-gray-400">({hoursToDays(formData.annualAllowance)} days)</div>
                   </div>
                 </div>

@@ -12,10 +12,10 @@ export interface UserSettings {
 }
 
 export const defaultUserSettings: UserSettings = {
-  currentPTO: 96, // 12 days * 8 hours = 96 hours
+  currentPTO: 96.00, // 12 days * 8 hours = 96 hours
   accrualRate: 13.36, // 1.67 days * 8 hours = 13.36 hours
   payPeriod: 'monthly',
-  annualAllowance: 200, // 25 days * 8 hours = 200 hours
+  annualAllowance: 200.00, // 25 days * 8 hours = 200 hours
   startDate: new Date().toISOString().split('T')[0],
   companyName: '',
   employeeId: '',

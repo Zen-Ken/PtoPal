@@ -61,7 +61,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
   };
 
   // Helper function to convert hours to days for display
-  const hoursToDays = (hours: number) => (hours / 8).toFixed(1);
+  const hoursToDays = (hours: number) => (hours / 8).toFixed(2);
 
   const generatePayPeriods = useMemo(() => {
     const events: PayPeriodEvent[] = [];
@@ -94,7 +94,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
         allEvents.push({
           date: firstPayDate,
           ptoAccrued: userSettings.accrualRate,
-          totalPTO: runningPTO,
+          totalPTO: Math.round(runningPTO * 100) / 100,
           isPayDay: true
         });
         
@@ -113,7 +113,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
         allEvents.push({
           date: secondPayDate,
           ptoAccrued: userSettings.accrualRate,
-          totalPTO: runningPTO,
+          totalPTO: Math.round(runningPTO * 100) / 100,
           isPayDay: true
         });
       }
@@ -137,7 +137,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
         allEvents.push({
           date: new Date(currentPayDate),
           ptoAccrued: userSettings.accrualRate,
-          totalPTO: runningPTO,
+          totalPTO: Math.round(runningPTO * 100) / 100,
           isPayDay: true
         });
         
@@ -185,7 +185,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
       
       balances[dateKey] = {
         date: new Date(currentDay),
-        ptoBalance,
+        ptoBalance: Math.round(ptoBalance * 100) / 100,
         isPayDay: !!payPeriodEvent,
         vacations: vacationsForDay,
         ptoAccrued: payPeriodEvent?.ptoAccrued
@@ -282,11 +282,11 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
   const handleSaveVacation = () => {
     if (!vacationForm.startDate || !vacationForm.endDate) return;
     
-    const totalHours = calculateVacationHours(
+    const totalHours = Math.round(calculateVacationHours(
       vacationForm.startDate,
       vacationForm.endDate,
       vacationForm.includeWeekends
-    );
+    ) * 100) / 100;
     
     const now = new Date().toISOString();
     
@@ -334,11 +334,11 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
 
   const calculateFormHours = () => {
     if (!vacationForm.startDate || !vacationForm.endDate) return 0;
-    return calculateVacationHours(
+    return Math.round(calculateVacationHours(
       vacationForm.startDate,
       vacationForm.endDate,
       vacationForm.includeWeekends
-    );
+    ) * 100) / 100;
   };
 
   const monthNames = [
@@ -481,7 +481,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                             <span className="font-medium">Pay Day</span>
                           </div>
                           <div className="text-xs opacity-90 font-medium">
-                            {payPeriodEvent.totalPTO.toFixed(0)} hrs total
+                            {payPeriodEvent.totalPTO.toFixed(2)} hrs total
                           </div>
                           <div className="text-xs opacity-75">
                             ({hoursToDays(payPeriodEvent.totalPTO)}d)
@@ -549,7 +549,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                             {formatDateRange(vacation.startDate, vacation.endDate)}
                           </div>
                           <div className="flex items-center space-x-3 text-xs text-gray-500 dark:text-gray-500">
-                            <span>{vacation.totalHours} hrs</span>
+                            <span>{vacation.totalHours.toFixed(2)} hrs</span>
                             <span>({hoursToDays(vacation.totalHours)}d)</span>
                             {vacation.includeWeekends && (
                               <span className="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-1 py-0.5 rounded text-xs">
@@ -595,7 +595,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                             {formatDateRange(vacation.startDate, vacation.endDate)}
                           </div>
                           <div className="text-xs text-gray-400 dark:text-gray-500">
-                            {vacation.totalHours} hrs ({hoursToDays(vacation.totalHours)}d)
+                            {vacation.totalHours.toFixed(2)} hrs ({hoursToDays(vacation.totalHours)}d)
                           </div>
                         </div>
                         <Edit3 className="w-3 h-3 text-gray-400 dark:text-gray-500" />
@@ -625,7 +625,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600 dark:text-gray-400">Current PTO</span>
                   <div className="text-right">
-                    <div className="font-bold text-primary-600 dark:text-primary-400">{userSettings.currentPTO} hrs</div>
+                    <div className="font-bold text-primary-600 dark:text-primary-400">{userSettings.currentPTO.toFixed(2)} hrs</div>
                     <div className="text-xs text-gray-600 dark:text-gray-400">({hoursToDays(userSettings.currentPTO)} days)</div>
                   </div>
                 </div>
@@ -634,7 +634,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                   <span className="text-gray-600 dark:text-gray-400">Total Planned</span>
                   <div className="text-right">
                     <div className="font-bold text-purple-600 dark:text-purple-400">
-                      {userSettings.vacations.reduce((sum, v) => sum + v.totalHours, 0)} hrs
+                      {userSettings.vacations.reduce((sum, v) => sum + v.totalHours, 0).toFixed(2)} hrs
                     </div>
                     <div className="text-xs text-gray-600 dark:text-gray-400">
                       ({hoursToDays(userSettings.vacations.reduce((sum, v) => sum + v.totalHours, 0))} days)
@@ -647,7 +647,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                     <span className="text-gray-600 dark:text-gray-400">Remaining After Vacations</span>
                     <div className="text-right">
                       <div className="font-bold text-emerald-600 dark:text-emerald-400">
-                        {Math.max(0, userSettings.currentPTO - userSettings.vacations.reduce((sum, v) => sum + v.totalHours, 0))} hrs
+                        {Math.max(0, userSettings.currentPTO - userSettings.vacations.reduce((sum, v) => sum + v.totalHours, 0)).toFixed(2)} hrs
                       </div>
                       <div className="text-xs text-gray-600 dark:text-gray-400">
                         ({hoursToDays(Math.max(0, userSettings.currentPTO - userSettings.vacations.reduce((sum, v) => sum + v.totalHours, 0)))} days)
@@ -762,7 +762,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                         Total PTO Required
                       </div>
                       <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-500">
-                        {calculateFormHours()} hours
+                        {calculateFormHours().toFixed(2)} hours
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
                         ({hoursToDays(calculateFormHours())} days)

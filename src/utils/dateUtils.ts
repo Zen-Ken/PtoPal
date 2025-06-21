@@ -59,7 +59,7 @@ export const calculateVacationHours = (
   const startDate = createDateFromString(startDateStr);
   const endDate = createDateFromString(endDateStr);
   const days = getDaysBetweenDates(startDate, endDate, includeWeekends);
-  return days * 8; // 8 hours per day
+  return Math.round(days * 8 * 100) / 100; // 8 hours per day, rounded to 2 decimal places
 };
 
 /**
@@ -103,7 +103,7 @@ export const calculatePTOForTargetDate = (
     });
     
     const totalVacationHours = completedVacations.reduce((sum, vacation) => sum + vacation.totalHours, 0);
-    return Math.max(0, currentPTOAtSnapshot - totalVacationHours);
+    return Math.max(0, Math.round((currentPTOAtSnapshot - totalVacationHours) * 100) / 100);
   }
 
   // Calculate accruals from today to target date
@@ -143,7 +143,7 @@ export const calculatePTOForTargetDate = (
     payPeriodsCount = Math.floor(daysDifference / intervalDays);
   }
 
-  const additionalPTO = payPeriodsCount * accrualRate;
+  const additionalPTO = Math.round(payPeriodsCount * accrualRate * 100) / 100;
   
   // Calculate vacation hours that will be used by the target date
   const vacationsBeforeTarget = vacations.filter(vacation => {
@@ -153,7 +153,7 @@ export const calculatePTOForTargetDate = (
   
   const totalVacationHours = vacationsBeforeTarget.reduce((sum, vacation) => sum + vacation.totalHours, 0);
   
-  return Math.max(0, currentPTOAtSnapshot + additionalPTO - totalVacationHours);
+  return Math.max(0, Math.round((currentPTOAtSnapshot + additionalPTO - totalVacationHours) * 100) / 100);
 };
 
 /**

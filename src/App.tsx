@@ -29,11 +29,11 @@ function App() {
 
   // Sync input values with userSettings
   useEffect(() => {
-    setCurrentPTOInputValue(userSettings.currentPTO.toString());
+    setCurrentPTOInputValue(userSettings.currentPTO.toFixed(2));
   }, [userSettings.currentPTO]);
 
   useEffect(() => {
-    setAccrualRateInputValue(userSettings.accrualRate.toString());
+    setAccrualRateInputValue(userSettings.accrualRate.toFixed(2));
   }, [userSettings.accrualRate]);
 
   useEffect(() => {
@@ -59,21 +59,35 @@ function App() {
       userSettings.vacations,
       targetDate
     );
-    setCalculatedPTO(calculatedBalance);
+    setCalculatedPTO(Math.round(calculatedBalance * 100) / 100); // Round to 2 decimal places
   };
 
   const handleUpdateSettings = (newSettings: Partial<UserSettings>) => {
-    setUserSettings(prev => ({ ...prev, ...newSettings }));
+    // Round numeric values to 2 decimal places
+    const processedSettings = { ...newSettings };
+    if (typeof processedSettings.currentPTO === 'number') {
+      processedSettings.currentPTO = Math.round(processedSettings.currentPTO * 100) / 100;
+    }
+    if (typeof processedSettings.accrualRate === 'number') {
+      processedSettings.accrualRate = Math.round(processedSettings.accrualRate * 100) / 100;
+    }
+    if (typeof processedSettings.annualAllowance === 'number') {
+      processedSettings.annualAllowance = Math.round(processedSettings.annualAllowance * 100) / 100;
+    }
+    
+    setUserSettings(prev => ({ ...prev, ...processedSettings }));
   };
 
   const handleCurrentPTOBlur = () => {
     const numericValue = currentPTOInputValue === '' ? 0 : Number(currentPTOInputValue);
-    handleUpdateSettings({ currentPTO: numericValue });
+    const roundedValue = Math.round(numericValue * 100) / 100;
+    handleUpdateSettings({ currentPTO: roundedValue });
   };
 
   const handleAccrualRateBlur = () => {
     const numericValue = accrualRateInputValue === '' ? 0 : Number(accrualRateInputValue);
-    handleUpdateSettings({ accrualRate: numericValue });
+    const roundedValue = Math.round(numericValue * 100) / 100;
+    handleUpdateSettings({ accrualRate: roundedValue });
   };
 
   const handleOnboardingComplete = (settings: UserSettings) => {
@@ -101,7 +115,7 @@ function App() {
   };
 
   // Helper function to convert hours to days for display
-  const hoursToDays = (hours: number) => (hours / 8).toFixed(1);
+  const hoursToDays = (hours: number) => (hours / 8).toFixed(2);
 
   const features = [
     {
@@ -315,7 +329,7 @@ function App() {
                       onBlur={handleCurrentPTOBlur}
                       className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-lg font-medium bg-white dark:bg-gray-700 transition-all duration-200 text-gray-900 dark:text-white"
                       min="0"
-                      step="0.5"
+                      step="0.01"
                       placeholder="Enter your current PTO in hours"
                     />
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
@@ -333,7 +347,7 @@ function App() {
                       onBlur={handleAccrualRateBlur}
                       className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-lg font-medium bg-white dark:bg-gray-700 transition-all duration-200 text-gray-900 dark:text-white"
                       min="0"
-                      step="0.1"
+                      step="0.01"
                       placeholder="How many PTO hours you earn per pay period"
                     />
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
@@ -360,7 +374,7 @@ function App() {
                       On {formatSelectedDate()}
                     </div>
                     <div className="text-4xl sm:text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-500 mb-2">
-                      {calculatedPTO.toFixed(1)}
+                      {calculatedPTO.toFixed(2)}
                     </div>
                     <div className="text-gray-700 dark:text-gray-300 font-semibold text-base mb-2">
                       hours of PTO available
@@ -371,7 +385,7 @@ function App() {
                     {calculatedPTO > userSettings.currentPTO && (
                       <div className="inline-flex items-center px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-sm font-medium">
                         <TrendingUp className="w-4 h-4 mr-1" />
-                        +{(calculatedPTO - userSettings.currentPTO).toFixed(1)} hours from accrual
+                        +{(calculatedPTO - userSettings.currentPTO).toFixed(2)} hours from accrual
                       </div>
                     )}
                     {calculatedPTO === userSettings.currentPTO && selectedDate && (
@@ -516,7 +530,7 @@ function App() {
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-500">
-                          {userSettings.currentPTO} hrs
+                          {userSettings.currentPTO.toFixed(2)} hrs
                         </div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">
                           ({hoursToDays(userSettings.currentPTO)} days)
@@ -541,7 +555,7 @@ function App() {
                         <span className="font-semibold text-gray-900 dark:text-white">Next Accrual</span>
                       </div>
                       <div className="text-right">
-                        <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">+{userSettings.accrualRate} hrs</div>
+                        <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">+{userSettings.accrualRate.toFixed(2)} hrs</div>
                         <div className="text-sm text-gray-600 dark:text-gray-400">
                           (+{hoursToDays(userSettings.accrualRate)} days)
                         </div>

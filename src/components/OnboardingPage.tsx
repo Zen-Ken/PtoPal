@@ -14,23 +14,26 @@ export default function OnboardingPage({ onComplete, onBack }: OnboardingPagePro
   const [formData, setFormData] = useState<UserSettings>(defaultUserSettings);
   
   // Local input states for better UX
-  const [currentPTOInputValue, setCurrentPTOInputValue] = useState(defaultUserSettings.currentPTO.toString());
-  const [accrualRateInputValue, setAccrualRateInputValue] = useState(defaultUserSettings.accrualRate.toString());
-  const [annualAllowanceInputValue, setAnnualAllowanceInputValue] = useState(defaultUserSettings.annualAllowance.toString());
+  const [currentPTOInputValue, setCurrentPTOInputValue] = useState(defaultUserSettings.currentPTO.toFixed(2));
+  const [accrualRateInputValue, setAccrualRateInputValue] = useState(defaultUserSettings.accrualRate.toFixed(2));
+  const [annualAllowanceInputValue, setAnnualAllowanceInputValue] = useState(defaultUserSettings.annualAllowance.toFixed(2));
 
   const handleCurrentPTOBlur = () => {
     const numericValue = currentPTOInputValue === '' ? 0 : Number(currentPTOInputValue);
-    setFormData(prev => ({ ...prev, currentPTO: numericValue }));
+    const roundedValue = Math.round(numericValue * 100) / 100;
+    setFormData(prev => ({ ...prev, currentPTO: roundedValue }));
   };
 
   const handleAccrualRateBlur = () => {
     const numericValue = accrualRateInputValue === '' ? 0 : Number(accrualRateInputValue);
-    setFormData(prev => ({ ...prev, accrualRate: numericValue }));
+    const roundedValue = Math.round(numericValue * 100) / 100;
+    setFormData(prev => ({ ...prev, accrualRate: roundedValue }));
   };
 
   const handleAnnualAllowanceBlur = () => {
     const numericValue = annualAllowanceInputValue === '' ? 0 : Number(annualAllowanceInputValue);
-    setFormData(prev => ({ ...prev, annualAllowance: numericValue }));
+    const roundedValue = Math.round(numericValue * 100) / 100;
+    setFormData(prev => ({ ...prev, annualAllowance: roundedValue }));
   };
 
   const slides = [
@@ -80,15 +83,15 @@ export default function OnboardingPage({ onComplete, onBack }: OnboardingPagePro
                 onBlur={handleCurrentPTOBlur}
                 className="w-full px-6 py-4 text-2xl font-bold text-center border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 shadow-soft transition-all duration-200 text-gray-900 dark:text-white"
                 min="0"
-                step="0.5"
-                placeholder="96"
+                step="0.01"
+                placeholder="96.00"
               />
               <span className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-lg font-medium">
                 hours
               </span>
             </div>
             <p className="text-center text-gray-500 dark:text-gray-400 mt-4">
-              Equivalent to {(formData.currentPTO / 8).toFixed(1)} days
+              Equivalent to {(formData.currentPTO / 8).toFixed(2)} days
               <br />
               <span className="text-sm">(8 hours = 1 work day)</span>
             </p>
@@ -140,7 +143,7 @@ export default function OnboardingPage({ onComplete, onBack }: OnboardingPagePro
                   onBlur={handleAccrualRateBlur}
                   className="w-full px-4 py-4 text-lg text-center border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 shadow-soft transition-all duration-200 text-gray-900 dark:text-white"
                   min="0"
-                  step="0.1"
+                  step="0.01"
                   placeholder="13.36"
                 />
                 <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm font-medium">
@@ -196,14 +199,15 @@ export default function OnboardingPage({ onComplete, onBack }: OnboardingPagePro
                   onBlur={handleAnnualAllowanceBlur}
                   className="w-full px-6 py-4 text-lg text-center border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 shadow-soft transition-all duration-200 text-gray-900 dark:text-white"
                   min="0"
-                  placeholder="200"
+                  step="0.01"
+                  placeholder="200.00"
                 />
                 <span className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm font-medium">
                   hours/year
                 </span>
               </div>
               <p className="text-center text-gray-500 dark:text-gray-400 mt-2 text-sm">
-                ≈ {(formData.annualAllowance / 8).toFixed(1)} days per year
+                ≈ {(formData.annualAllowance / 8).toFixed(2)} days per year
               </p>
             </div>
           </div>
@@ -238,7 +242,7 @@ export default function OnboardingPage({ onComplete, onBack }: OnboardingPagePro
             <div className="space-y-3 text-left">
               <div className="flex justify-between items-center">
                 <span className="text-gray-600 dark:text-gray-400">Current PTO:</span>
-                <span className="font-bold text-gray-900 dark:text-white">{formData.currentPTO} hours ({(formData.currentPTO / 8).toFixed(1)} days)</span>
+                <span className="font-bold text-gray-900 dark:text-white">{formData.currentPTO.toFixed(2)} hours ({(formData.currentPTO / 8).toFixed(2)} days)</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-600 dark:text-gray-400">Pay Period:</span>
@@ -246,11 +250,11 @@ export default function OnboardingPage({ onComplete, onBack }: OnboardingPagePro
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-600 dark:text-gray-400">Accrual Rate:</span>
-                <span className="font-bold text-gray-900 dark:text-white">{formData.accrualRate} hrs/paycheck</span>
+                <span className="font-bold text-gray-900 dark:text-white">{formData.accrualRate.toFixed(2)} hrs/paycheck</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-600 dark:text-gray-400">Annual Allowance:</span>
-                <span className="font-bold text-gray-900 dark:text-white">{formData.annualAllowance} hours</span>
+                <span className="font-bold text-gray-900 dark:text-white">{formData.annualAllowance.toFixed(2)} hours</span>
               </div>
             </div>
           </div>
