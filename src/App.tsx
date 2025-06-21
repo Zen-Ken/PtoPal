@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ProfilePage from './components/ProfilePage';
 import CalendarPage from './components/CalendarPage';
-import FullCalendarPage from './components/FullCalendarPage';
 import OnboardingPage from './components/OnboardingPage';
 import HomePage from './components/HomePage';
 import Navbar from './components/Navbar';
@@ -172,27 +171,6 @@ function App() {
           onGetStarted={handleGetStarted}
         />
         <CalendarPage 
-          onBack={() => setCurrentPage('home')}
-          userSettings={userSettings}
-          onUpdateSettings={handleUpdateSettings}
-        />
-      </div>
-    );
-  }
-
-  if (currentPage === 'fullcalendar') {
-    return (
-      <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
-        <BoltBadge />
-        <Navbar 
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          isMenuOpen={isMenuOpen}
-          setIsMenuOpen={setIsMenuOpen}
-          hasCompletedOnboarding={hasCompletedOnboarding}
-          onGetStarted={handleGetStarted}
-        />
-        <FullCalendarPage 
           onBack={() => setCurrentPage('home')}
           userSettings={userSettings}
           onUpdateSettings={handleUpdateSettings}
