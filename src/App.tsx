@@ -6,6 +6,7 @@ import OnboardingPage from './components/OnboardingPage';
 import BoltBadge from './components/BoltBadge';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { UserSettings, defaultUserSettings } from './types/UserSettings';
+import { calculatePTOForTargetDate } from './utils/dateUtils';
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -42,57 +43,18 @@ function App() {
     if (selectedDate) {
       calculatePTOForDate(selectedDate);
     }
-  }, [selectedDate, userSettings.currentPTO, userSettings.accrualRate, userSettings.payPeriod]);
+  }, [selectedDate, userSettings.currentPTO, userSettings.accrualRate, userSettings.payPeriod, userSettings.vacations]);
 
   const calculatePTOForDate = (dateString: string) => {
     const targetDate = new Date(dateString);
-    const today = new Date();
-    
-    // If the target date is in the past or today, return current PTO
-    if (targetDate <= today) {
-      setCalculatedPTO(userSettings.currentPTO);
-      return;
-    }
-
-    // Calculate how many pay periods will occur between now and the target date
-    const payPeriodOptions = {
-      weekly: 7,
-      biweekly: 14,
-      semimonthly: 15, // Approximate
-      monthly: 30 // Approximate
-    };
-
-    let payPeriodsCount = 0;
-    
-    if (userSettings.payPeriod === 'semimonthly') {
-      // For semi-monthly, count 1st and 15th of each month
-      const currentDate = new Date(today);
-      currentDate.setDate(1); // Start from first of current month
-      
-      while (currentDate <= targetDate) {
-        // Check if 1st of month is between now and target
-        if (currentDate >= today && currentDate <= targetDate) {
-          payPeriodsCount++;
-        }
-        
-        // Check if 15th of month is between now and target
-        const fifteenth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 15);
-        if (fifteenth >= today && fifteenth <= targetDate) {
-          payPeriodsCount++;
-        }
-        
-        // Move to next month
-        currentDate.setMonth(currentDate.getMonth() + 1);
-      }
-    } else {
-      // For other pay periods, calculate based on interval
-      const intervalDays = payPeriodOptions[userSettings.payPeriod as keyof typeof payPeriodOptions] || 30;
-      const daysDifference = Math.ceil((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      payPeriodsCount = Math.floor(daysDifference / intervalDays);
-    }
-
-    const additionalPTO = payPeriodsCount * userSettings.accrualRate;
-    setCalculatedPTO(userSettings.currentPTO + additionalPTO);
+    const calculatedBalance = calculatePTOForTargetDate(
+      userSettings.currentPTO,
+      userSettings.accrualRate,
+      userSettings.payPeriod,
+      userSettings.vacations,
+      targetDate
+    );
+    setCalculatedPTO(calculatedBalance);
   };
 
   const handleUpdateSettings = (newSettings: Partial<UserSettings>) => {
@@ -190,6 +152,7 @@ function App() {
       <CalendarPage 
         onBack={() => setCurrentPage('home')}
         userSettings={userSettings}
+        onUpdateSettings={handleUpdateSettings}
       />
     );
   }
@@ -421,6 +384,12 @@ function App() {
                         <div className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
                           <Clock className="w-4 h-4 mr-1" />
                           Current balance
+                        </div>
+                      )}
+                      {calculatedPTO < userSettings.currentPTO && (
+                        <div className="inline-flex items-center px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm font-medium">
+                          <Calendar className="w-4 h-4 mr-1" />
+                          After planned vacations
                         </div>
                       )}
                     </div>
