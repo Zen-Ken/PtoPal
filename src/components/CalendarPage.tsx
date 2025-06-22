@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Calendar, Clock, TrendingUp, DollarSign, Plus, X, Edit3, Trash2, MapPin, Save, List } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Clock, TrendingUp, DollarSign, Plus, X, Edit3, Trash2, MapPin, Save, Calculator } from 'lucide-react';
 import { UserSettings } from '../types/UserSettings';
 import { VacationEntry } from '../types/VacationEntry';
 import { 
@@ -70,6 +70,33 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
   const getFirstDayOfMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
   };
+
+  // Calculate PTO balance accounting for vacations
+  const calculatePTOWithVacations = useMemo(() => {
+    const today = new Date();
+    const totalVacationHours = userSettings.vacations.reduce((sum, vacation) => sum + vacation.totalHours, 0);
+    const remainingPTO = Math.max(0, userSettings.currentPTO - totalVacationHours);
+    
+    // Separate upcoming and past vacations
+    const upcomingVacations = userSettings.vacations.filter(vacation => 
+      createDateFromString(vacation.endDate) >= today
+    );
+    const pastVacations = userSettings.vacations.filter(vacation => 
+      createDateFromString(vacation.endDate) < today
+    );
+    
+    const upcomingVacationHours = upcomingVacations.reduce((sum, vacation) => sum + vacation.totalHours, 0);
+    const pastVacationHours = pastVacations.reduce((sum, vacation) => sum + vacation.totalHours, 0);
+    
+    return {
+      currentPTO: userSettings.currentPTO,
+      totalPlannedVacations: totalVacationHours,
+      upcomingVacations: upcomingVacationHours,
+      pastVacations: pastVacationHours,
+      remainingAfterVacations: remainingPTO,
+      utilizationPercentage: userSettings.currentPTO > 0 ? (totalVacationHours / userSettings.currentPTO) * 100 : 0
+    };
+  }, [userSettings.currentPTO, userSettings.vacations]);
 
   const generatePayPeriods = useMemo(() => {
     const events: PayPeriodEvent[] = [];
@@ -532,6 +559,84 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
 
           {/* Sidebar - Vacation Management */}
           <div className="space-y-6">
+            {/* PTO Balance with Vacation Accounting */}
+            <div className="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 rounded-xl p-6 border border-primary-200/50 dark:border-primary-700/50">
+              <div className="flex items-center space-x-3 mb-4">
+                <Calculator className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">PTO Balance Analysis</h3>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 dark:text-gray-400">Current PTO</span>
+                  <div className="text-right">
+                    <div className="font-bold text-primary-600 dark:text-primary-400">{calculatePTOWithVacations.currentPTO.toFixed(2)} hrs</div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">({hoursToDays(calculatePTOWithVacations.currentPTO)} days)</div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 dark:text-gray-400">Total Planned Vacations</span>
+                  <div className="text-right">
+                    <div className="font-bold text-purple-600 dark:text-purple-400">
+                      -{calculatePTOWithVacations.totalPlannedVacations.toFixed(2)} hrs
+                    </div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                      (-{hoursToDays(calculatePTOWithVacations.totalPlannedVacations)} days)
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="pt-3 border-t border-primary-200 dark:border-primary-700">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600 dark:text-gray-400">Remaining After Vacations</span>
+                    <div className="text-right">
+                      <div className={`font-bold ${
+                        calculatePTOWithVacations.remainingAfterVacations > 0 
+                          ? 'text-emerald-600 dark:text-emerald-400' 
+                          : 'text-red-600 dark:text-red-400'
+                      }`}>
+                        {calculatePTOWithVacations.remainingAfterVacations.toFixed(2)} hrs
+                      </div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
+                        ({hoursToDays(calculatePTOWithVacations.remainingAfterVacations)} days)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Utilization Percentage */}
+                <div className="pt-3 border-t border-primary-200 dark:border-primary-700">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-gray-600 dark:text-gray-400">PTO Utilization</span>
+                    <span className="font-bold text-gray-900 dark:text-white">
+                      {calculatePTOWithVacations.utilizationPercentage.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                    <div 
+                      className={`h-2 rounded-full transition-all duration-500 ${
+                        calculatePTOWithVacations.utilizationPercentage > 100 
+                          ? 'bg-gradient-to-r from-red-500 to-red-600' 
+                          : calculatePTOWithVacations.utilizationPercentage > 80
+                          ? 'bg-gradient-to-r from-amber-500 to-orange-600'
+                          : 'bg-gradient-to-r from-emerald-500 to-green-600'
+                      }`}
+                      style={{width: `${Math.min(calculatePTOWithVacations.utilizationPercentage, 100)}%`}}
+                    ></div>
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {calculatePTOWithVacations.utilizationPercentage > 100 
+                      ? 'Over budget - consider reducing vacation plans'
+                      : calculatePTOWithVacations.utilizationPercentage > 80
+                      ? 'High utilization - plan carefully'
+                      : 'Good balance - room for more vacation time'
+                    }
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Upcoming Vacations */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-100 dark:border-gray-700 p-6">
               <div className="flex items-center justify-between mb-4">
@@ -636,50 +741,6 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                 </div>
               </div>
             )}
-
-            {/* Quick Summary */}
-            <div className="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 rounded-xl p-6 border border-primary-200/50 dark:border-primary-700/50">
-              <div className="flex items-center space-x-3 mb-4">
-                <TrendingUp className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Summary</h3>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600 dark:text-gray-400">Current PTO</span>
-                  <div className="text-right">
-                    <div className="font-bold text-primary-600 dark:text-primary-400">{userSettings.currentPTO.toFixed(2)} hrs</div>
-                    <div className="text-xs text-gray-600 dark:text-gray-400">({hoursToDays(userSettings.currentPTO)} days)</div>
-                  </div>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600 dark:text-gray-400">Total Planned</span>
-                  <div className="text-right">
-                    <div className="font-bold text-purple-600 dark:text-purple-400">
-                      {userSettings.vacations.reduce((sum, v) => sum + v.totalHours, 0).toFixed(2)} hrs
-                    </div>
-                    <div className="text-xs text-gray-600 dark:text-gray-400">
-                      ({hoursToDays(userSettings.vacations.reduce((sum, v) => sum + v.totalHours, 0))} days)
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="pt-3 border-t border-primary-200 dark:border-primary-700">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600 dark:text-gray-400">Remaining After Vacations</span>
-                    <div className="text-right">
-                      <div className="font-bold text-emerald-600 dark:text-emerald-400">
-                        {Math.max(0, userSettings.currentPTO - userSettings.vacations.reduce((sum, v) => sum + v.totalHours, 0)).toFixed(2)} hrs
-                      </div>
-                      <div className="text-xs text-gray-600 dark:text-gray-400">
-                        ({hoursToDays(Math.max(0, userSettings.currentPTO - userSettings.vacations.reduce((sum, v) => sum + v.totalHours, 0)))} days)
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
 
             {/* Legend */}
             <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 rounded-xl p-6 border border-amber-200/50 dark:border-amber-700/50">
