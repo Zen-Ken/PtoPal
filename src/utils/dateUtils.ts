@@ -208,7 +208,7 @@ export const updatePTOBalanceForTimePassed = (
 };
 
 /**
- * Calculates PTO balance for a specific target date, accounting for accruals and vacations
+ * Calculates PTO balance for a specific target date, accounting for accruals only (vacations removed from calculation)
  */
 export const calculatePTOForTargetDate = (
   currentPTOAtSnapshot: number,
@@ -221,16 +221,9 @@ export const calculatePTOForTargetDate = (
   const today = normalizeDate(snapshotDate);
   const target = normalizeDate(targetDate);
   
-  // If target date is in the past or today, calculate based on vacations only
+  // If target date is in the past or today, return current PTO (no vacation deduction)
   if (target <= today) {
-    // Find vacations that have already been taken (end date is before or on today)
-    const completedVacations = vacations.filter(vacation => {
-      const vacationEnd = normalizeDate(createDateFromString(vacation.endDate));
-      return vacationEnd <= today;
-    });
-    
-    const totalVacationHours = completedVacations.reduce((sum, vacation) => sum + vacation.totalHours, 0);
-    return Math.max(0, Math.round((currentPTOAtSnapshot - totalVacationHours) * 100) / 100);
+    return Math.max(0, Math.round(currentPTOAtSnapshot * 100) / 100);
   }
 
   // Calculate accruals from today to target date
@@ -272,15 +265,8 @@ export const calculatePTOForTargetDate = (
 
   const additionalPTO = Math.round(payPeriodsCount * accrualRate * 100) / 100;
   
-  // Calculate vacation hours that will be used by the target date
-  const vacationsBeforeTarget = vacations.filter(vacation => {
-    const vacationEnd = normalizeDate(createDateFromString(vacation.endDate));
-    return vacationEnd <= target;
-  });
-  
-  const totalVacationHours = vacationsBeforeTarget.reduce((sum, vacation) => sum + vacation.totalHours, 0);
-  
-  return Math.max(0, Math.round((currentPTOAtSnapshot + additionalPTO - totalVacationHours) * 100) / 100);
+  // Return current PTO plus accruals (no vacation deduction)
+  return Math.max(0, Math.round((currentPTOAtSnapshot + additionalPTO) * 100) / 100);
 };
 
 /**
