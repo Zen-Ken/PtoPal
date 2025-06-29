@@ -307,20 +307,17 @@ export default function HomePage({
           <div className="text-center mt-16">
             <div className="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 rounded-2xl p-8 border border-primary-200/50 dark:border-primary-700/50 max-w-2xl mx-auto">
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                {hasCompletedOnboarding ? 'Ready to plan your next vacation?' : 'Ready to take control of your PTO?'}
+                Ready to take control of your PTO?
               </h3>
               <p className="text-gray-600 dark:text-gray-300 mb-6">
-                {hasCompletedOnboarding 
-                  ? 'Use your personalized PTO calendar to schedule time off and track your balance with confidence.'
-                  : 'Join thousands of professionals who never worry about their time off balance again.'
-                }
+                Join thousands of professionals who never worry about their time off balance again.
               </p>
               <button 
-                onClick={handleMainCTA}
+                onClick={onGetStarted}
                 className="bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-medium hover:shadow-large flex items-center justify-center mx-auto"
               >
-                {hasCompletedOnboarding ? 'View Your PTO Calendar' : 'Start Planning Today'}
-                {hasCompletedOnboarding ? <CalendarDays className="ml-2 w-5 h-5" /> : <ChevronRight className="ml-2 w-5 h-5" />}
+                Start Planning Today
+                <ChevronRight className="ml-2 w-5 h-5" />
               </button>
             </div>
           </div>
