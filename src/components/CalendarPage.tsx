@@ -825,6 +825,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
           position={tooltipPosition}
           onClose={handlePaydayIconLeave}
           hoursToDays={hoursToDays}
+          isFuturePayday={isFutureDate(dailyPTOBalances[openTooltipDate].date.getDate())}
         />
       )}
 
