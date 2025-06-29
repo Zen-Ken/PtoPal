@@ -17,6 +17,8 @@ interface CalendarPageProps {
   onBack: () => void;
   userSettings: UserSettings;
   onUpdateSettings: (settings: Partial<UserSettings>) => void;
+  selectedDate: string;
+  setSelectedDate: (date: string) => void;
 }
 
 interface PayPeriodEvent {
@@ -42,7 +44,7 @@ interface VacationFormData {
   description: string;
 }
 
-export default function CalendarPage({ onBack, userSettings, onUpdateSettings }: CalendarPageProps) {
+export default function CalendarPage({ onBack, userSettings, onUpdateSettings, selectedDate, setSelectedDate }: CalendarPageProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isAddVacationModalOpen, setIsAddVacationModalOpen] = useState(false);
   const [editingVacation, setEditingVacation] = useState<VacationEntry | null>(null);
@@ -51,14 +53,6 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
     endDate: '',
     includeWeekends: false,
     description: ''
-  });
-  
-  // State for projected PTO calculation
-  const [selectedProjectionDate, setSelectedProjectionDate] = useState(() => {
-    // Default to 3 months from now
-    const today = new Date();
-    const threeMonthsFromNow = new Date(today.getFullYear(), today.getMonth() + 3, today.getDate());
-    return threeMonthsFromNow.toISOString().split('T')[0];
   });
   
   const payPeriodOptions = {
@@ -71,6 +65,20 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
   // Helper function to convert hours to days for display
   const hoursToDays = (hours: number) => (hours / 8).toFixed(2);
 
+  // Calculate projected PTO balance for the selected future date
+  const projectedPTOData = useMemo(() => {
+    if (!selectedDate) return null;
+    
+    const targetDate = createDateFromString(selectedDate);
+    return getProjectedPTOBalance(
+      userSettings.currentPTO,
+      userSettings.accrualRate,
+      userSettings.payPeriod,
+      userSettings.vacations,
+      targetDate
+    );
+  }, [selectedDate, userSettings.currentPTO, userSettings.accrualRate, userSettings.payPeriod, userSettings.vacations]);
+
   // Helper functions - moved before useMemo hooks that use them
   const getDaysInMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
@@ -79,20 +87,6 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
   const getFirstDayOfMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
   };
-
-  // Calculate projected PTO balance for the selected future date
-  const projectedPTOData = useMemo(() => {
-    if (!selectedProjectionDate) return null;
-    
-    const targetDate = createDateFromString(selectedProjectionDate);
-    return getProjectedPTOBalance(
-      userSettings.currentPTO,
-      userSettings.accrualRate,
-      userSettings.payPeriod,
-      userSettings.vacations,
-      targetDate
-    );
-  }, [selectedProjectionDate, userSettings.currentPTO, userSettings.accrualRate, userSettings.payPeriod, userSettings.vacations]);
 
   const generatePayPeriods = useMemo(() => {
     const events: PayPeriodEvent[] = [];
@@ -374,8 +368,8 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
   };
 
   const formatSelectedDate = () => {
-    if (!selectedProjectionDate) return '';
-    const date = createDateFromString(selectedProjectionDate);
+    if (!selectedDate) return '';
+    const date = createDateFromString(selectedDate);
     return date.toLocaleDateString('en-US', { 
       year: 'numeric', 
       month: 'long', 
@@ -582,8 +576,8 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                   </label>
                   <input
                     type="date"
-                    value={selectedProjectionDate}
-                    onChange={(e) => setSelectedProjectionDate(e.target.value)}
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
                     className="w-full px-3 py-2 border border-primary-200 dark:border-primary-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 transition-all duration-200 text-gray-900 dark:text-white text-sm"
                     min={new Date().toISOString().split('T')[0]}
                   />

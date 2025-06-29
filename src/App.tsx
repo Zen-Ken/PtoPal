@@ -191,6 +191,8 @@ function App() {
           onBack={() => setCurrentPage('home')}
           userSettings={userSettings}
           onUpdateSettings={handleUpdateSettings}
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
         />
       </div>
     );
