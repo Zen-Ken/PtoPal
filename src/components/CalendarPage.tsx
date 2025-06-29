@@ -253,6 +253,35 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
     return checkDateNormalized < todayNormalized;
   };
 
+  const handlePaydayIconHover = (event: React.MouseEvent, dateKey: string) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+    
+    setTooltipPosition({
+      top: rect.bottom + scrollTop + 8,
+      left: Math.max(16, Math.min(rect.left + scrollLeft, window.innerWidth - 336))
+    });
+    setOpenTooltipDate(dateKey);
+  };
+
+  const handlePaydayIconLeave = () => {
+    setOpenTooltipDate(null);
+  };
+
+  const handlePaydayIconClick = (event: React.MouseEvent, dateKey: string) => {
+    event.stopPropagation();
+    const rect = event.currentTarget.getBoundingClientRect();
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+    
+    setTooltipPosition({
+      top: rect.bottom + scrollTop + 8,
+      left: Math.max(16, Math.min(rect.left + scrollLeft, window.innerWidth - 336))
+    });
+    setOpenTooltipDate(dateKey);
+  };
+
   const handleDayClick = (day: number) => {
     const clickedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
     const year = clickedDate.getFullYear();
@@ -282,35 +311,6 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
       });
     }
     setIsAddVacationModalOpen(true);
-  };
-
-  const handlePaydayIconHover = (event: React.MouseEvent, dateKey: string) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-    
-    setTooltipPosition({
-      top: rect.bottom + scrollTop + 8,
-      left: Math.max(16, Math.min(rect.left + scrollLeft, window.innerWidth - 336))
-    });
-    setOpenTooltipDate(dateKey);
-  };
-
-  const handlePaydayIconLeave = () => {
-    setOpenTooltipDate(null);
-  };
-
-  const handlePaydayIconClick = (event: React.MouseEvent, dateKey: string) => {
-    event.stopPropagation();
-    const rect = event.currentTarget.getBoundingClientRect();
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-    
-    setTooltipPosition({
-      top: rect.bottom + scrollTop + 8,
-      left: Math.max(16, Math.min(rect.left + scrollLeft, window.innerWidth - 336))
-    });
-    setOpenTooltipDate(dateKey);
   };
 
   const handleAddVacation = () => {
@@ -515,7 +515,9 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                         todayClass 
                           ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-300 dark:border-primary-600 ring-2 ring-primary-200 dark:ring-primary-700' 
                           : dayInfo?.isPayDay
-                          ? 'border-emerald-200 dark:border-emerald-700 bg-emerald-50/30 dark:bg-emerald-900/10'
+                          ? isFuture
+                            ? 'border-emerald-200 dark:border-emerald-700 bg-emerald-50/30 dark:bg-emerald-900/10'
+                            : 'border-gray-300 dark:border-gray-600 bg-gray-50/30 dark:bg-gray-800/10'
                           : 'border-gray-200 dark:border-gray-600'
                       }`}
                     >
@@ -783,7 +785,13 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                   <div className="w-6 h-6 bg-gradient-to-r from-emerald-500 to-green-600 rounded-full flex items-center justify-center">
                     <DollarSign className="w-3 h-3 text-white" />
                   </div>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Pay Day (hover/click for details)</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Future Pay Day (hover/click for details)</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 bg-gradient-to-r from-gray-400 to-gray-500 opacity-60 rounded-full flex items-center justify-center">
+                    <DollarSign className="w-3 h-3 text-white" />
+                  </div>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Past Pay Day</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-4 h-4 bg-gradient-to-r from-purple-500 to-pink-600 rounded"></div>
@@ -795,7 +803,11 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-4 h-4 border-2 border-emerald-200 dark:border-emerald-700 bg-emerald-50/30 dark:bg-emerald-900/10 rounded"></div>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Pay Day Border</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Future Pay Day Border</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-4 h-4 border-2 border-gray-300 dark:border-gray-600 bg-gray-50/30 dark:bg-gray-800/10 rounded"></div>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Past Pay Day Border</span>
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 mt-3 p-2 bg-gray-100 dark:bg-gray-700 rounded">
                   <strong>Tip:</strong> Click on vacation indicators to edit, or click on any day to add new vacations. Hover or click on pay day dollar icons for detailed balance information.
