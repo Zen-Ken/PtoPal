@@ -475,46 +475,50 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                   const isFuture = isFutureDate(day);
                   const isPast = isPastDate(day);
 
+                  // Determine background and border classes based on payday status
+                  let dayClasses = "p-2 h-32 border rounded-lg relative transition-all duration-200 cursor-pointer";
+                  
+                  if (todayClass) {
+                    dayClasses += " bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700 ring-2 ring-primary-200 dark:ring-primary-700";
+                  } else if (dayInfo?.isPayDay) {
+                    if (isFuture) {
+                      dayClasses += " bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/30";
+                    } else {
+                      dayClasses += " bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700";
+                    }
+                  } else {
+                    dayClasses += " border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700";
+                  }
+
                   return (
                     <div
                       key={day}
                       onClick={() => handleDayClick(day)}
-                      className={`p-2 h-32 border border-gray-100 dark:border-gray-700 rounded-lg relative transition-all duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${
-                        todayClass 
-                          ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700 ring-2 ring-primary-200 dark:ring-primary-700' 
-                          : ''
-                      }`}
+                      className={dayClasses}
+                      title={dayInfo?.isPayDay && dayInfo.totalPTOOnPayDay !== undefined ? 
+                        `Pay Day - Total PTO: ${dayInfo.totalPTOOnPayDay.toFixed(2)} hrs (${hoursToDays(dayInfo.totalPTOOnPayDay)} days)` : 
+                        undefined
+                      }
                     >
                       <div className={`text-sm font-medium mb-1 ${
-                        todayClass ? 'text-primary-700 dark:text-primary-300' : 'text-gray-900 dark:text-white'
+                        todayClass ? 'text-primary-700 dark:text-primary-300' : 
+                        dayInfo?.isPayDay && isFuture ? 'text-emerald-700 dark:text-emerald-300' :
+                        dayInfo?.isPayDay && isPast ? 'text-gray-600 dark:text-gray-400' :
+                        'text-gray-900 dark:text-white'
                       }`}>
                         {day}
+                        {/* Small payday icon */}
+                        {dayInfo?.isPayDay && (
+                          <DollarSign className={`w-3 h-3 inline ml-1 ${
+                            isFuture ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-500'
+                          }`} />
+                        )}
                       </div>
-                      
-                      {/* Pay Day Indicator with Total PTO Balance */}
-                      {dayInfo?.isPayDay && dayInfo.totalPTOOnPayDay !== undefined && (
-                        <div className={`text-white text-xs px-2 py-1 rounded-md shadow-soft mb-1 ${
-                          isFuture 
-                            ? 'bg-gradient-to-r from-emerald-500 to-green-600' 
-                            : 'bg-gradient-to-r from-gray-400 to-gray-500 opacity-60'
-                        }`}>
-                          <div className="flex items-center space-x-1 mb-1">
-                            <DollarSign className="w-3 h-3" />
-                            <span className="font-medium">Pay Day</span>
-                          </div>
-                          <div className="text-xs opacity-90 font-medium">
-                            {dayInfo.totalPTOOnPayDay.toFixed(2)} hrs total
-                          </div>
-                          <div className="text-xs opacity-75">
-                            ({hoursToDays(dayInfo.totalPTOOnPayDay)}d)
-                          </div>
-                        </div>
-                      )}
 
                       {/* Individual Vacation Indicators */}
                       {dayInfo?.vacations && dayInfo.vacations.length > 0 && (
                         <div className="space-y-1">
-                          {dayInfo.vacations.slice(0, 2).map((vacation, index) => {
+                          {dayInfo.vacations.slice(0, 3).map((vacation, index) => {
                             const colors = [
                               'from-purple-500 to-pink-600',
                               'from-blue-500 to-indigo-600',
@@ -543,9 +547,9 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                               </div>
                             );
                           })}
-                          {dayInfo.vacations.length > 2 && (
+                          {dayInfo.vacations.length > 3 && (
                             <div className="text-xs text-gray-500 dark:text-gray-400 px-2">
-                              +{dayInfo.vacations.length - 2} more
+                              +{dayInfo.vacations.length - 3} more
                             </div>
                           )}
                         </div>
@@ -747,12 +751,16 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
               
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-gradient-to-r from-emerald-500 to-green-600 rounded"></div>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Future Pay Day + PTO Balance</span>
+                  <div className="w-4 h-4 bg-emerald-50 border border-emerald-200 rounded flex items-center justify-center">
+                    <DollarSign className="w-2 h-2 text-emerald-600" />
+                  </div>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Future Pay Day (hover for PTO balance)</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-gradient-to-r from-gray-400 to-gray-500 opacity-60 rounded"></div>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Past Pay Day (Historical)</span>
+                  <div className="w-4 h-4 bg-gray-50 border border-gray-200 rounded flex items-center justify-center">
+                    <DollarSign className="w-2 h-2 text-gray-500" />
+                  </div>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Past Pay Day (historical)</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-4 h-4 bg-gradient-to-r from-purple-500 to-pink-600 rounded"></div>
@@ -763,7 +771,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                   <span className="text-sm text-gray-700 dark:text-gray-300">Today</span>
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 mt-3 p-2 bg-gray-100 dark:bg-gray-700 rounded">
-                  <strong>Tip:</strong> Click on vacation indicators to edit, or click on any day to add new vacations
+                  <strong>Tip:</strong> Click on vacation indicators to edit, or click on any day to add new vacations. Hover over payday cells to see PTO balance details.
                 </div>
               </div>
             </div>
