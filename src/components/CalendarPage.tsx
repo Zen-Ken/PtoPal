@@ -482,7 +482,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                     dayClasses += " bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700 ring-2 ring-primary-200 dark:ring-primary-700";
                   } else if (dayInfo?.isPayDay) {
                     if (isFuture) {
-                      dayClasses += " bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/30";
+                      dayClasses += " bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-600 hover:bg-green-100 dark:hover:bg-green-900/30";
                     } else {
                       dayClasses += " bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700";
                     }
@@ -500,17 +500,17 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                         undefined
                       }
                     >
-                      <div className={`text-sm font-medium mb-1 ${
+                      <div className={`text-sm font-medium mb-1 flex items-center ${
                         todayClass ? 'text-primary-700 dark:text-primary-300' : 
-                        dayInfo?.isPayDay && isFuture ? 'text-emerald-700 dark:text-emerald-300' :
+                        dayInfo?.isPayDay && isFuture ? 'text-green-700 dark:text-green-300' :
                         dayInfo?.isPayDay && isPast ? 'text-gray-600 dark:text-gray-400' :
                         'text-gray-900 dark:text-white'
                       }`}>
-                        {day}
+                        <span>{day}</span>
                         {/* Small payday icon */}
                         {dayInfo?.isPayDay && (
-                          <DollarSign className={`w-3 h-3 inline ml-1 ${
-                            isFuture ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-500 dark:text-gray-500'
+                          <DollarSign className={`w-3 h-3 ml-1 ${
+                            isFuture ? 'text-green-600 dark:text-green-400' : 'text-gray-500 dark:text-gray-500'
                           }`} />
                         )}
                       </div>
@@ -751,8 +751,8 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
               
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-emerald-50 border border-emerald-200 rounded flex items-center justify-center">
-                    <DollarSign className="w-2 h-2 text-emerald-600" />
+                  <div className="w-4 h-4 bg-green-50 border border-green-300 rounded flex items-center justify-center">
+                    <DollarSign className="w-2 h-2 text-green-600" />
                   </div>
                   <span className="text-sm text-gray-700 dark:text-gray-300">Future Pay Day (hover for PTO balance)</span>
                 </div>
