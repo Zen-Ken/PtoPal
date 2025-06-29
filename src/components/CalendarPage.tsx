@@ -98,7 +98,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
       // First pay period (1st of month)
       const firstPayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       if (firstPayDate >= startOfMonth && firstPayDate <= endOfMonth) {
-        const totalPTO = calculatePTOForTargetDate(
+        const projectedData = getProjectedPTOBalance(
           userSettings.currentPTO,
           userSettings.accrualRate,
           userSettings.payPeriod,
@@ -109,7 +109,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
         events.push({
           date: firstPayDate,
           ptoAccrued: userSettings.accrualRate,
-          totalPTO: Math.round(totalPTO * 100) / 100,
+          totalPTO: Math.round(projectedData.projectedBalance * 100) / 100,
           isPayDay: true
         });
       }
@@ -117,7 +117,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
       // Second pay period (15th of month)
       const secondPayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 15);
       if (secondPayDate >= startOfMonth && secondPayDate <= endOfMonth) {
-        const totalPTO = calculatePTOForTargetDate(
+        const projectedData = getProjectedPTOBalance(
           userSettings.currentPTO,
           userSettings.accrualRate,
           userSettings.payPeriod,
@@ -128,7 +128,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
         events.push({
           date: secondPayDate,
           ptoAccrued: userSettings.accrualRate,
-          totalPTO: Math.round(totalPTO * 100) / 100,
+          totalPTO: Math.round(projectedData.projectedBalance * 100) / 100,
           isPayDay: true
         });
       }
@@ -143,7 +143,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
       while (currentPayDate.getFullYear() === currentDate.getFullYear()) {
         // Check if this pay date falls within the current month
         if (currentPayDate >= startOfMonth && currentPayDate <= endOfMonth) {
-          const totalPTO = calculatePTOForTargetDate(
+          const projectedData = getProjectedPTOBalance(
             userSettings.currentPTO,
             userSettings.accrualRate,
             userSettings.payPeriod,
@@ -154,7 +154,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
           events.push({
             date: new Date(currentPayDate),
             ptoAccrued: userSettings.accrualRate,
-            totalPTO: Math.round(totalPTO * 100) / 100,
+            totalPTO: Math.round(projectedData.projectedBalance * 100) / 100,
             isPayDay: true
           });
         }
@@ -180,7 +180,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
       const day = currentDay.getDate();
       const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       
-      const ptoBalance = calculatePTOForTargetDate(
+      const projectedData = getProjectedPTOBalance(
         userSettings.currentPTO,
         userSettings.accrualRate,
         userSettings.payPeriod,
@@ -200,7 +200,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
       
       balances[dateKey] = {
         date: new Date(currentDay),
-        ptoBalance: Math.round(ptoBalance * 100) / 100,
+        ptoBalance: Math.round(projectedData.projectedBalance * 100) / 100,
         isPayDay: !!payPeriodEvent,
         vacations: vacationsForDay,
         ptoAccrued: payPeriodEvent?.ptoAccrued,
