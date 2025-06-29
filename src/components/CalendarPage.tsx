@@ -571,6 +571,9 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                 <Target className="w-6 h-6 text-primary-600 dark:text-primary-400" />
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">Projected PTO Balance</h3>
               </div>
+              <p className="text-sm text-primary-700 dark:text-primary-300 mb-4">
+                This projection includes your saved vacations and future accruals.
+              </p>
               
               <div className="space-y-4">
                 <div>
@@ -616,7 +619,10 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
                       </div>
                       
                       <div className="flex justify-between items-center">
-                        <span className="text-gray-600 dark:text-gray-400">Vacation Hours</span>
+                        <span className="text-gray-600 dark:text-gray-400 flex items-center space-x-1">
+                          <MapPin className="w-3 h-3" />
+                          <span>Vacation Hours</span>
+                        </span>
                         <span className="font-medium text-red-600 dark:text-red-400">
                           -{projectedPTOData.breakdown.totalVacationHours.toFixed(2)} hrs
                         </span>
