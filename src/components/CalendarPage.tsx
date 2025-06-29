@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Calendar, Clock, TrendingUp, DollarSign, Plus, X, Edit3, Trash2, MapPin, Save, Calculator, Target } from 'lucide-react';
 import { UserSettings } from '../types/UserSettings';
 import { VacationEntry } from '../types/VacationEntry';
@@ -58,6 +58,18 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
     includeWeekends: false,
     description: ''
   });
+
+  // Set calendar month to match the selected date from Home page
+  useEffect(() => {
+    if (selectedDate) {
+      const targetDate = createDateFromString(selectedDate);
+      // Only update if the month/year is different from current display
+      if (targetDate.getMonth() !== currentDate.getMonth() || 
+          targetDate.getFullYear() !== currentDate.getFullYear()) {
+        setCurrentDate(new Date(targetDate.getFullYear(), targetDate.getMonth(), 1));
+      }
+    }
+  }, [selectedDate]); // Remove currentDate from dependencies to avoid infinite loop
   
   const payPeriodOptions = {
     weekly: { days: 7, label: 'Weekly' },
