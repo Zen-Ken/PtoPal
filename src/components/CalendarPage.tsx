@@ -517,7 +517,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                           : dayInfo?.isPayDay
                           ? isFuture
                             ? 'border-emerald-200 dark:border-emerald-700 bg-emerald-50/30 dark:bg-emerald-900/10'
-                            : 'border-gray-300 dark:border-gray-600 bg-gray-50/30 dark:bg-gray-800/10'
+                            : 'border-gray-400 dark:border-gray-500 bg-gray-50/30 dark:bg-gray-800/10'
                           : 'border-gray-200 dark:border-gray-600'
                       }`}
                     >
@@ -806,7 +806,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                   <span className="text-sm text-gray-700 dark:text-gray-300">Future Pay Day Border</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 border-2 border-gray-300 dark:border-gray-600 bg-gray-50/30 dark:bg-gray-800/10 rounded"></div>
+                  <div className="w-4 h-4 border-2 border-gray-400 dark:border-gray-500 bg-gray-50/30 dark:bg-gray-800/10 rounded"></div>
                   <span className="text-sm text-gray-700 dark:text-gray-300">Past Pay Day Border</span>
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 mt-3 p-2 bg-gray-100 dark:bg-gray-700 rounded">
