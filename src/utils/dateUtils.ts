@@ -96,20 +96,20 @@ export const calculatePayPeriodsBetweenDates = (
   let payPeriodsCount = 0;
   
   if (payPeriod === 'semimonthly') {
-    // For semi-monthly, count 1st and 15th of each month between dates
+    // For semi-monthly, count 15th and last day of each month between dates
     const currentDate = new Date(start);
     currentDate.setDate(1); // Start from first of start month
     
     while (currentDate <= end) {
-      // Check if 1st of month is between start and end (exclusive of start, inclusive of end)
-      const firstOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-      if (firstOfMonth > start && firstOfMonth <= end) {
-        payPeriodsCount++;
-      }
-      
       // Check if 15th of month is between start and end (exclusive of start, inclusive of end)
       const fifteenthOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 15);
       if (fifteenthOfMonth > start && fifteenthOfMonth <= end) {
+        payPeriodsCount++;
+      }
+      
+      // Check if last day of month is between start and end (exclusive of start, inclusive of end)
+      const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+      if (lastDayOfMonth > start && lastDayOfMonth <= end) {
         payPeriodsCount++;
       }
       
@@ -237,19 +237,20 @@ export const calculatePTOForTargetDate = (
   let payPeriodsCount = 0;
   
   if (payPeriod === 'semimonthly') {
-    // For semi-monthly, count 1st and 15th of each month
+    // For semi-monthly, count 15th and last day of each month
     const currentDate = new Date(today);
     currentDate.setDate(1); // Start from first of current month
     
     while (currentDate <= target) {
-      // Check if 1st of month is between now and target
-      if (currentDate >= today && currentDate <= target) {
-        payPeriodsCount++;
-      }
-      
       // Check if 15th of month is between now and target
       const fifteenth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 15);
       if (fifteenth >= today && fifteenth <= target) {
+        payPeriodsCount++;
+      }
+      
+      // Check if last day of month is between now and target
+      const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+      if (lastDay >= today && lastDay <= target) {
         payPeriodsCount++;
       }
       

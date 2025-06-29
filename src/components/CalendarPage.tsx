@@ -96,40 +96,40 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
     const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
     
-    // For semi-monthly, use 1st and 15th of each month
+    // For semi-monthly, use 15th and last day of each month
     if (userSettings.payPeriod === 'semimonthly') {
-      // First pay period (1st of month)
-      const firstPayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-      if (firstPayDate >= startOfMonth && firstPayDate <= endOfMonth) {
+      // First pay period (15th of month)
+      const fifteenthPayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 15);
+      if (fifteenthPayDate >= startOfMonth && fifteenthPayDate <= endOfMonth) {
         const projectedData = getProjectedPTOBalance(
           userSettings.currentPTO,
           userSettings.accrualRate,
           userSettings.payPeriod,
           userSettings.vacations,
-          firstPayDate
+          fifteenthPayDate
         );
         
         events.push({
-          date: firstPayDate,
+          date: fifteenthPayDate,
           ptoAccrued: userSettings.accrualRate,
           totalPTO: Math.round(projectedData.projectedBalance * 100) / 100,
           isPayDay: true
         });
       }
       
-      // Second pay period (15th of month)
-      const secondPayDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 15);
-      if (secondPayDate >= startOfMonth && secondPayDate <= endOfMonth) {
+      // Second pay period (last day of month)
+      const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+      if (lastDayOfMonth >= startOfMonth && lastDayOfMonth <= endOfMonth) {
         const projectedData = getProjectedPTOBalance(
           userSettings.currentPTO,
           userSettings.accrualRate,
           userSettings.payPeriod,
           userSettings.vacations,
-          secondPayDate
+          lastDayOfMonth
         );
         
         events.push({
-          date: secondPayDate,
+          date: lastDayOfMonth,
           ptoAccrued: userSettings.accrualRate,
           totalPTO: Math.round(projectedData.projectedBalance * 100) / 100,
           isPayDay: true
