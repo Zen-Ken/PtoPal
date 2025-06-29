@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Calendar, Clock, TrendingUp, DollarSign, Plus, X, Edit3, Trash2, MapPin, Save, Calculator, Target } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Clock, TrendingUp, DollarSign, Plus, X, Edit3, Trash2, MapPin, Save, Calculator, Target, Home } from 'lucide-react';
 import { UserSettings } from '../types/UserSettings';
 import { VacationEntry } from '../types/VacationEntry';
 import PaydayTooltip from './PaydayTooltip';
@@ -276,6 +276,11 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
     });
   };
 
+  const jumpToToday = () => {
+    const today = new Date();
+    setCurrentDate(new Date(today.getFullYear(), today.getMonth(), 1));
+  };
+
   const isToday = (day: number) => {
     const today = new Date();
     return day === today.getDate() &&
@@ -481,6 +486,13 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
     createDateFromString(vacation.endDate) < today
   );
 
+  // Check if we're currently viewing today's month
+  const isCurrentMonth = () => {
+    const today = new Date();
+    return currentDate.getMonth() === today.getMonth() && 
+           currentDate.getFullYear() === today.getFullYear();
+  };
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -520,6 +532,16 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
               >
                 <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
               </button>
+              {!isCurrentMonth() && (
+                <button
+                  onClick={jumpToToday}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-soft hover:shadow-medium flex items-center space-x-2"
+                  title="Jump to current month"
+                >
+                  <Home className="w-4 h-4" />
+                  <span>Today</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
