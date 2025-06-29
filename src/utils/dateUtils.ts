@@ -270,6 +270,67 @@ export const calculatePTOForTargetDate = (
 };
 
 /**
+ * NEW: Calculates projected PTO balance for a future date, accounting for both accruals and vacation deductions
+ */
+export const getProjectedPTOBalance = (
+  currentPTO: number,
+  accrualRate: number,
+  payPeriod: 'weekly' | 'biweekly' | 'semimonthly' | 'monthly',
+  vacations: VacationEntry[],
+  targetDate: Date,
+  currentDate: Date = new Date()
+): {
+  projectedBalance: number;
+  accruedHours: number;
+  vacationHoursUsed: number;
+  breakdown: {
+    startingBalance: number;
+    totalAccrued: number;
+    totalVacationHours: number;
+    finalBalance: number;
+  };
+} => {
+  const today = normalizeDate(currentDate);
+  const target = normalizeDate(targetDate);
+  
+  // If target date is in the past or today, return current PTO
+  if (target <= today) {
+    return {
+      projectedBalance: currentPTO,
+      accruedHours: 0,
+      vacationHoursUsed: 0,
+      breakdown: {
+        startingBalance: currentPTO,
+        totalAccrued: 0,
+        totalVacationHours: 0,
+        finalBalance: currentPTO
+      }
+    };
+  }
+
+  // Calculate PTO that will be accrued between now and target date
+  const accruedHours = calculateAccruedPTO(today, target, accrualRate, payPeriod);
+  
+  // Calculate vacation hours that will be used between now and target date
+  const vacationHoursUsed = calculateVacationHoursUsedBetweenDates(today, target, vacations);
+  
+  // Calculate final projected balance
+  const projectedBalance = Math.max(0, Math.round((currentPTO + accruedHours - vacationHoursUsed) * 100) / 100);
+  
+  return {
+    projectedBalance,
+    accruedHours: Math.round(accruedHours * 100) / 100,
+    vacationHoursUsed: Math.round(vacationHoursUsed * 100) / 100,
+    breakdown: {
+      startingBalance: Math.round(currentPTO * 100) / 100,
+      totalAccrued: Math.round(accruedHours * 100) / 100,
+      totalVacationHours: Math.round(vacationHoursUsed * 100) / 100,
+      finalBalance: projectedBalance
+    }
+  };
+};
+
+/**
  * Generates a unique ID for vacation entries
  */
 export const generateVacationId = (): string => {

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Calendar, Clock, TrendingUp, DollarSign, Plus, X, Edit3, Trash2, MapPin, Save, Calculator } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Clock, TrendingUp, DollarSign, Plus, X, Edit3, Trash2, MapPin, Save, Calculator, Target } from 'lucide-react';
 import { UserSettings } from '../types/UserSettings';
 import { VacationEntry } from '../types/VacationEntry';
 import { 
@@ -9,7 +9,8 @@ import {
   formatDateRange,
   calculateVacationHours,
   normalizeDate,
-  createDateFromString
+  createDateFromString,
+  getProjectedPTOBalance
 } from '../utils/dateUtils';
 
 interface CalendarPageProps {
@@ -52,6 +53,14 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
     description: ''
   });
   
+  // State for projected PTO calculation
+  const [selectedProjectionDate, setSelectedProjectionDate] = useState(() => {
+    // Default to 3 months from now
+    const today = new Date();
+    const threeMonthsFromNow = new Date(today.getFullYear(), today.getMonth() + 3, today.getDate());
+    return threeMonthsFromNow.toISOString().split('T')[0];
+  });
+  
   const payPeriodOptions = {
     weekly: { days: 7, label: 'Weekly' },
     biweekly: { days: 14, label: 'Bi-weekly' },
@@ -71,32 +80,19 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
     return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
   };
 
-  // Calculate PTO balance accounting for vacations
-  const calculatePTOWithVacations = useMemo(() => {
-    const today = new Date();
-    const totalVacationHours = userSettings.vacations.reduce((sum, vacation) => sum + vacation.totalHours, 0);
-    const remainingPTO = Math.max(0, userSettings.currentPTO - totalVacationHours);
+  // Calculate projected PTO balance for the selected future date
+  const projectedPTOData = useMemo(() => {
+    if (!selectedProjectionDate) return null;
     
-    // Separate upcoming and past vacations
-    const upcomingVacations = userSettings.vacations.filter(vacation => 
-      createDateFromString(vacation.endDate) >= today
+    const targetDate = createDateFromString(selectedProjectionDate);
+    return getProjectedPTOBalance(
+      userSettings.currentPTO,
+      userSettings.accrualRate,
+      userSettings.payPeriod,
+      userSettings.vacations,
+      targetDate
     );
-    const pastVacations = userSettings.vacations.filter(vacation => 
-      createDateFromString(vacation.endDate) < today
-    );
-    
-    const upcomingVacationHours = upcomingVacations.reduce((sum, vacation) => sum + vacation.totalHours, 0);
-    const pastVacationHours = pastVacations.reduce((sum, vacation) => sum + vacation.totalHours, 0);
-    
-    return {
-      currentPTO: userSettings.currentPTO,
-      totalPlannedVacations: totalVacationHours,
-      upcomingVacations: upcomingVacationHours,
-      pastVacations: pastVacationHours,
-      remainingAfterVacations: remainingPTO,
-      utilizationPercentage: userSettings.currentPTO > 0 ? (totalVacationHours / userSettings.currentPTO) * 100 : 0
-    };
-  }, [userSettings.currentPTO, userSettings.vacations]);
+  }, [selectedProjectionDate, userSettings.currentPTO, userSettings.accrualRate, userSettings.payPeriod, userSettings.vacations]);
 
   const generatePayPeriods = useMemo(() => {
     const events: PayPeriodEvent[] = [];
@@ -377,6 +373,16 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
     ) * 100) / 100;
   };
 
+  const formatSelectedDate = () => {
+    if (!selectedProjectionDate) return '';
+    const date = createDateFromString(selectedProjectionDate);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
@@ -559,81 +565,74 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings }:
 
           {/* Sidebar - Vacation Management */}
           <div className="space-y-6">
-            {/* PTO Balance with Vacation Accounting */}
+            {/* Projected PTO Balance */}
             <div className="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 rounded-xl p-6 border border-primary-200/50 dark:border-primary-700/50">
               <div className="flex items-center space-x-3 mb-4">
-                <Calculator className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">PTO Balance Analysis</h3>
+                <Target className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Projected PTO Balance</h3>
               </div>
               
               <div className="space-y-4">
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600 dark:text-gray-400">Current PTO</span>
-                  <div className="text-right">
-                    <div className="font-bold text-primary-600 dark:text-primary-400">{calculatePTOWithVacations.currentPTO.toFixed(2)} hrs</div>
-                    <div className="text-xs text-gray-600 dark:text-gray-400">({hoursToDays(calculatePTOWithVacations.currentPTO)} days)</div>
-                  </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Select Future Date
+                  </label>
+                  <input
+                    type="date"
+                    value={selectedProjectionDate}
+                    onChange={(e) => setSelectedProjectionDate(e.target.value)}
+                    className="w-full px-3 py-2 border border-primary-200 dark:border-primary-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 transition-all duration-200 text-gray-900 dark:text-white text-sm"
+                    min={new Date().toISOString().split('T')[0]}
+                  />
                 </div>
                 
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600 dark:text-gray-400">Total Planned Vacations</span>
-                  <div className="text-right">
-                    <div className="font-bold text-purple-600 dark:text-purple-400">
-                      -{calculatePTOWithVacations.totalPlannedVacations.toFixed(2)} hrs
-                    </div>
-                    <div className="text-xs text-gray-600 dark:text-gray-400">
-                      (-{hoursToDays(calculatePTOWithVacations.totalPlannedVacations)} days)
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="pt-3 border-t border-primary-200 dark:border-primary-700">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600 dark:text-gray-400">Remaining After Vacations</span>
-                    <div className="text-right">
-                      <div className={`font-bold ${
-                        calculatePTOWithVacations.remainingAfterVacations > 0 
-                          ? 'text-emerald-600 dark:text-emerald-400' 
-                          : 'text-red-600 dark:text-red-400'
-                      }`}>
-                        {calculatePTOWithVacations.remainingAfterVacations.toFixed(2)} hrs
+                {projectedPTOData && (
+                  <div className="space-y-3">
+                    <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-lg border border-primary-200 dark:border-primary-700">
+                      <div className="text-sm text-primary-700 dark:text-primary-300 font-semibold mb-1">
+                        On {formatSelectedDate()}
                       </div>
-                      <div className="text-xs text-gray-600 dark:text-gray-400">
-                        ({hoursToDays(calculatePTOWithVacations.remainingAfterVacations)} days)
+                      <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-500">
+                        {projectedPTOData.projectedBalance.toFixed(2)} hrs
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        ({hoursToDays(projectedPTOData.projectedBalance)} days)
                       </div>
                     </div>
+                    
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 dark:text-gray-400">Starting Balance</span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {projectedPTOData.breakdown.startingBalance.toFixed(2)} hrs
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 dark:text-gray-400">PTO Accrued</span>
+                        <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                          +{projectedPTOData.breakdown.totalAccrued.toFixed(2)} hrs
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600 dark:text-gray-400">Vacation Hours</span>
+                        <span className="font-medium text-red-600 dark:text-red-400">
+                          -{projectedPTOData.breakdown.totalVacationHours.toFixed(2)} hrs
+                        </span>
+                      </div>
+                      
+                      <div className="pt-2 border-t border-primary-200 dark:border-primary-700">
+                        <div className="flex justify-between items-center">
+                          <span className="font-semibold text-gray-700 dark:text-gray-300">Final Balance</span>
+                          <span className="font-bold text-primary-600 dark:text-primary-400">
+                            {projectedPTOData.breakdown.finalBalance.toFixed(2)} hrs
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                
-                {/* Utilization Percentage */}
-                <div className="pt-3 border-t border-primary-200 dark:border-primary-700">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-600 dark:text-gray-400">PTO Utilization</span>
-                    <span className="font-bold text-gray-900 dark:text-white">
-                      {calculatePTOWithVacations.utilizationPercentage.toFixed(1)}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
-                    <div 
-                      className={`h-2 rounded-full transition-all duration-500 ${
-                        calculatePTOWithVacations.utilizationPercentage > 100 
-                          ? 'bg-gradient-to-r from-red-500 to-red-600' 
-                          : calculatePTOWithVacations.utilizationPercentage > 80
-                          ? 'bg-gradient-to-r from-amber-500 to-orange-600'
-                          : 'bg-gradient-to-r from-emerald-500 to-green-600'
-                      }`}
-                      style={{width: `${Math.min(calculatePTOWithVacations.utilizationPercentage, 100)}%`}}
-                    ></div>
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    {calculatePTOWithVacations.utilizationPercentage > 100 
-                      ? 'Over budget - consider reducing vacation plans'
-                      : calculatePTOWithVacations.utilizationPercentage > 80
-                      ? 'High utilization - plan carefully'
-                      : 'Good balance - room for more vacation time'
-                    }
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 
