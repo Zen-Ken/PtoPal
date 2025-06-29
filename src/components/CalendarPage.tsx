@@ -62,7 +62,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
     weekly: { days: 7, label: 'Weekly' },
     biweekly: { days: 14, label: 'Bi-weekly' },
     semimonthly: { days: 15, label: 'Semi-monthly' }, // Approximate
-    monthly: { days: 30, label: 'Monthly' } // Approximate
+    monthly: { days: 'end-of-month', label: 'Monthly' } // End of month
   };
 
   // Helper function to convert hours to days for display
@@ -135,34 +135,55 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
           isPayDay: true
         });
       }
+    } else if (userSettings.payPeriod === 'monthly') {
+      // For monthly, use last day of each month
+      const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+      if (lastDayOfMonth >= startOfMonth && lastDayOfMonth <= endOfMonth) {
+        const projectedData = getProjectedPTOBalance(
+          userSettings.currentPTO,
+          userSettings.accrualRate,
+          userSettings.payPeriod,
+          userSettings.vacations,
+          lastDayOfMonth
+        );
+        
+        events.push({
+          date: lastDayOfMonth,
+          ptoAccrued: userSettings.accrualRate,
+          totalPTO: Math.round(projectedData.projectedBalance * 100) / 100,
+          isPayDay: true
+        });
+      }
     } else {
       // For other pay periods, calculate based on interval
-      const intervalDays = payPeriodOptions[userSettings.payPeriod as keyof typeof payPeriodOptions]?.days || 30;
+      const intervalDays = payPeriodOptions[userSettings.payPeriod as keyof typeof payPeriodOptions]?.days;
       
-      // Start from the beginning of the year to find pay periods
-      const startOfYear = new Date(currentDate.getFullYear(), 0, 1);
-      let currentPayDate = new Date(startOfYear);
-      
-      while (currentPayDate.getFullYear() === currentDate.getFullYear()) {
-        // Check if this pay date falls within the current month
-        if (currentPayDate >= startOfMonth && currentPayDate <= endOfMonth) {
-          const projectedData = getProjectedPTOBalance(
-            userSettings.currentPTO,
-            userSettings.accrualRate,
-            userSettings.payPeriod,
-            userSettings.vacations,
-            currentPayDate
-          );
-          
-          events.push({
-            date: new Date(currentPayDate),
-            ptoAccrued: userSettings.accrualRate,
-            totalPTO: Math.round(projectedData.projectedBalance * 100) / 100,
-            isPayDay: true
-          });
-        }
+      if (typeof intervalDays === 'number') {
+        // Start from the beginning of the year to find pay periods
+        const startOfYear = new Date(currentDate.getFullYear(), 0, 1);
+        let currentPayDate = new Date(startOfYear);
         
-        currentPayDate.setDate(currentPayDate.getDate() + intervalDays);
+        while (currentPayDate.getFullYear() === currentDate.getFullYear()) {
+          // Check if this pay date falls within the current month
+          if (currentPayDate >= startOfMonth && currentPayDate <= endOfMonth) {
+            const projectedData = getProjectedPTOBalance(
+              userSettings.currentPTO,
+              userSettings.accrualRate,
+              userSettings.payPeriod,
+              userSettings.vacations,
+              currentPayDate
+            );
+            
+            events.push({
+              date: new Date(currentPayDate),
+              ptoAccrued: userSettings.accrualRate,
+              totalPTO: Math.round(projectedData.projectedBalance * 100) / 100,
+              isPayDay: true
+            });
+          }
+          
+          currentPayDate.setDate(currentPayDate.getDate() + intervalDays);
+        }
       }
     }
     

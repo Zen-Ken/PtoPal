@@ -116,13 +116,27 @@ export const calculatePayPeriodsBetweenDates = (
       // Move to next month
       currentDate.setMonth(currentDate.getMonth() + 1);
     }
+  } else if (payPeriod === 'monthly') {
+    // For monthly, count last day of each month between dates
+    const currentDate = new Date(start);
+    currentDate.setDate(1); // Start from first of start month
+    
+    while (currentDate <= end) {
+      // Check if last day of month is between start and end (exclusive of start, inclusive of end)
+      const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+      if (lastDayOfMonth > start && lastDayOfMonth <= end) {
+        payPeriodsCount++;
+      }
+      
+      // Move to next month
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
   } else {
     // For other pay periods, calculate based on interval
     const intervalDays = {
       weekly: 7,
-      biweekly: 14,
-      monthly: 30
-    }[payPeriod] || 30;
+      biweekly: 14
+    }[payPeriod] || 7;
     
     const daysDifference = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
     payPeriodsCount = Math.floor(daysDifference / intervalDays);
@@ -226,14 +240,6 @@ export const calculatePTOForTargetDate = (
     return Math.max(0, Math.round(currentPTOAtSnapshot * 100) / 100);
   }
 
-  // Calculate accruals from today to target date
-  const payPeriodOptions = {
-    weekly: 7,
-    biweekly: 14,
-    semimonthly: 15, // Approximate
-    monthly: 30 // Approximate
-  };
-
   let payPeriodsCount = 0;
   
   if (payPeriod === 'semimonthly') {
@@ -257,9 +263,28 @@ export const calculatePTOForTargetDate = (
       // Move to next month
       currentDate.setMonth(currentDate.getMonth() + 1);
     }
+  } else if (payPeriod === 'monthly') {
+    // For monthly, count last day of each month
+    const currentDate = new Date(today);
+    currentDate.setDate(1); // Start from first of current month
+    
+    while (currentDate <= target) {
+      // Check if last day of month is between now and target
+      const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+      if (lastDay >= today && lastDay <= target) {
+        payPeriodsCount++;
+      }
+      
+      // Move to next month
+      currentDate.setMonth(currentDate.getMonth() + 1);
+    }
   } else {
     // For other pay periods, calculate based on interval
-    const intervalDays = payPeriodOptions[payPeriod] || 30;
+    const intervalDays = {
+      weekly: 7,
+      biweekly: 14
+    }[payPeriod] || 7;
+    
     const daysDifference = Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     payPeriodsCount = Math.floor(daysDifference / intervalDays);
   }
