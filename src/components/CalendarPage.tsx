@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Calendar, Clock, TrendingUp, DollarSign, Plus, X, Edit3, Trash2, MapPin, Save, Calculator, Target } from 'lucide-react';
 import { UserSettings } from '../types/UserSettings';
 import { VacationEntry } from '../types/VacationEntry';
+import PaydayTooltip from './PaydayTooltip';
 import { 
   calculatePTOForTargetDate, 
   getVacationsForDate, 
@@ -48,15 +49,14 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isAddVacationModalOpen, setIsAddVacationModalOpen] = useState(false);
   const [editingVacation, setEditingVacation] = useState<VacationEntry | null>(null);
+  const [openTooltipDate, setOpenTooltipDate] = useState<string | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
   const [vacationForm, setVacationForm] = useState<VacationFormData>({
     startDate: '',
     endDate: '',
     includeWeekends: false,
     description: ''
   });
-  
-  // New state for tooltip management
-  const [openTooltipDate, setOpenTooltipDate] = useState<string | null>(null);
   
   const payPeriodOptions = {
     weekly: { days: 7, label: 'Weekly' },
@@ -284,8 +284,15 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
     setIsAddVacationModalOpen(true);
   };
 
-  // New functions for tooltip management
-  const handlePaydayIconHover = (dateKey: string) => {
+  const handlePaydayIconHover = (event: React.MouseEvent, dateKey: string) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+    
+    setTooltipPosition({
+      top: rect.bottom + scrollTop + 8,
+      left: Math.max(16, Math.min(rect.left + scrollLeft, window.innerWidth - 336))
+    });
     setOpenTooltipDate(dateKey);
   };
 
@@ -293,9 +300,17 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
     setOpenTooltipDate(null);
   };
 
-  const handlePaydayIconClick = (e: React.MouseEvent, dateKey: string) => {
-    e.stopPropagation(); // Prevent triggering handleDayClick
-    setOpenTooltipDate(openTooltipDate === dateKey ? null : dateKey);
+  const handlePaydayIconClick = (event: React.MouseEvent, dateKey: string) => {
+    event.stopPropagation();
+    const rect = event.currentTarget.getBoundingClientRect();
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+    
+    setTooltipPosition({
+      top: rect.bottom + scrollTop + 8,
+      left: Math.max(16, Math.min(rect.left + scrollLeft, window.innerWidth - 336))
+    });
+    setOpenTooltipDate(dateKey);
   };
 
   const handleAddVacation = () => {
@@ -492,152 +507,51 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                   const isFuture = isFutureDate(day);
                   const isPast = isPastDate(day);
 
-                  // Determine background and border classes based on payday status
-                  let dayClasses = "p-2 h-32 border rounded-lg relative transition-all duration-200 cursor-pointer";
-                  
-                  if (todayClass) {
-                    dayClasses += " bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700 ring-2 ring-primary-200 dark:ring-primary-700";
-                  } else if (dayInfo?.isPayDay) {
-                    if (isFuture) {
-                      dayClasses += " bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-600 hover:bg-green-100 dark:hover:bg-green-900/30";
-                    } else {
-                      dayClasses += " bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700";
-                    }
-                  } else {
-                    dayClasses += " border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700";
-                  }
-
                   return (
                     <div
                       key={day}
                       onClick={() => handleDayClick(day)}
-                      className={dayClasses}
+                      className={`p-2 h-32 border border-gray-100 dark:border-gray-700 rounded-lg relative transition-all duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                        todayClass 
+                          ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700 ring-2 ring-primary-200 dark:ring-primary-700' 
+                          : ''
+                      }`}
                     >
-                      <div className={`text-sm font-medium mb-1 flex items-center justify-between ${
-                        todayClass ? 'text-primary-700 dark:text-primary-300' : 
-                        dayInfo?.isPayDay && isFuture ? 'text-green-700 dark:text-green-300' :
-                        dayInfo?.isPayDay && isPast ? 'text-gray-600 dark:text-gray-400' :
-                        'text-gray-900 dark:text-white'
+                      <div className={`text-sm font-medium mb-1 ${
+                        todayClass ? 'text-primary-700 dark:text-primary-300' : 'text-gray-900 dark:text-white'
                       }`}>
-                        <span>{day}</span>
-                        {/* Clickable payday icon */}
-                        {dayInfo?.isPayDay && dayInfo.totalPTOOnPayDay !== undefined && (
-                          <div className="relative">
-                            <button
-                              onMouseEnter={() => handlePaydayIconHover(dateKey)}
-                              onMouseLeave={handlePaydayIconLeave}
-                              onClick={(e) => handlePaydayIconClick(e, dateKey)}
-                              className={`p-1 rounded-full hover:bg-white/20 transition-colors ${
-                                isFuture ? 'text-green-600 dark:text-green-400 hover:bg-green-200 dark:hover:bg-green-800' : 
-                                'text-gray-500 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'
-                              }`}
-                              title="Click for payday details"
-                            >
-                              <DollarSign className="w-4 h-4" />
-                            </button>
-                            
-                            {/* Tooltip */}
-                            {openTooltipDate === dateKey && (
-                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50">
-                                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-large p-4 min-w-[280px]">
-                                  {/* Arrow */}
-                                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-200 dark:border-t-gray-600"></div>
-                                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-px w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-white dark:border-t-gray-800"></div>
-                                  
-                                  {/* Header */}
-                                  <div className="flex items-center space-x-3 mb-4">
-                                    <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
-                                      <DollarSign className="w-4 h-4 text-white" />
-                                    </div>
-                                    <div>
-                                      <h4 className="font-bold text-gray-900 dark:text-white">Payday Details</h4>
-                                      <p className="text-xs text-gray-600 dark:text-gray-400">
-                                        {dayInfo.date.toLocaleDateString('en-US', { 
-                                          weekday: 'short',
-                                          month: 'short', 
-                                          day: 'numeric' 
-                                        })}
-                                      </p>
-                                    </div>
-                                  </div>
-
-                                  {/* PTO Balance */}
-                                  <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-3 rounded-lg border border-green-200/50 dark:border-green-700/50 mb-3">
-                                    <div className="text-center">
-                                      <div className="text-xs text-green-700 dark:text-green-300 font-semibold mb-1">
-                                        Total PTO Balance
-                                      </div>
-                                      <div className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-500">
-                                        {dayInfo.totalPTOOnPayDay?.toFixed(2)} hrs
-                                      </div>
-                                      <div className="text-xs text-gray-600 dark:text-gray-400">
-                                        ({hoursToDays(dayInfo.totalPTOOnPayDay || 0)} days)
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {/* Details */}
-                                  <div className="space-y-2 text-sm">
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-gray-600 dark:text-gray-400">PTO Accrued</span>
-                                      <div className="text-right">
-                                        <div className="font-medium text-emerald-600 dark:text-emerald-400">
-                                          +{dayInfo.ptoAccrued?.toFixed(2)} hrs
-                                        </div>
-                                        <div className="text-xs text-gray-500 dark:text-gray-500">
-                                          (+{hoursToDays(dayInfo.ptoAccrued || 0)} days)
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-gray-600 dark:text-gray-400">Pay Period</span>
-                                      <span className="font-medium text-gray-900 dark:text-white capitalize">
-                                        {userSettings.payPeriod === 'biweekly' ? 'Bi-weekly' : 
-                                         userSettings.payPeriod === 'semimonthly' ? 'Semi-monthly' : 
-                                         userSettings.payPeriod}
-                                      </span>
-                                    </div>
-
-                                    <div className="flex justify-between items-center">
-                                      <span className="text-gray-600 dark:text-gray-400">Status</span>
-                                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                        isFuture 
-                                          ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                                      }`}>
-                                        {isFuture ? 'Upcoming' : 'Past'}
-                                      </span>
-                                    </div>
-                                  </div>
-
-                                  {/* Vacations on this day */}
-                                  {dayInfo.vacations.length > 0 && (
-                                    <div className="pt-3 mt-3 border-t border-gray-200 dark:border-gray-700">
-                                      <h5 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                        Vacations on this day:
-                                      </h5>
-                                      <div className="space-y-1">
-                                        {dayInfo.vacations.map((vacation) => (
-                                          <div key={vacation.id} className="text-xs text-gray-600 dark:text-gray-400 flex items-center space-x-2">
-                                            <MapPin className="w-3 h-3 text-purple-500 flex-shrink-0" />
-                                            <span className="truncate">{vacation.description || 'Vacation'}</span>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        )}
+                        {day}
                       </div>
+                      
+                      {/* Pay Day Indicator with Total PTO Balance */}
+                      {dayInfo?.isPayDay && dayInfo.totalPTOOnPayDay !== undefined && (
+                        <div 
+                          className={`text-white text-xs px-2 py-1 rounded-md shadow-soft mb-1 cursor-pointer ${
+                            isFuture 
+                              ? 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700' 
+                              : 'bg-gradient-to-r from-gray-400 to-gray-500 opacity-60'
+                          }`}
+                          onMouseEnter={(e) => handlePaydayIconHover(e, dateKey)}
+                          onMouseLeave={handlePaydayIconLeave}
+                          onClick={(e) => handlePaydayIconClick(e, dateKey)}
+                        >
+                          <div className="flex items-center space-x-1 mb-1">
+                            <DollarSign className="w-3 h-3" />
+                            <span className="font-medium">Pay Day</span>
+                          </div>
+                          <div className="text-xs opacity-90 font-medium">
+                            {dayInfo.totalPTOOnPayDay.toFixed(2)} hrs total
+                          </div>
+                          <div className="text-xs opacity-75">
+                            ({hoursToDays(dayInfo.totalPTOOnPayDay)}d)
+                          </div>
+                        </div>
+                      )}
 
                       {/* Individual Vacation Indicators */}
                       {dayInfo?.vacations && dayInfo.vacations.length > 0 && (
                         <div className="space-y-1">
-                          {dayInfo.vacations.slice(0, 3).map((vacation, index) => {
+                          {dayInfo.vacations.slice(0, 2).map((vacation, index) => {
                             const colors = [
                               'from-purple-500 to-pink-600',
                               'from-blue-500 to-indigo-600',
@@ -666,9 +580,9 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                               </div>
                             );
                           })}
-                          {dayInfo.vacations.length > 3 && (
+                          {dayInfo.vacations.length > 2 && (
                             <div className="text-xs text-gray-500 dark:text-gray-400 px-2">
-                              +{dayInfo.vacations.length - 3} more
+                              +{dayInfo.vacations.length - 2} more
                             </div>
                           )}
                         </div>
@@ -870,16 +784,12 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
               
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-green-50 border border-green-300 rounded flex items-center justify-center">
-                    <DollarSign className="w-2 h-2 text-green-600" />
-                  </div>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Future Pay Day (hover/click $ for details)</span>
+                  <div className="w-4 h-4 bg-gradient-to-r from-emerald-500 to-green-600 rounded"></div>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Future Pay Day + PTO Balance</span>
                 </div>
                 <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-gray-50 border border-gray-200 rounded flex items-center justify-center">
-                    <DollarSign className="w-2 h-2 text-gray-500" />
-                  </div>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Past Pay Day (hover/click $ for details)</span>
+                  <div className="w-4 h-4 bg-gradient-to-r from-gray-400 to-gray-500 opacity-60 rounded"></div>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Past Pay Day (Historical)</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-4 h-4 bg-gradient-to-r from-purple-500 to-pink-600 rounded"></div>
@@ -890,13 +800,23 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                   <span className="text-sm text-gray-700 dark:text-gray-300">Today</span>
                 </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 mt-3 p-2 bg-gray-100 dark:bg-gray-700 rounded">
-                  <strong>Tip:</strong> Click on vacation indicators to edit, or click on any day to add new vacations. Hover or click the $ icon on payday cells for detailed PTO information.
+                  <strong>Tip:</strong> Click on vacation indicators to edit, or click on any day to add new vacations. Hover or click on pay day indicators for details.
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Payday Tooltip */}
+      {openTooltipDate && dailyPTOBalances[openTooltipDate] && (
+        <PaydayTooltip
+          dayInfo={dailyPTOBalances[openTooltipDate]}
+          position={tooltipPosition}
+          onClose={handlePaydayIconLeave}
+          hoursToDays={hoursToDays}
+        />
+      )}
 
       {/* Vacation Modal */}
       {isAddVacationModalOpen && (
