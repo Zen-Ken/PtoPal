@@ -479,7 +479,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Calendar */}
           <div className="lg:col-span-3">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-100 dark:border-gray-700 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-200 dark:border-gray-700 p-6">
               {/* Calendar Header */}
               <div className="grid grid-cols-7 gap-1 mb-4">
                 {dayNames.map((day) => (
@@ -511,10 +511,12 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                     <div
                       key={day}
                       onClick={() => handleDayClick(day)}
-                      className={`p-2 h-32 border border-gray-100 dark:border-gray-700 rounded-lg relative transition-all duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                      className={`p-2 h-32 border-2 rounded-lg relative transition-all duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${
                         todayClass 
-                          ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-200 dark:border-primary-700 ring-2 ring-primary-200 dark:ring-primary-700' 
-                          : ''
+                          ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-300 dark:border-primary-600 ring-2 ring-primary-200 dark:ring-primary-700' 
+                          : dayInfo?.isPayDay
+                          ? 'border-emerald-200 dark:border-emerald-700 bg-emerald-50/30 dark:bg-emerald-900/10'
+                          : 'border-gray-200 dark:border-gray-600'
                       }`}
                     >
                       <div className={`text-sm font-medium mb-1 ${
@@ -523,34 +525,28 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                         {day}
                       </div>
                       
-                      {/* Pay Day Indicator with Total PTO Balance */}
+                      {/* Pay Day Dollar Icon */}
                       {dayInfo?.isPayDay && dayInfo.totalPTOOnPayDay !== undefined && (
-                        <div 
-                          className={`text-white text-xs px-2 py-1 rounded-md shadow-soft mb-1 cursor-pointer ${
-                            isFuture 
-                              ? 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700' 
-                              : 'bg-gradient-to-r from-gray-400 to-gray-500 opacity-60'
-                          }`}
-                          onMouseEnter={(e) => handlePaydayIconHover(e, dateKey)}
-                          onMouseLeave={handlePaydayIconLeave}
-                          onClick={(e) => handlePaydayIconClick(e, dateKey)}
-                        >
-                          <div className="flex items-center space-x-1 mb-1">
-                            <DollarSign className="w-3 h-3" />
-                            <span className="font-medium">Pay Day</span>
-                          </div>
-                          <div className="text-xs opacity-90 font-medium">
-                            {dayInfo.totalPTOOnPayDay.toFixed(2)} hrs total
-                          </div>
-                          <div className="text-xs opacity-75">
-                            ({hoursToDays(dayInfo.totalPTOOnPayDay)}d)
-                          </div>
+                        <div className="absolute top-2 right-2">
+                          <button
+                            className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 transform hover:scale-110 ${
+                              isFuture 
+                                ? 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-soft hover:shadow-medium' 
+                                : 'bg-gradient-to-r from-gray-400 to-gray-500 opacity-60'
+                            }`}
+                            onMouseEnter={(e) => handlePaydayIconHover(e, dateKey)}
+                            onMouseLeave={handlePaydayIconLeave}
+                            onClick={(e) => handlePaydayIconClick(e, dateKey)}
+                            title="Pay Day - Click for details"
+                          >
+                            <DollarSign className="w-3 h-3 text-white" />
+                          </button>
                         </div>
                       )}
 
                       {/* Individual Vacation Indicators */}
                       {dayInfo?.vacations && dayInfo.vacations.length > 0 && (
-                        <div className="space-y-1">
+                        <div className="space-y-1 mt-6">
                           {dayInfo.vacations.slice(0, 2).map((vacation, index) => {
                             const colors = [
                               'from-purple-500 to-pink-600',
@@ -784,12 +780,10 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
               
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-gradient-to-r from-emerald-500 to-green-600 rounded"></div>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Future Pay Day + PTO Balance</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-gradient-to-r from-gray-400 to-gray-500 opacity-60 rounded"></div>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Past Pay Day (Historical)</span>
+                  <div className="w-6 h-6 bg-gradient-to-r from-emerald-500 to-green-600 rounded-full flex items-center justify-center">
+                    <DollarSign className="w-3 h-3 text-white" />
+                  </div>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Pay Day (hover/click for details)</span>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-4 h-4 bg-gradient-to-r from-purple-500 to-pink-600 rounded"></div>
@@ -799,8 +793,12 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                   <div className="w-4 h-4 bg-primary-200 dark:bg-primary-800 border-2 border-primary-400 dark:border-primary-600 rounded"></div>
                   <span className="text-sm text-gray-700 dark:text-gray-300">Today</span>
                 </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-4 h-4 border-2 border-emerald-200 dark:border-emerald-700 bg-emerald-50/30 dark:bg-emerald-900/10 rounded"></div>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Pay Day Border</span>
+                </div>
                 <div className="text-xs text-gray-600 dark:text-gray-400 mt-3 p-2 bg-gray-100 dark:bg-gray-700 rounded">
-                  <strong>Tip:</strong> Click on vacation indicators to edit, or click on any day to add new vacations. Hover or click on pay day indicators for details.
+                  <strong>Tip:</strong> Click on vacation indicators to edit, or click on any day to add new vacations. Hover or click on pay day dollar icons for detailed balance information.
                 </div>
               </div>
             </div>
