@@ -19,6 +19,40 @@ export const createDateFromString = (dateString: string): Date => {
 };
 
 /**
+ * Finds the next occurrence of a specific day of the week on or after a given date
+ */
+export const getNextDayOfWeek = (startDate: Date, targetDayOfWeek: number): Date => {
+  const date = new Date(startDate);
+  const currentDayOfWeek = date.getDay();
+  const daysUntilTarget = (targetDayOfWeek - currentDayOfWeek + 7) % 7;
+  
+  if (daysUntilTarget === 0 && date.getTime() === startDate.getTime()) {
+    // If it's already the target day and we're looking at the exact start date, return it
+    return date;
+  }
+  
+  date.setDate(date.getDate() + (daysUntilTarget === 0 ? 7 : daysUntilTarget));
+  return date;
+};
+
+/**
+ * Finds the previous occurrence of a specific day of the week on or before a given date
+ */
+export const getPreviousDayOfWeek = (endDate: Date, targetDayOfWeek: number): Date => {
+  const date = new Date(endDate);
+  const currentDayOfWeek = date.getDay();
+  const daysSinceTarget = (currentDayOfWeek - targetDayOfWeek + 7) % 7;
+  
+  if (daysSinceTarget === 0) {
+    // If it's already the target day, return it
+    return date;
+  }
+  
+  date.setDate(date.getDate() - daysSinceTarget);
+  return date;
+};
+
+/**
  * Calculates the number of days between two dates, optionally excluding weekends
  */
 export const getDaysBetweenDates = (
@@ -86,7 +120,8 @@ export const getVacationsForDate = (date: Date, vacations: VacationEntry[]): Vac
 export const calculatePayPeriodsBetweenDates = (
   startDate: Date,
   endDate: Date,
-  payPeriod: 'weekly' | 'biweekly' | 'semimonthly' | 'monthly'
+  payPeriod: 'weekly' | 'biweekly' | 'semimonthly' | 'monthly',
+  paydayOfWeek?: number
 ): number => {
   const start = normalizeDate(startDate);
   const end = normalizeDate(endDate);
@@ -131,15 +166,28 @@ export const calculatePayPeriodsBetweenDates = (
       // Move to next month
       currentDate.setMonth(currentDate.getMonth() + 1);
     }
-  } else {
-    // For other pay periods, calculate based on interval
-    const intervalDays = {
-      weekly: 7,
-      biweekly: 14
-    }[payPeriod] || 7;
+  } else if (payPeriod === 'weekly' || payPeriod === 'biweekly') {
+    // For weekly and biweekly, use the paydayOfWeek to calculate exact paydays
+    if (paydayOfWeek === undefined) {
+      paydayOfWeek = 5; // Default to Friday if not specified
+    }
     
-    const daysDifference = Math.floor((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    payPeriodsCount = Math.floor(daysDifference / intervalDays);
+    const intervalDays = payPeriod === 'weekly' ? 7 : 14;
+    
+    // Find the first payday on or after the start date
+    let currentPayday = getNextDayOfWeek(start, paydayOfWeek);
+    
+    // If the first payday is exactly on the start date, we need to move to the next one
+    // since we want periods between dates (exclusive of start)
+    if (currentPayday.getTime() === start.getTime()) {
+      currentPayday.setDate(currentPayday.getDate() + intervalDays);
+    }
+    
+    // Count all paydays between start and end (exclusive of start, inclusive of end)
+    while (currentPayday <= end) {
+      payPeriodsCount++;
+      currentPayday.setDate(currentPayday.getDate() + intervalDays);
+    }
   }
   
   return payPeriodsCount;
@@ -152,9 +200,10 @@ export const calculateAccruedPTO = (
   startDate: Date,
   endDate: Date,
   accrualRate: number,
-  payPeriod: 'weekly' | 'biweekly' | 'semimonthly' | 'monthly'
+  payPeriod: 'weekly' | 'biweekly' | 'semimonthly' | 'monthly',
+  paydayOfWeek?: number
 ): number => {
-  const payPeriods = calculatePayPeriodsBetweenDates(startDate, endDate, payPeriod);
+  const payPeriods = calculatePayPeriodsBetweenDates(startDate, endDate, payPeriod, paydayOfWeek);
   return Math.round(payPeriods * accrualRate * 100) / 100;
 };
 
@@ -191,7 +240,8 @@ export const updatePTOBalanceForTimePassed = (
   currentDate: Date,
   accrualRate: number,
   payPeriod: 'weekly' | 'biweekly' | 'semimonthly' | 'monthly',
-  vacations: VacationEntry[]
+  vacations: VacationEntry[],
+  paydayOfWeek?: number
 ): { newBalance: number; accruedHours: number; vacationHoursUsed: number } => {
   const lastUpdate = normalizeDate(createDateFromString(lastUpdateDate));
   const today = normalizeDate(currentDate);
@@ -206,7 +256,7 @@ export const updatePTOBalanceForTimePassed = (
   }
   
   // Calculate PTO accrued since last update
-  const accruedHours = calculateAccruedPTO(lastUpdate, today, accrualRate, payPeriod);
+  const accruedHours = calculateAccruedPTO(lastUpdate, today, accrualRate, payPeriod, paydayOfWeek);
   
   // Calculate vacation hours used since last update
   const vacationHoursUsed = calculateVacationHoursUsedBetweenDates(lastUpdate, today, vacations);
@@ -230,7 +280,8 @@ export const calculatePTOForTargetDate = (
   payPeriod: 'weekly' | 'biweekly' | 'semimonthly' | 'monthly',
   vacations: VacationEntry[],
   targetDate: Date,
-  snapshotDate: Date = new Date()
+  snapshotDate: Date = new Date(),
+  paydayOfWeek?: number
 ): number => {
   const today = normalizeDate(snapshotDate);
   const target = normalizeDate(targetDate);
@@ -278,15 +329,22 @@ export const calculatePTOForTargetDate = (
       // Move to next month
       currentDate.setMonth(currentDate.getMonth() + 1);
     }
-  } else {
-    // For other pay periods, calculate based on interval
-    const intervalDays = {
-      weekly: 7,
-      biweekly: 14
-    }[payPeriod] || 7;
+  } else if (payPeriod === 'weekly' || payPeriod === 'biweekly') {
+    // For weekly and biweekly, use the paydayOfWeek to calculate exact paydays
+    if (paydayOfWeek === undefined) {
+      paydayOfWeek = 5; // Default to Friday if not specified
+    }
     
-    const daysDifference = Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    payPeriodsCount = Math.floor(daysDifference / intervalDays);
+    const intervalDays = payPeriod === 'weekly' ? 7 : 14;
+    
+    // Find the first payday on or after today
+    let currentPayday = getNextDayOfWeek(today, paydayOfWeek);
+    
+    // Count all paydays between today and target (inclusive of both)
+    while (currentPayday <= target) {
+      payPeriodsCount++;
+      currentPayday.setDate(currentPayday.getDate() + intervalDays);
+    }
   }
 
   const additionalPTO = Math.round(payPeriodsCount * accrualRate * 100) / 100;
@@ -304,7 +362,8 @@ export const getProjectedPTOBalance = (
   payPeriod: 'weekly' | 'biweekly' | 'semimonthly' | 'monthly',
   vacations: VacationEntry[],
   targetDate: Date,
-  currentDate: Date = new Date()
+  currentDate: Date = new Date(),
+  paydayOfWeek?: number
 ): {
   projectedBalance: number;
   accruedHours: number;
@@ -335,7 +394,7 @@ export const getProjectedPTOBalance = (
   }
 
   // Calculate PTO that will be accrued between now and target date
-  const accruedHours = calculateAccruedPTO(today, target, accrualRate, payPeriod);
+  const accruedHours = calculateAccruedPTO(today, target, accrualRate, payPeriod, paydayOfWeek);
   
   // Calculate vacation hours that will be used between now and target date
   const vacationHoursUsed = calculateVacationHoursUsedBetweenDates(today, target, vacations);

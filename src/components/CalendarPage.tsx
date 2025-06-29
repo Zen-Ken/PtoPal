@@ -11,7 +11,8 @@ import {
   calculateVacationHours,
   normalizeDate,
   createDateFromString,
-  getProjectedPTOBalance
+  getProjectedPTOBalance,
+  getNextDayOfWeek
 } from '../utils/dateUtils';
 
 interface CalendarPageProps {
@@ -78,9 +79,11 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
       userSettings.accrualRate,
       userSettings.payPeriod,
       userSettings.vacations,
-      targetDate
+      targetDate,
+      new Date(),
+      userSettings.paydayOfWeek
     );
-  }, [selectedDate, userSettings.currentPTO, userSettings.accrualRate, userSettings.payPeriod, userSettings.vacations]);
+  }, [selectedDate, userSettings.currentPTO, userSettings.accrualRate, userSettings.payPeriod, userSettings.vacations, userSettings.paydayOfWeek]);
 
   // Helper functions - moved before useMemo hooks that use them
   const getDaysInMonth = (date: Date) => {
@@ -106,7 +109,9 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
           userSettings.accrualRate,
           userSettings.payPeriod,
           userSettings.vacations,
-          fifteenthPayDate
+          fifteenthPayDate,
+          new Date(),
+          userSettings.paydayOfWeek
         );
         
         events.push({
@@ -125,7 +130,9 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
           userSettings.accrualRate,
           userSettings.payPeriod,
           userSettings.vacations,
-          lastDayOfMonth
+          lastDayOfMonth,
+          new Date(),
+          userSettings.paydayOfWeek
         );
         
         events.push({
@@ -144,7 +151,9 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
           userSettings.accrualRate,
           userSettings.payPeriod,
           userSettings.vacations,
-          lastDayOfMonth
+          lastDayOfMonth,
+          new Date(),
+          userSettings.paydayOfWeek
         );
         
         events.push({
@@ -154,41 +163,45 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
           isPayDay: true
         });
       }
-    } else {
-      // For other pay periods, calculate based on interval
-      const intervalDays = payPeriodOptions[userSettings.payPeriod as keyof typeof payPeriodOptions]?.days;
+    } else if (userSettings.payPeriod === 'weekly' || userSettings.payPeriod === 'biweekly') {
+      // For weekly and biweekly, use the paydayOfWeek setting
+      const intervalDays = userSettings.payPeriod === 'weekly' ? 7 : 14;
+      const paydayOfWeek = userSettings.paydayOfWeek ?? 5; // Default to Friday
       
-      if (typeof intervalDays === 'number') {
-        // Start from the beginning of the year to find pay periods
-        const startOfYear = new Date(currentDate.getFullYear(), 0, 1);
-        let currentPayDate = new Date(startOfYear);
+      // Find the first payday of the specified day of week in the current month
+      let currentPayday = getNextDayOfWeek(startOfMonth, paydayOfWeek);
+      
+      // If the first payday is before the start of the month, move to the next one
+      if (currentPayday < startOfMonth) {
+        currentPayday.setDate(currentPayday.getDate() + intervalDays);
+      }
+      
+      // Generate all paydays within the current month
+      while (currentPayday <= endOfMonth) {
+        const projectedData = getProjectedPTOBalance(
+          userSettings.currentPTO,
+          userSettings.accrualRate,
+          userSettings.payPeriod,
+          userSettings.vacations,
+          currentPayday,
+          new Date(),
+          userSettings.paydayOfWeek
+        );
         
-        while (currentPayDate.getFullYear() === currentDate.getFullYear()) {
-          // Check if this pay date falls within the current month
-          if (currentPayDate >= startOfMonth && currentPayDate <= endOfMonth) {
-            const projectedData = getProjectedPTOBalance(
-              userSettings.currentPTO,
-              userSettings.accrualRate,
-              userSettings.payPeriod,
-              userSettings.vacations,
-              currentPayDate
-            );
-            
-            events.push({
-              date: new Date(currentPayDate),
-              ptoAccrued: userSettings.accrualRate,
-              totalPTO: Math.round(projectedData.projectedBalance * 100) / 100,
-              isPayDay: true
-            });
-          }
-          
-          currentPayDate.setDate(currentPayDate.getDate() + intervalDays);
-        }
+        events.push({
+          date: new Date(currentPayday),
+          ptoAccrued: userSettings.accrualRate,
+          totalPTO: Math.round(projectedData.projectedBalance * 100) / 100,
+          isPayDay: true
+        });
+        
+        // Move to next payday
+        currentPayday.setDate(currentPayday.getDate() + intervalDays);
       }
     }
     
     return events;
-  }, [currentDate, userSettings.currentPTO, userSettings.accrualRate, userSettings.payPeriod, userSettings.vacations]);
+  }, [currentDate, userSettings.currentPTO, userSettings.accrualRate, userSettings.payPeriod, userSettings.vacations, userSettings.paydayOfWeek]);
 
   // Calculate daily PTO balances for the entire month
   const dailyPTOBalances = useMemo(() => {
@@ -209,7 +222,9 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
         userSettings.accrualRate,
         userSettings.payPeriod,
         userSettings.vacations,
-        new Date(currentDay)
+        new Date(currentDay),
+        new Date(),
+        userSettings.paydayOfWeek
       );
       
       const payPeriodEvent = generatePayPeriods.find(event => 

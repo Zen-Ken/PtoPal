@@ -55,6 +55,16 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
     { value: 'monthly', label: 'Monthly', periodsPerMonth: 1 }
   ];
 
+  const dayOfWeekOptions = [
+    { value: 0, label: 'Sunday' },
+    { value: 1, label: 'Monday' },
+    { value: 2, label: 'Tuesday' },
+    { value: 3, label: 'Wednesday' },
+    { value: 4, label: 'Thursday' },
+    { value: 5, label: 'Friday' },
+    { value: 6, label: 'Saturday' }
+  ];
+
   const getMonthlyAccrual = () => {
     const selectedPeriod = payPeriodOptions.find(p => p.value === formData.payPeriod);
     if (!selectedPeriod) return formData.accrualRate;
@@ -131,6 +141,9 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
     
     return diffDays;
   };
+
+  // Check if payday of week setting should be shown
+  const shouldShowPaydayOfWeek = formData.payPeriod === 'weekly' || formData.payPeriod === 'biweekly';
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
@@ -244,7 +257,29 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                   </select>
                 </div>
 
-                <div>
+                {shouldShowPaydayOfWeek && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
+                      Payday of Week
+                    </label>
+                    <select
+                      value={formData.paydayOfWeek}
+                      onChange={(e) => handleInputChange('paydayOfWeek', Number(e.target.value))}
+                      className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 transition-all duration-200 text-gray-900 dark:text-white"
+                    >
+                      {dayOfWeekOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                      Which day of the week you receive your paycheck
+                    </p>
+                  </div>
+                )}
+
+                <div className={shouldShowPaydayOfWeek ? '' : 'md:col-start-2'}>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                     Accrual Rate per {payPeriodOptions.find(p => p.value === formData.payPeriod)?.label || 'Period'} (hours)
                   </label>
@@ -426,6 +461,12 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                   <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                   <span>8 hours typically equals 1 work day</span>
                 </li>
+                {shouldShowPaydayOfWeek && (
+                  <li className="flex items-start space-x-2">
+                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <span>Set your payday to match your actual pay schedule</span>
+                  </li>
+                )}
               </ul>
             </div>
           </div>

@@ -26,7 +26,8 @@ export function useAutomaticPTOAccrual(
           today,
           userSettings.accrualRate,
           userSettings.payPeriod,
-          userSettings.vacations
+          userSettings.vacations,
+          userSettings.paydayOfWeek
         );
         
         // Only update if there's a meaningful change (more than 0.01 hours difference)
@@ -69,5 +70,5 @@ export function useAutomaticPTOAccrual(
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [userSettings.lastAccrualUpdateDate, userSettings.lastKnownPTOBalance, userSettings.accrualRate, userSettings.payPeriod, userSettings.vacations, onUpdateSettings]);
+  }, [userSettings.lastAccrualUpdateDate, userSettings.lastKnownPTOBalance, userSettings.accrualRate, userSettings.payPeriod, userSettings.vacations, userSettings.paydayOfWeek, onUpdateSettings]);
 }
