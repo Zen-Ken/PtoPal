@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, ArrowRight, Calendar, Clock, Briefcase, CheckCircle, Sparkles, User, Building } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Calendar, Clock, Briefcase, CheckCircle, Sparkles, User } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import { UserSettings, defaultUserSettings } from '../types/UserSettings';
 
@@ -124,8 +124,8 @@ export default function OnboardingPage({ onComplete, onBack }: OnboardingPagePro
                 className="w-full px-4 py-4 text-lg border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 shadow-soft transition-all duration-200 text-gray-900 dark:text-white"
               >
                 <option value="weekly">Weekly</option>
-                <option value="biweekly">Bi-weekly (Every 2 weeks))</option>
-                <option value="semimonthly">Semi-monthly (1st & 15th)</option>
+                <option value="biweekly">Bi-weekly (Every 2 weeks)</option>
+                <option value="semimonthly">Semi-monthly (15th & Last day)</option>
                 <option value="monthly">Monthly</option>
               </select>
             </div>
@@ -164,56 +164,44 @@ export default function OnboardingPage({ onComplete, onBack }: OnboardingPagePro
       )
     },
     {
-      id: 'start-date',
-      title: 'When did you start your job?',
-      subtitle: 'This helps us track your PTO history accurately',
+      id: 'annual-allowance',
+      title: 'What\'s your annual PTO allowance?',
+      subtitle: 'This helps us track your progress toward your yearly limit',
       content: (
         <div className="space-y-8">
           <div className="w-24 h-24 mx-auto bg-gradient-to-br from-rose-500 to-pink-600 rounded-full flex items-center justify-center mb-8">
-            <Building className="w-12 h-12 text-white" />
+            <Calendar className="w-12 h-12 text-white" />
           </div>
           
-          <div className="max-w-md mx-auto space-y-6">
-            <div>
-              <label className="block text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 text-center">
-                Employment Start Date
-              </label>
+          <div className="max-w-md mx-auto">
+            <label className="block text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 text-center">
+              Annual PTO Allowance
+            </label>
+            <div className="relative">
               <input
-                type="date"
-                value={formData.startDate}
-                onChange={(e) => setFormData(prev => ({ ...prev, startDate: e.target.value }))}
-                className="w-full px-6 py-4 text-lg text-center border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 shadow-soft transition-all duration-200 text-gray-900 dark:text-white"
+                type="number"
+                value={annualAllowanceInputValue}
+                onChange={(e) => setAnnualAllowanceInputValue(e.target.value)}
+                onBlur={handleAnnualAllowanceBlur}
+                className="w-full px-6 py-4 text-2xl font-bold text-center border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 shadow-soft transition-all duration-200 text-gray-900 dark:text-white"
+                min="0"
+                step="0.01"
+                placeholder="200.00"
               />
+              <span className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-lg font-medium">
+                hours/year
+              </span>
             </div>
-            
-            <div>
-              <label className="block text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 text-center">
-                Annual PTO Allowance (Optional)
-              </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  value={annualAllowanceInputValue}
-                  onChange={(e) => setAnnualAllowanceInputValue(e.target.value)}
-                  onBlur={handleAnnualAllowanceBlur}
-                  className="w-full px-6 py-4 text-lg text-center border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 shadow-soft transition-all duration-200 text-gray-900 dark:text-white"
-                  min="0"
-                  step="0.01"
-                  placeholder="200.00"
-                />
-                <span className="absolute right-6 top-1/2 -translate-y-1/2 text-gray-500 dark:text-gray-400 text-sm font-medium">
-                  hours/year
-                </span>
-              </div>
-              <p className="text-center text-gray-500 dark:text-gray-400 mt-2 text-sm">
-                ≈ {(formData.annualAllowance / 8).toFixed(2)} days per year
-              </p>
-            </div>
+            <p className="text-center text-gray-500 dark:text-gray-400 mt-4">
+              Equivalent to {(formData.annualAllowance / 8).toFixed(2)} days per year
+              <br />
+              <span className="text-sm">(This is your maximum PTO cap)</span>
+            </p>
           </div>
           
           <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg border border-green-200 dark:border-green-700 max-w-md mx-auto">
             <p className="text-green-700 dark:text-green-300 text-sm text-center">
-              🎯 We'll use this to calculate your PTO projections more accurately
+              🎯 We'll use this to calculate when you'll reach your PTO cap and help prevent losing hours
             </p>
           </div>
         </div>
@@ -278,7 +266,6 @@ export default function OnboardingPage({ onComplete, onBack }: OnboardingPagePro
   const nextSlide = () => {
     if (currentSlide < slides.length - 1) {
       setCurrentSlide(currentSlide + 1);
-    
     }
   };
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Calendar, Clock, Settings, Calculator, Shield, Check, TrendingUp } from 'lucide-react';
+import { User, Calendar, Clock, Calculator, Shield, Check, TrendingUp } from 'lucide-react';
 import { UserSettings } from '../types/UserSettings';
 
 interface ProfilePageProps {
@@ -268,36 +268,8 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                     Equivalent to {hoursToDays(formData.accrualRate)} days per pay period
                   </p>
                 </div>
-              </div>
-            </div>
 
-            {/* Company Information */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-100 dark:border-gray-700 p-8">
-              <div className="flex items-center space-x-3 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
-                  <Settings className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold text-gray-900 dark:text-white">Company Information</h2>
-                  <p className="text-gray-600 dark:text-gray-400">Optional details for better tracking</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                    Company Name
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.companyName}
-                    onChange={(e) => handleInputChange('companyName', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 transition-all duration-200 text-gray-900 dark:text-white"
-                    placeholder="Acme Corporation"
-                  />
-                </div>
-
-                <div>
+                <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                     Employment Start Date
                   </label>
@@ -307,6 +279,9 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                     onChange={(e) => handleInputChange('startDate', e.target.value)}
                     className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 transition-all duration-200 text-gray-900 dark:text-white"
                   />
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    Used for reference and historical tracking
+                  </p>
                 </div>
               </div>
             </div>

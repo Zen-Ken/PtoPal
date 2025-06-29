@@ -6,7 +6,6 @@ export interface UserSettings {
   payPeriod: 'weekly' | 'biweekly' | 'semimonthly' | 'monthly';
   annualAllowance: number; // Now in hours
   startDate: string;
-  companyName: string;
   vacations: VacationEntry[]; // Array of vacation entries
   lastAccrualUpdateDate: string; // ISO date string for tracking when PTO was last updated
   lastKnownPTOBalance: number; // The PTO balance at the lastAccrualUpdateDate
@@ -18,7 +17,6 @@ export const defaultUserSettings: UserSettings = {
   payPeriod: 'monthly',
   annualAllowance: 200.00, // 25 days * 8 hours = 200 hours
   startDate: new Date().toISOString().split('T')[0],
-  companyName: '',
   vacations: [], // Initialize with empty array
   lastAccrualUpdateDate: new Date().toISOString().split('T')[0], // Today's date
   lastKnownPTOBalance: 96.00 // Same as currentPTO initially
