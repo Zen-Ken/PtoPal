@@ -154,6 +154,31 @@ export default function OnboardingPage({ onComplete, onBack }: OnboardingPagePro
               </p>
             </div>
           </div>
+
+          {/* Payday of Week for Weekly/Biweekly */}
+          {(formData.payPeriod === 'weekly' || formData.payPeriod === 'biweekly') && (
+            <div className="max-w-md mx-auto">
+              <label className="block text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 text-center">
+                Payday of Week
+              </label>
+              <select
+                value={formData.paydayOfWeek}
+                onChange={(e) => setFormData(prev => ({ ...prev, paydayOfWeek: Number(e.target.value) }))}
+                className="w-full px-4 py-4 text-lg border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 shadow-soft transition-all duration-200 text-gray-900 dark:text-white"
+              >
+                <option value={0}>Sunday</option>
+                <option value={1}>Monday</option>
+                <option value={2}>Tuesday</option>
+                <option value={3}>Wednesday</option>
+                <option value={4}>Thursday</option>
+                <option value={5}>Friday</option>
+                <option value={6}>Saturday</option>
+              </select>
+              <p className="text-center text-gray-500 dark:text-gray-400 mt-2 text-sm">
+                Which day of the week you receive your paycheck
+              </p>
+            </div>
+          )}
           
           <div className="bg-primary-50 dark:bg-primary-900/30 p-4 rounded-lg border border-primary-200 dark:border-primary-700 max-w-md mx-auto">
             <p className="text-primary-700 dark:text-primary-300 text-sm text-center">
@@ -235,6 +260,14 @@ export default function OnboardingPage({ onComplete, onBack }: OnboardingPagePro
                 <span className="text-gray-600 dark:text-gray-400">Pay Period:</span>
                 <span className="font-bold text-gray-900 dark:text-white capitalize">{formData.payPeriod}</span>
               </div>
+              {(formData.payPeriod === 'weekly' || formData.payPeriod === 'biweekly') && (
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600 dark:text-gray-400">Payday:</span>
+                  <span className="font-bold text-gray-900 dark:text-white">
+                    {['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][formData.paydayOfWeek]}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between items-center">
                 <span className="text-gray-600 dark:text-gray-400">Accrual Rate:</span>
                 <span className="font-bold text-gray-900 dark:text-white">{formData.accrualRate.toFixed(2)} hrs/paycheck</span>
