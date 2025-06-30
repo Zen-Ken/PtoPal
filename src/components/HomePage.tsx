@@ -241,7 +241,7 @@ export default function HomePage({
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Future Date
+                      Your Next vacation
                     </label>
                     <input
                       type="date"
@@ -251,7 +251,7 @@ export default function HomePage({
                       min={new Date().toISOString().split('T')[0]}
                     />
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Your next vacation
+                      Future Date
                     </p>
                   </div>
                 </div>
