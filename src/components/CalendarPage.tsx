@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Calendar, Clock, TrendingUp, DollarSign, Plus, X, Edit3, Trash2, MapPin, Save, Calculator, Target, Info } from 'lucide-react';
 import { UserSettings } from '../types/UserSettings';
 import { VacationEntry } from '../types/VacationEntry';
@@ -42,7 +42,15 @@ interface DayInfo {
 }
 
 export default function CalendarPage({ onBack, userSettings, onUpdateSettings, selectedDate, setSelectedDate }: CalendarPageProps) {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  // Initialize currentDate based on selectedDate if available
+  const [currentDate, setCurrentDate] = useState(() => {
+    if (selectedDate) {
+      const selected = createDateFromString(selectedDate);
+      return new Date(selected.getFullYear(), selected.getMonth(), 1);
+    }
+    return new Date();
+  });
+  
   const [isAddVacationModalOpen, setIsAddVacationModalOpen] = useState(false);
   const [editingVacation, setEditingVacation] = useState<VacationEntry | null>(null);
   const [openTooltipDate, setOpenTooltipDate] = useState<string | null>(null);
@@ -50,6 +58,10 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
   const [isLegendTooltipOpen, setIsLegendTooltipOpen] = useState(false);
   const [legendTooltipPosition, setLegendTooltipPosition] = useState({ top: 0, left: 0 });
   const [modalInitialDates, setModalInitialDates] = useState({ startDate: '', endDate: '' });
+  const [shouldScrollAfterMonthChange, setShouldScrollAfterMonthChange] = useState(false);
+  
+  // Ref to store day element references
+  const dayRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   
   const payPeriodOptions = {
     weekly: { days: 7, label: 'Weekly' },
@@ -263,6 +275,66 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
     
     return balances;
   }, [currentDate, userSettings, generatePayPeriods]);
+
+  // Effect to handle scrolling to selected date
+  useEffect(() => {
+    if (!selectedDate) return;
+
+    const selectedDateObj = createDateFromString(selectedDate);
+    const selectedMonth = selectedDateObj.getMonth();
+    const selectedYear = selectedDateObj.getFullYear();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+
+    // Check if selected date is in the currently displayed month
+    if (selectedMonth === currentMonth && selectedYear === currentYear) {
+      // Same month, scroll to the day
+      const dateKey = selectedDate;
+      const dayElement = dayRefs.current.get(dateKey);
+      
+      if (dayElement) {
+        setTimeout(() => {
+          dayElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center',
+            inline: 'center'
+          });
+        }, 100); // Small delay to ensure rendering is complete
+      }
+    } else {
+      // Different month, navigate to the correct month first
+      setCurrentDate(new Date(selectedYear, selectedMonth, 1));
+      setShouldScrollAfterMonthChange(true);
+    }
+  }, [selectedDate, currentDate]);
+
+  // Effect to scroll after month change
+  useEffect(() => {
+    if (shouldScrollAfterMonthChange && selectedDate) {
+      const dateKey = selectedDate;
+      const dayElement = dayRefs.current.get(dateKey);
+      
+      if (dayElement) {
+        setTimeout(() => {
+          dayElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center',
+            inline: 'center'
+          });
+          setShouldScrollAfterMonthChange(false);
+        }, 200); // Slightly longer delay after month change
+      }
+    }
+  }, [dailyPTOBalances, shouldScrollAfterMonthChange, selectedDate]);
+
+  // Callback ref function to store day element references
+  const setDayRef = (dateKey: string) => (element: HTMLDivElement | null) => {
+    if (element) {
+      dayRefs.current.set(dateKey, element);
+    } else {
+      dayRefs.current.delete(dateKey);
+    }
+  };
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCurrentDate(prev => {
@@ -526,6 +598,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                   return (
                     <div
                       key={day}
+                      ref={setDayRef(dateKey)}
                       onClick={() => handleDayClick(day)}
                       className={`p-2 h-32 border-2 rounded-lg relative transition-all duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${
                         todayClass 
