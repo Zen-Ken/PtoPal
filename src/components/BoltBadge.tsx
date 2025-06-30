@@ -18,7 +18,7 @@ export default function BoltBadge({ className = '' }: BoltBadgeProps) {
           <img 
             src="/white_circle_360x360.png"
             alt="Powered by Bolt.new - Made in Bolt"
-            className="w-14 h-14 shadow-large hover:shadow-xl transition-shadow duration-300 rounded-full"
+            className="w-20 h-20 shadow-large hover:shadow-xl transition-shadow duration-300 rounded-full"
           />
           
           {/* Hover gradient overlay */}
