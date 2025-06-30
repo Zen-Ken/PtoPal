@@ -839,6 +839,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
         onDelete={handleDeleteVacation}
         initialStartDate={modalInitialDates.startDate}
         initialEndDate={modalInitialDates.endDate}
+        userSettings={userSettings}
       />
     </div>
   );

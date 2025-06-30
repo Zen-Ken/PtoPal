@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { X, Save, Trash2, Calculator } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { X, Save, Trash2, Calculator, TrendingUp } from 'lucide-react';
 import { VacationEntry } from '../types/VacationEntry';
-import { calculateVacationHours, generateVacationId } from '../utils/dateUtils';
+import { UserSettings } from '../types/UserSettings';
+import { calculateVacationHours, generateVacationId, getProjectedPTOBalance, createDateFromString } from '../utils/dateUtils';
 
 interface VacationModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface VacationModalProps {
   onDelete: (vacationId: string) => void;
   initialStartDate?: string;
   initialEndDate?: string;
+  userSettings: UserSettings;
 }
 
 interface VacationFormData {
@@ -27,7 +29,8 @@ export default function VacationModal({
   onSave,
   onDelete,
   initialStartDate = '',
-  initialEndDate = ''
+  initialEndDate = '',
+  userSettings
 }: VacationModalProps) {
   const [vacationForm, setVacationForm] = useState<VacationFormData>({
     startDate: initialStartDate,
@@ -66,6 +69,32 @@ export default function VacationModal({
       vacationForm.includeWeekends
     ) * 100) / 100;
   };
+
+  // Calculate available PTO on start date
+  const availablePTOOnStartDate = useMemo(() => {
+    if (!vacationForm.startDate) return null;
+    
+    const startDate = createDateFromString(vacationForm.startDate);
+    const today = new Date();
+    
+    // If start date is today or in the past, use current PTO
+    if (startDate <= today) {
+      return userSettings.currentPTO;
+    }
+    
+    // For future dates, calculate projected PTO balance
+    const projectedData = getProjectedPTOBalance(
+      userSettings.currentPTO,
+      userSettings.accrualRate,
+      userSettings.payPeriod,
+      userSettings.vacations,
+      startDate,
+      today,
+      userSettings.paydayOfWeek
+    );
+    
+    return projectedData.projectedBalance;
+  }, [vacationForm.startDate, userSettings]);
 
   const handleSave = () => {
     if (!vacationForm.startDate || !vacationForm.endDate) return;
@@ -188,20 +217,64 @@ export default function VacationModal({
             </div>
 
             {vacationForm.startDate && vacationForm.endDate && (
-              <div className="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 p-4 rounded-lg border border-primary-200/50 dark:border-primary-700/50">
-                <div className="flex items-center space-x-2 mb-2">
-                  <Calculator className="w-5 h-5 text-primary-600 dark:text-primary-400" />
-                  <span className="text-sm text-primary-700 dark:text-primary-300 font-semibold">
-                    Total PTO Required
-                  </span>
+              <div className="grid grid-cols-2 gap-4">
+                {/* Total PTO Required */}
+                <div className="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 p-4 rounded-lg border border-primary-200/50 dark:border-primary-700/50">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Calculator className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                    <span className="text-sm text-primary-700 dark:text-primary-300 font-semibold">
+                      Total PTO Required
+                    </span>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-500">
+                      {calculateFormHours().toFixed(2)} hrs
+                    </div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                      ({hoursToDays(calculateFormHours())} days)
+                    </div>
+                  </div>
                 </div>
+
+                {/* Available PTO on Start Date */}
+                {availablePTOOnStartDate !== null && (
+                  <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-4 rounded-lg border border-emerald-200/50 dark:border-emerald-700/50">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                      <span className="text-sm text-emerald-700 dark:text-emerald-300 font-semibold">
+                        Available on Start Date
+                      </span>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-green-600">
+                        {availablePTOOnStartDate.toFixed(2)} hrs
+                      </div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
+                        ({hoursToDays(availablePTOOnStartDate)} days)
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Balance Check */}
+            {vacationForm.startDate && vacationForm.endDate && availablePTOOnStartDate !== null && (
+              <div className={`p-3 rounded-lg border ${
+                availablePTOOnStartDate >= calculateFormHours()
+                  ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700'
+                  : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700'
+              }`}>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-500">
-                    {calculateFormHours().toFixed(2)} hours
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    ({hoursToDays(calculateFormHours())} days)
-                  </div>
+                  {availablePTOOnStartDate >= calculateFormHours() ? (
+                    <div className="text-green-700 dark:text-green-300 text-sm font-medium">
+                      ✅ You have enough PTO for this vacation!
+                    </div>
+                  ) : (
+                    <div className="text-red-700 dark:text-red-300 text-sm font-medium">
+                      ⚠️ You need {(calculateFormHours() - availablePTOOnStartDate).toFixed(2)} more hours
+                    </div>
+                  )}
                 </div>
               </div>
             )}
