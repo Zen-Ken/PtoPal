@@ -462,6 +462,13 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
     });
   };
 
+  // Check if we're currently viewing today's month
+  const isCurrentMonth = () => {
+    const today = new Date();
+    return currentDate.getMonth() === today.getMonth() && 
+           currentDate.getFullYear() === today.getFullYear();
+  };
+
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
@@ -486,19 +493,12 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
     createDateFromString(vacation.endDate) < today
   );
 
-  // Check if we're currently viewing today's month
-  const isCurrentMonth = () => {
-    const today = new Date();
-    return currentDate.getMonth() === today.getMonth() && 
-           currentDate.getFullYear() === today.getFullYear();
-  };
-
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0">
+            <div className="flex items-center space-x-3 w-full sm:w-auto justify-center sm:justify-start">
               <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
                 <Calendar className="w-6 h-6 text-white" />
               </div>
@@ -509,39 +509,42 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
             </div>
             
             {/* Actions */}
-            <div className="flex items-center space-x-4">
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 w-full sm:w-auto">
               <button
                 onClick={handleAddVacation}
-                className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-soft hover:shadow-medium flex items-center space-x-2"
+                className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-soft hover:shadow-medium flex items-center space-x-2 w-full sm:w-auto justify-center"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Vacation</span>
               </button>
-              <button
-                onClick={() => navigateMonth('prev')}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-              >
-                <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-              </button>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white min-w-[200px] text-center">
-                {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-              </h2>
-              <button
-                onClick={() => navigateMonth('next')}
-                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-              >
-                <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-              </button>
-              {!isCurrentMonth() && (
+              
+              <div className="flex items-center justify-between w-full sm:w-auto">
                 <button
-                  onClick={jumpToToday}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-soft hover:shadow-medium flex items-center space-x-2"
-                  title="Jump to current month"
+                  onClick={() => navigateMonth('prev')}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                 >
-                  <Home className="w-4 h-4" />
-                  <span>Today</span>
+                  <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
                 </button>
-              )}
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white text-center flex-grow mx-2">
+                  {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                </h2>
+                <button
+                  onClick={() => navigateMonth('next')}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+                >
+                  <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                </button>
+                {!isCurrentMonth() && (
+                  <button
+                    onClick={jumpToToday}
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-soft hover:shadow-medium flex items-center space-x-2 ml-2"
+                    title="Jump to current month"
+                  >
+                    <Home className="w-4 h-4" />
+                    <span className="hidden sm:inline">Today</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -549,12 +552,13 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Calendar */}
           <div className="lg:col-span-3">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-200 dark:border-gray-700 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-200 dark:border-gray-700 p-4 sm:p-6">
               {/* Calendar Header */}
               <div className="grid grid-cols-7 gap-1 mb-4">
                 {dayNames.map((day) => (
-                  <div key={day} className="p-3 text-center text-sm font-semibold text-gray-600 dark:text-gray-400">
-                    {day}
+                  <div key={day} className="p-2 sm:p-3 text-center text-sm font-semibold text-gray-600 dark:text-gray-400">
+                    <span className="hidden sm:inline">{day}</span>
+                    <span className="sm:hidden">{day.slice(0, 1)}</span>
                   </div>
                 ))}
               </div>
@@ -563,7 +567,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
               <div className="grid grid-cols-7 gap-1">
                 {/* Empty cells for days before month starts */}
                 {Array.from({ length: firstDay }, (_, index) => (
-                  <div key={`empty-${index}`} className="p-3 h-32"></div>
+                  <div key={`empty-${index}`} className="p-2 h-24 sm:h-32"></div>
                 ))}
 
                 {/* Days of the month */}
@@ -581,7 +585,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                     <div
                       key={day}
                       onClick={() => handleDayClick(day)}
-                      className={`p-2 h-32 border-2 rounded-lg relative transition-all duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                      className={`p-1 sm:p-2 h-24 sm:h-32 border-2 rounded-lg relative transition-all duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${
                         todayClass 
                           ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-300 dark:border-primary-600 ring-2 ring-primary-200 dark:ring-primary-700' 
                           : dayInfo?.isPayDay
@@ -591,7 +595,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                           : 'border-gray-200 dark:border-gray-600'
                       }`}
                     >
-                      <div className={`text-sm font-medium mb-1 ${
+                      <div className={`text-xs sm:text-sm font-medium mb-1 ${
                         todayClass ? 'text-primary-700 dark:text-primary-300' : 'text-gray-900 dark:text-white'
                       }`}>
                         {day}
@@ -599,9 +603,9 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                       
                       {/* Pay Day Dollar Icon */}
                       {dayInfo?.isPayDay && dayInfo.totalPTOOnPayDay !== undefined && (
-                        <div className="absolute top-2 right-2">
+                        <div className="absolute top-1 sm:top-2 right-1 sm:right-2">
                           <button
-                            className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 transform hover:scale-110 ${
+                            className={`w-4 h-4 sm:w-6 sm:h-6 rounded-full flex items-center justify-center transition-all duration-200 transform hover:scale-110 ${
                               isFuture 
                                 ? 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-soft hover:shadow-medium' 
                                 : 'bg-gradient-to-r from-gray-400 to-gray-500 opacity-60'
@@ -611,14 +615,14 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                             onClick={(e) => handlePaydayIconClick(e, dateKey)}
                             title="Pay Day - Click for details"
                           >
-                            <DollarSign className="w-3 h-3 text-white" />
+                            <DollarSign className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
                           </button>
                         </div>
                       )}
 
                       {/* Individual Vacation Indicators */}
                       {dayInfo?.vacations && dayInfo.vacations.length > 0 && (
-                        <div className="space-y-1 mt-6">
+                        <div className="space-y-1 mt-4 sm:mt-6">
                           {dayInfo.vacations.slice(0, 2).map((vacation, index) => {
                             const colors = [
                               'from-purple-500 to-pink-600',
@@ -633,15 +637,15 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                             return (
                               <div
                                 key={vacation.id}
-                                className={`bg-gradient-to-r ${colorClass} text-white text-xs px-2 py-1 rounded-md shadow-soft cursor-pointer hover:shadow-medium transition-all duration-200 transform hover:scale-105`}
+                                className={`bg-gradient-to-r ${colorClass} text-white text-xs px-1 sm:px-2 py-0.5 sm:py-1 rounded-md shadow-soft cursor-pointer hover:shadow-medium transition-all duration-200 transform hover:scale-105`}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleEditVacation(vacation);
                                 }}
                               >
                                 <div className="flex items-center space-x-1 truncate">
-                                  <MapPin className="w-3 h-3 flex-shrink-0" />
-                                  <span className="font-medium truncate">
+                                  <MapPin className="w-2 h-2 sm:w-3 sm:h-3 flex-shrink-0" />
+                                  <span className="font-medium truncate text-xs">
                                     {vacation.description || 'Vacation'}
                                   </span>
                                 </div>
@@ -649,7 +653,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                             );
                           })}
                           {dayInfo.vacations.length > 2 && (
-                            <div className="text-xs text-gray-500 dark:text-gray-400 px-2">
+                            <div className="text-xs text-gray-500 dark:text-gray-400 px-1 sm:px-2">
                               +{dayInfo.vacations.length - 2} more
                             </div>
                           )}
