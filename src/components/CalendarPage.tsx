@@ -59,9 +59,13 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
   const [legendTooltipPosition, setLegendTooltipPosition] = useState({ top: 0, left: 0 });
   const [modalInitialDates, setModalInitialDates] = useState({ startDate: '', endDate: '' });
   const [hasInitializedFromSelectedDate, setHasInitializedFromSelectedDate] = useState(false);
+  const [calendarHeight, setCalendarHeight] = useState<number>(0);
   
   // Ref to store day element references
   const dayRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  
+  // Ref for the calendar container to measure its height
+  const calendarRef = useRef<HTMLDivElement>(null);
   
   const payPeriodOptions = {
     weekly: { days: 7, label: 'Weekly' },
@@ -81,6 +85,36 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
   const getFirstDayOfMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
   };
+
+  // Effect to measure calendar height
+  useEffect(() => {
+    const measureCalendarHeight = () => {
+      if (calendarRef.current) {
+        const height = calendarRef.current.offsetHeight;
+        setCalendarHeight(height);
+      }
+    };
+
+    // Measure height after component mounts and calendar renders
+    measureCalendarHeight();
+
+    // Create ResizeObserver to watch for calendar size changes
+    const resizeObserver = new ResizeObserver(() => {
+      measureCalendarHeight();
+    });
+
+    if (calendarRef.current) {
+      resizeObserver.observe(calendarRef.current);
+    }
+
+    // Also measure on window resize
+    window.addEventListener('resize', measureCalendarHeight);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', measureCalendarHeight);
+    };
+  }, [currentDate]); // Re-measure when month changes
 
   // Legend items configuration
   const legendItems = useMemo(() => [
@@ -554,7 +588,10 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Calendar */}
           <div className="lg:col-span-3">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-200 dark:border-gray-700 p-6 relative">
+            <div 
+              ref={calendarRef}
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-200 dark:border-gray-700 p-6 relative"
+            >
               {/* Legend Icon */}
               <div className="absolute top-4 right-4 z-10">
                 <button
@@ -694,7 +731,12 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                 </span>
               </div>
               
-              <div className="space-y-3 max-h-64 overflow-y-auto">
+              <div 
+                className="space-y-3 overflow-y-auto"
+                style={{ 
+                  maxHeight: calendarHeight > 0 ? `${calendarHeight - 120}px` : '400px' // Subtract header height
+                }}
+              >
                 {upcomingVacations.length === 0 ? (
                   <div className="text-center py-6 text-gray-500 dark:text-gray-400">
                     <MapPin className="w-8 h-8 text-gray-300 dark:text-gray-600 mx-auto mb-2" />
