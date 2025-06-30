@@ -1,8 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Save, Trash2, Calculator, TrendingUp } from 'lucide-react';
+import { X, Save, Trash2, Calculator, TrendingUp, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import { VacationEntry } from '../types/VacationEntry';
 import { UserSettings } from '../types/UserSettings';
-import { calculateVacationHours, generateVacationId, getProjectedPTOBalance, createDateFromString } from '../utils/dateUtils';
+import { generateVacationId } from '../utils/dateUtils';
+import { 
+  validateVacationFormData, 
+  haveVacationDatesChanged,
+  hoursToDays,
+  VacationValidationResult
+} from '../utils/vacationValidation';
 
 interface VacationModalProps {
   isOpen: boolean;
@@ -70,63 +76,35 @@ export default function VacationModal({
     }
   }, [editingVacation, initialStartDate, initialEndDate]);
 
-  // Helper function to convert hours to days for display
-  const hoursToDays = (hours: number) => (hours / 8).toFixed(2);
-
-  const calculateFormHours = () => {
-    if (!vacationForm.startDate || !vacationForm.endDate) return 0;
-    return Math.round(calculateVacationHours(
-      vacationForm.startDate,
-      vacationForm.endDate,
-      vacationForm.includeWeekends
-    ) * 100) / 100;
-  };
-
-  // Calculate available PTO on start date
-  const availablePTOOnStartDate = useMemo(() => {
-    if (!vacationForm.startDate) return null;
-    
-    const startDate = createDateFromString(vacationForm.startDate);
-    const today = new Date();
-    
-    // If start date is today or in the past, use current PTO
-    if (startDate <= today) {
-      return userSettings.currentPTO;
-    }
-    
-    // For future dates, calculate projected PTO balance
-    const projectedData = getProjectedPTOBalance(
-      userSettings.currentPTO,
-      userSettings.accrualRate,
-      userSettings.payPeriod,
-      userSettings.vacations,
-      startDate,
-      today,
-      userSettings.paydayOfWeek
+  // Real-time validation using the new validation system
+  const validation: VacationValidationResult = useMemo(() => {
+    return validateVacationFormData(
+      {
+        startDate: vacationForm.startDate,
+        endDate: vacationForm.endDate,
+        includeWeekends: vacationForm.includeWeekends
+      },
+      userSettings,
+      editingVacation?.id
     );
-    
-    return projectedData.projectedBalance;
-  }, [vacationForm.startDate, userSettings]);
+  }, [vacationForm.startDate, vacationForm.endDate, vacationForm.includeWeekends, userSettings, editingVacation?.id]);
 
-  // Check if vacation dates have changed from original
+  // Check if vacation dates have changed from original (for conditional validation display)
   const vacationDatesChanged = useMemo(() => {
-    if (!originalVacationDates) return true; // New vacation, always show balance check
-    
-    return (
-      vacationForm.startDate !== originalVacationDates.startDate ||
-      vacationForm.endDate !== originalVacationDates.endDate
+    return haveVacationDatesChanged(
+      { startDate: vacationForm.startDate, endDate: vacationForm.endDate },
+      originalVacationDates
     );
   }, [vacationForm.startDate, vacationForm.endDate, originalVacationDates]);
+
+  // Determine if we should show validation results
+  const shouldShowValidation = vacationForm.startDate && vacationForm.endDate && vacationDatesChanged;
 
   const handleSave = () => {
     if (!vacationForm.startDate || !vacationForm.endDate) return;
     
-    const totalHours = Math.round(calculateVacationHours(
-      vacationForm.startDate,
-      vacationForm.endDate,
-      vacationForm.includeWeekends
-    ) * 100) / 100;
-    
+    // Use the validation system's calculated hours
+    const totalHours = validation.requiredHours;
     const now = new Date().toISOString();
     
     if (editingVacation) {
@@ -163,6 +141,37 @@ export default function VacationModal({
     if (editingVacation) {
       onDelete(editingVacation.id);
       onClose();
+    }
+  };
+
+  // Get validation icon and color based on result
+  const getValidationIcon = () => {
+    if (!shouldShowValidation) return null;
+    
+    switch (validation.messageType) {
+      case 'success':
+        return <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />;
+      case 'warning':
+        return <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />;
+      case 'error':
+        return <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400" />;
+      default:
+        return <Info className="w-5 h-5 text-blue-600 dark:text-blue-400" />;
+    }
+  };
+
+  const getValidationStyles = () => {
+    if (!shouldShowValidation) return '';
+    
+    switch (validation.messageType) {
+      case 'success':
+        return 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700 text-green-700 dark:text-green-300';
+      case 'warning':
+        return 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700 text-amber-700 dark:text-amber-300';
+      case 'error':
+        return 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700 text-red-700 dark:text-red-300';
+      default:
+        return 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 text-blue-700 dark:text-blue-300';
     }
   };
 
@@ -238,6 +247,7 @@ export default function VacationModal({
               </label>
             </div>
 
+            {/* Vacation Details Cards */}
             {vacationForm.startDate && vacationForm.endDate && (
               <div className="grid grid-cols-2 gap-4">
                 {/* Total PTO Required */}
@@ -250,56 +260,92 @@ export default function VacationModal({
                   </div>
                   <div className="text-center">
                     <div className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-500">
-                      {calculateFormHours().toFixed(2)} hrs
+                      {validation.requiredHours.toFixed(2)} hrs
                     </div>
                     <div className="text-xs text-gray-600 dark:text-gray-400">
-                      ({hoursToDays(calculateFormHours())} days)
+                      ({hoursToDays(validation.requiredHours)} days)
                     </div>
                   </div>
+                  
+                  {/* Breakdown details */}
+                  {validation.breakdown.totalDays > 0 && (
+                    <div className="mt-2 pt-2 border-t border-primary-200 dark:border-primary-700">
+                      <div className="text-xs text-primary-700 dark:text-primary-300 space-y-1">
+                        <div className="flex justify-between">
+                          <span>Weekdays:</span>
+                          <span>{validation.breakdown.weekdayDays} days</span>
+                        </div>
+                        {validation.breakdown.weekendDays > 0 && (
+                          <div className="flex justify-between">
+                            <span>Weekends:</span>
+                            <span>{validation.breakdown.weekendDays} days {!vacationForm.includeWeekends ? '(excluded)' : ''}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Available PTO on Start Date */}
-                {availablePTOOnStartDate !== null && (
-                  <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-4 rounded-lg border border-emerald-200/50 dark:border-emerald-700/50">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                      <span className="text-sm text-emerald-700 dark:text-emerald-300 font-semibold">
-                        Available on Start Date
-                      </span>
+                <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-900/20 dark:to-green-900/20 p-4 rounded-lg border border-emerald-200/50 dark:border-emerald-700/50">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                    <span className="text-sm text-emerald-700 dark:text-emerald-300 font-semibold">
+                      Available on Start Date
+                    </span>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-green-600">
+                      {validation.availableHours.toFixed(2)} hrs
                     </div>
-                    <div className="text-center">
-                      <div className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-green-600">
-                        {availablePTOOnStartDate.toFixed(2)} hrs
-                      </div>
-                      <div className="text-xs text-gray-600 dark:text-gray-400">
-                        ({hoursToDays(availablePTOOnStartDate)} days)
-                      </div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                      ({hoursToDays(validation.availableHours)} days)
                     </div>
                   </div>
-                )}
+                  
+                  {/* Balance indicator */}
+                  <div className="mt-2 pt-2 border-t border-emerald-200 dark:border-emerald-700">
+                    <div className="text-xs text-emerald-700 dark:text-emerald-300 text-center">
+                      {validation.shortfallHours > 0 ? (
+                        <span className="text-red-600 dark:text-red-400 font-medium">
+                          Short by {validation.shortfallHours.toFixed(2)} hrs
+                        </span>
+                      ) : (
+                        <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                          Sufficient balance ✓
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* Balance Check - Only show for new vacations or when dates have changed */}
-            {vacationForm.startDate && 
-             vacationForm.endDate && 
-             availablePTOOnStartDate !== null && 
-             vacationDatesChanged && (
-              <div className={`p-3 rounded-lg border ${
-                availablePTOOnStartDate >= calculateFormHours()
-                  ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700'
-                  : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700'
-              }`}>
-                <div className="text-center">
-                  {availablePTOOnStartDate >= calculateFormHours() ? (
-                    <div className="text-green-700 dark:text-green-300 text-sm font-medium">
-                      ✅ You have enough PTO for this vacation!
+            {/* Validation Message - Only show for new vacations or when dates have changed */}
+            {shouldShowValidation && (
+              <div className={`p-4 rounded-lg border ${getValidationStyles()}`}>
+                <div className="flex items-start space-x-3">
+                  {getValidationIcon()}
+                  <div className="flex-1">
+                    <div className="font-medium text-sm">
+                      {validation.message}
                     </div>
-                  ) : (
-                    <div className="text-red-700 dark:text-red-300 text-sm font-medium">
-                      ⚠️ You need {(calculateFormHours() - availablePTOOnStartDate).toFixed(2)} more hours
-                    </div>
-                  )}
+                    
+                    {/* Additional context for weekend handling */}
+                    {validation.breakdown.weekendDays > 0 && (
+                      <div className="mt-2 text-xs opacity-90">
+                        {!vacationForm.includeWeekends ? (
+                          <div>
+                            <strong>Weekend Handling:</strong> {validation.breakdown.weekendDays} weekend day{validation.breakdown.weekendDays > 1 ? 's' : ''} excluded from PTO calculation
+                          </div>
+                        ) : (
+                          <div>
+                            <strong>Weekend Handling:</strong> {validation.breakdown.weekendDays} weekend day{validation.breakdown.weekendDays > 1 ? 's' : ''} included in PTO calculation
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
