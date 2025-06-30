@@ -406,33 +406,42 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
     return checkDateNormalized < todayNormalized;
   };
 
-  const handlePaydayIconHover = (event: React.MouseEvent, dateKey: string) => {
+  // Enhanced payday icon handlers for both hover and click
+  const handlePaydayIconInteraction = (event: React.MouseEvent, dateKey: string) => {
+    event.stopPropagation();
+    
     const rect = event.currentTarget.getBoundingClientRect();
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
     
     setTooltipPosition({
       top: rect.bottom + scrollTop + 8,
-      left: Math.max(16, Math.min(rect.left + scrollLeft, window.innerWidth - 336))
+      left: rect.left + scrollLeft + (rect.width / 2) - 160 // Center the tooltip
     });
     setOpenTooltipDate(dateKey);
   };
 
-  const handlePaydayIconLeave = () => {
-    setOpenTooltipDate(null);
+  const handlePaydayIconHover = (event: React.MouseEvent, dateKey: string) => {
+    // Only show on hover for desktop (non-touch devices)
+    if (!('ontouchstart' in window)) {
+      handlePaydayIconInteraction(event, dateKey);
+    }
   };
 
   const handlePaydayIconClick = (event: React.MouseEvent, dateKey: string) => {
-    event.stopPropagation();
-    const rect = event.currentTarget.getBoundingClientRect();
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-    
-    setTooltipPosition({
-      top: rect.bottom + scrollTop + 8,
-      left: Math.max(16, Math.min(rect.left + scrollLeft, window.innerWidth - 336))
-    });
-    setOpenTooltipDate(dateKey);
+    // Always show on click (for both desktop and mobile)
+    handlePaydayIconInteraction(event, dateKey);
+  };
+
+  const handlePaydayIconLeave = () => {
+    // Only hide on mouse leave for desktop (non-touch devices)
+    if (!('ontouchstart' in window)) {
+      setOpenTooltipDate(null);
+    }
+  };
+
+  const handleTooltipClose = () => {
+    setOpenTooltipDate(null);
   };
 
   const handleLegendIconHover = (event: React.MouseEvent) => {
@@ -656,7 +665,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                       {dayInfo?.isPayDay && dayInfo.totalPTOOnPayDay !== undefined && (
                         <div className="absolute top-2 right-2">
                           <button
-                            className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 transform hover:scale-110 ${
+                            className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 transform hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 ${
                               isFuture 
                                 ? 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-soft hover:shadow-medium' 
                                 : 'bg-gradient-to-r from-gray-400 to-gray-500 opacity-60'
@@ -665,6 +674,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                             onMouseLeave={handlePaydayIconLeave}
                             onClick={(e) => handlePaydayIconClick(e, dateKey)}
                             title="Pay Day - Click for details"
+                            aria-label={`Pay day details for ${dayInfo.date.toLocaleDateString()}`}
                           >
                             <DollarSign className="w-3 h-3 text-white" />
                           </button>
@@ -864,12 +874,12 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
         </div>
       </div>
 
-      {/* Payday Tooltip */}
+      {/* Enhanced Payday Tooltip */}
       {openTooltipDate && dailyPTOBalances[openTooltipDate] && (
         <PaydayTooltip
           dayInfo={dailyPTOBalances[openTooltipDate]}
           position={tooltipPosition}
-          onClose={handlePaydayIconLeave}
+          onClose={handleTooltipClose}
           hoursToDays={hoursToDays}
           isFuturePayday={isFutureDate(dailyPTOBalances[openTooltipDate].date.getDate())}
         />
