@@ -50,8 +50,8 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
 
   const payPeriodOptions = [
     { value: 'weekly', label: 'Weekly', periodsPerMonth: 4.33 },
-    { value: 'biweekly', label: 'Bi-weekly', periodsPerMonth: 2.17 },
-    { value: 'semimonthly', label: 'Semi-monthly', periodsPerMonth: 2 },
+    { value: 'biweekly', label: 'Bi-weekly (Every 2 weeks)', periodsPerMonth: 2.17 },
+    { value: 'semimonthly', label: 'Semi-monthly (15th & Last day)', periodsPerMonth: 2 },
     { value: 'monthly', label: 'Monthly', periodsPerMonth: 1 }
   ];
 
