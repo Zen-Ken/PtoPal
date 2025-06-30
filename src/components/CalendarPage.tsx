@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Calendar, Clock, TrendingUp, DollarSign, Plus, X, Edit3, Trash2, MapPin, Save, Calculator, Target } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Clock, TrendingUp, DollarSign, Plus, X, Edit3, Trash2, MapPin, Save, Calculator, Target, Info } from 'lucide-react';
 import { UserSettings } from '../types/UserSettings';
 import { VacationEntry } from '../types/VacationEntry';
 import PaydayTooltip from './PaydayTooltip';
+import LegendTooltip from './LegendTooltip';
 import { 
   calculatePTOForTargetDate, 
   getVacationsForDate, 
@@ -52,6 +53,8 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
   const [editingVacation, setEditingVacation] = useState<VacationEntry | null>(null);
   const [openTooltipDate, setOpenTooltipDate] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  const [isLegendTooltipOpen, setIsLegendTooltipOpen] = useState(false);
+  const [legendTooltipPosition, setLegendTooltipPosition] = useState({ top: 0, left: 0 });
   const [vacationForm, setVacationForm] = useState<VacationFormData>({
     startDate: '',
     endDate: '',
@@ -77,6 +80,42 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
   const getFirstDayOfMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth(), 1).getDay();
   };
+
+  // Legend items configuration
+  const legendItems = useMemo(() => [
+    {
+      type: 'icon' as const,
+      icon: DollarSign,
+      iconColor: 'bg-gradient-to-r from-emerald-500 to-green-600',
+      description: 'Future Pay Day (hover/click for details)'
+    },
+    {
+      type: 'icon' as const,
+      icon: DollarSign,
+      iconColor: 'bg-gradient-to-r from-gray-400 to-gray-500 opacity-60',
+      description: 'Past Pay Day'
+    },
+    {
+      type: 'color' as const,
+      colorClass: 'bg-gradient-to-r from-purple-500 to-pink-600',
+      description: 'Vacation Day'
+    },
+    {
+      type: 'border' as const,
+      borderClass: 'bg-primary-200 dark:bg-primary-800 border-2 border-primary-400 dark:border-primary-600',
+      description: 'Today'
+    },
+    {
+      type: 'border' as const,
+      borderClass: 'border-2 border-emerald-200 dark:border-emerald-700 bg-emerald-50/30 dark:bg-emerald-900/10',
+      description: 'Future Pay Day Border'
+    },
+    {
+      type: 'border' as const,
+      borderClass: 'border-2 border-gray-400 dark:border-gray-500 bg-gray-50/30 dark:bg-gray-800/10',
+      description: 'Past Pay Day Border'
+    }
+  ], []);
 
   const generatePayPeriods = useMemo(() => {
     const events: PayPeriodEvent[] = [];
@@ -302,6 +341,31 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
     setOpenTooltipDate(dateKey);
   };
 
+  const handleLegendIconHover = (event: React.MouseEvent) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+    
+    // Position tooltip to the left of the icon to avoid going off-screen
+    setLegendTooltipPosition({
+      top: rect.bottom + scrollTop + 8,
+      left: Math.max(16, rect.right + scrollLeft - 400) // Position to the left
+    });
+    setIsLegendTooltipOpen(true);
+  };
+
+  const handleLegendIconLeave = () => {
+    setIsLegendTooltipOpen(false);
+  };
+
+  const handleLegendTooltipMouseEnter = () => {
+    setIsLegendTooltipOpen(true);
+  };
+
+  const handleLegendTooltipMouseLeave = () => {
+    setIsLegendTooltipOpen(false);
+  };
+
   const handleDayClick = (day: number) => {
     const clickedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
     const year = clickedDate.getFullYear();
@@ -489,7 +553,19 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Calendar */}
           <div className="lg:col-span-3">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-200 dark:border-gray-700 p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-200 dark:border-gray-700 p-6 relative">
+              {/* Legend Icon */}
+              <div className="absolute top-4 right-4 z-10">
+                <button
+                  onMouseEnter={handleLegendIconHover}
+                  onMouseLeave={handleLegendIconLeave}
+                  className="w-8 h-8 bg-gradient-to-br from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 rounded-lg flex items-center justify-center transition-all duration-200 transform hover:scale-110 shadow-soft hover:shadow-medium group"
+                  title="Calendar Legend"
+                >
+                  <Info className="w-4 h-4 text-white group-hover:rotate-12 transition-transform duration-200" />
+                </button>
+              </div>
+
               {/* Calendar Header */}
               <div className="grid grid-cols-7 gap-1 mb-4">
                 {dayNames.map((day) => (
@@ -708,45 +784,6 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                 </div>
               </div>
             )}
-
-            {/* Legend */}
-            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 rounded-xl p-6 border border-amber-200/50 dark:border-amber-700/50">
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Legend</h3>
-              
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-gradient-to-r from-emerald-500 to-green-600 rounded-full flex items-center justify-center">
-                    <DollarSign className="w-3 h-3 text-white" />
-                  </div>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Future Pay Day (hover/click for details)</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-gradient-to-r from-gray-400 to-gray-500 opacity-60 rounded-full flex items-center justify-center">
-                    <DollarSign className="w-3 h-3 text-white" />
-                  </div>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Past Pay Day</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-gradient-to-r from-purple-500 to-pink-600 rounded"></div>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Vacation Day</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 bg-primary-200 dark:bg-primary-800 border-2 border-primary-400 dark:border-primary-600 rounded"></div>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Today</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 border-2 border-emerald-200 dark:border-emerald-700 bg-emerald-50/30 dark:bg-emerald-900/10 rounded"></div>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Future Pay Day Border</span>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-4 h-4 border-2 border-gray-400 dark:border-gray-500 bg-gray-50/30 dark:bg-gray-800/10 rounded"></div>
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Past Pay Day Border</span>
-                </div>
-                <div className="text-xs text-gray-600 dark:text-gray-400 mt-3 p-2 bg-gray-100 dark:bg-gray-700 rounded">
-                  <strong>Tip:</strong> Click on vacation indicators to edit, or click on any day to add new vacations. Hover or click on pay day dollar icons for detailed balance information.
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -761,6 +798,16 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
           isFuturePayday={isFutureDate(dailyPTOBalances[openTooltipDate].date.getDate())}
         />
       )}
+
+      {/* Legend Tooltip */}
+      <LegendTooltip
+        isOpen={isLegendTooltipOpen}
+        position={legendTooltipPosition}
+        onClose={handleLegendIconLeave}
+        onMouseEnter={handleLegendTooltipMouseEnter}
+        onMouseLeave={handleLegendTooltipMouseLeave}
+        legendItems={legendItems}
+      />
 
       {/* Vacation Modal */}
       {isAddVacationModalOpen && (
