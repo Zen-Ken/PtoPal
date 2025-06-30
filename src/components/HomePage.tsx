@@ -304,7 +304,7 @@ export default function HomePage({
                               You have {vacationsBetweenDates.length} vacation{vacationsBetweenDates.length > 1 ? 's' : ''} planned!
                             </div>
                             <div className="text-xs text-primary-700 dark:text-primary-300 leading-relaxed">
-                              This calculation shows accruals only. 
+                              Remember, this total doesn't subtract your upcoming vacations. 
                               <span className="block font-medium mt-1 group-hover:text-primary-800 dark:group-hover:text-primary-200 transition-colors">
                                 View your calendar for the complete picture →
                               </span>
