@@ -42,7 +42,7 @@ interface DayInfo {
 }
 
 export default function CalendarPage({ onBack, userSettings, onUpdateSettings, selectedDate, setSelectedDate }: CalendarPageProps) {
-  // Initialize currentDate based on selectedDate if available
+  // Initialize currentDate based on selectedDate if available, but only once
   const [currentDate, setCurrentDate] = useState(() => {
     if (selectedDate) {
       const selected = createDateFromString(selectedDate);
@@ -58,7 +58,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
   const [isLegendTooltipOpen, setIsLegendTooltipOpen] = useState(false);
   const [legendTooltipPosition, setLegendTooltipPosition] = useState({ top: 0, left: 0 });
   const [modalInitialDates, setModalInitialDates] = useState({ startDate: '', endDate: '' });
-  const [shouldScrollAfterMonthChange, setShouldScrollAfterMonthChange] = useState(false);
+  const [hasInitializedFromSelectedDate, setHasInitializedFromSelectedDate] = useState(false);
   
   // Ref to store day element references
   const dayRefs = useRef<Map<string, HTMLDivElement>>(new Map());
@@ -276,9 +276,9 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
     return balances;
   }, [currentDate, userSettings, generatePayPeriods]);
 
-  // Effect to handle scrolling to selected date
+  // Effect to handle initial navigation to selected date (only once)
   useEffect(() => {
-    if (!selectedDate) return;
+    if (!selectedDate || hasInitializedFromSelectedDate) return;
 
     const selectedDateObj = createDateFromString(selectedDate);
     const selectedMonth = selectedDateObj.getMonth();
@@ -286,46 +286,13 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
 
-    // Check if selected date is in the currently displayed month
-    if (selectedMonth === currentMonth && selectedYear === currentYear) {
-      // Same month, scroll to the day
-      const dateKey = selectedDate;
-      const dayElement = dayRefs.current.get(dateKey);
-      
-      if (dayElement) {
-        setTimeout(() => {
-          dayElement.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center',
-            inline: 'center'
-          });
-        }, 100); // Small delay to ensure rendering is complete
-      }
-    } else {
-      // Different month, navigate to the correct month first
+    // If selected date is not in the currently displayed month, navigate to it
+    if (selectedMonth !== currentMonth || selectedYear !== currentYear) {
       setCurrentDate(new Date(selectedYear, selectedMonth, 1));
-      setShouldScrollAfterMonthChange(true);
     }
-  }, [selectedDate, currentDate]);
-
-  // Effect to scroll after month change
-  useEffect(() => {
-    if (shouldScrollAfterMonthChange && selectedDate) {
-      const dateKey = selectedDate;
-      const dayElement = dayRefs.current.get(dateKey);
-      
-      if (dayElement) {
-        setTimeout(() => {
-          dayElement.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center',
-            inline: 'center'
-          });
-          setShouldScrollAfterMonthChange(false);
-        }, 200); // Slightly longer delay after month change
-      }
-    }
-  }, [dailyPTOBalances, shouldScrollAfterMonthChange, selectedDate]);
+    
+    setHasInitializedFromSelectedDate(true);
+  }, [selectedDate]); // Only depend on selectedDate, not currentDate
 
   // Callback ref function to store day element references
   const setDayRef = (dateKey: string) => (element: HTMLDivElement | null) => {
