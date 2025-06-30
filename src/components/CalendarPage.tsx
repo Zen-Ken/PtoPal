@@ -712,12 +712,12 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                       key={vacation.id} 
                       className="p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200/50 dark:border-purple-700/50 rounded-lg hover:shadow-soft transition-all duration-200 group"
                     >
-                      <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
                           <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
                             {vacation.description || 'Vacation'}
                           </h4>
-                          <div className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                          <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">
                             {formatDateRange(vacation.startDate, vacation.endDate)}
                           </div>
                           <div className="flex items-center space-x-3 text-xs text-gray-500 dark:text-gray-500">
@@ -732,21 +732,21 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                         </div>
                       </div>
                       
-                      {/* Action Buttons */}
-                      <div className="flex items-center space-x-2">
+                      {/* Compact Action Buttons */}
+                      <div className="flex items-center space-x-1">
                         <button
                           onClick={() => navigateToVacation(vacation)}
-                          className="flex-1 bg-primary-100 dark:bg-primary-900/30 hover:bg-primary-200 dark:hover:bg-primary-900/50 text-primary-700 dark:text-primary-300 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center space-x-2 group-hover:scale-105"
+                          className="flex-1 bg-primary-100 dark:bg-primary-900/30 hover:bg-primary-200 dark:hover:bg-primary-900/50 text-primary-700 dark:text-primary-300 px-2 py-1.5 rounded text-xs font-medium transition-all duration-200 flex items-center justify-center space-x-1 group-hover:scale-105"
                         >
-                          <Navigation className="w-4 h-4" />
-                          <span>View on Calendar</span>
+                          <Navigation className="w-3 h-3" />
+                          <span>View</span>
                         </button>
                         <button
                           onClick={() => handleEditVacation(vacation)}
-                          className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 p-2 rounded-lg transition-all duration-200 group-hover:scale-105"
+                          className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 p-1.5 rounded transition-all duration-200 group-hover:scale-105"
                           title="Edit vacation"
                         >
-                          <Edit3 className="w-4 h-4" />
+                          <Edit3 className="w-3 h-3" />
                         </button>
                       </div>
                     </div>
@@ -788,18 +788,18 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                         </div>
                       </div>
                       
-                      {/* Action Buttons for Past Vacations */}
-                      <div className="flex items-center space-x-2">
+                      {/* Compact Action Buttons for Past Vacations */}
+                      <div className="flex items-center space-x-1">
                         <button
                           onClick={() => navigateToVacation(vacation)}
-                          className="flex-1 bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center space-x-2 group-hover:scale-105"
+                          className="flex-1 bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300 px-2 py-1.5 rounded text-xs font-medium transition-all duration-200 flex items-center justify-center space-x-1 group-hover:scale-105"
                         >
-                          <Navigation className="w-4 h-4" />
+                          <Navigation className="w-3 h-3" />
                           <span>View</span>
                         </button>
                         <button
                           onClick={() => handleEditVacation(vacation)}
-                          className="bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300 p-2 rounded-lg transition-all duration-200 group-hover:scale-105"
+                          className="bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300 p-1.5 rounded transition-all duration-200 group-hover:scale-105"
                           title="Edit vacation"
                         >
                           <Edit3 className="w-3 h-3" />
