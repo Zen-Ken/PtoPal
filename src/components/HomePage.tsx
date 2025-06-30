@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Calendar, Clock, TrendingUp, Users, Shield, Sparkles, ChevronRight, CalendarDays, Zap, User, Calculator, Target, CheckCircle, CalendarCheck } from 'lucide-react';
+import { Calendar, Clock, TrendingUp, Users, Shield, Sparkles, ChevronRight, CalendarDays, Zap, User, Calculator, Target, CheckCircle, CalendarCheck, MapPin, AlertTriangle } from 'lucide-react';
 import { UserSettings } from '../types/UserSettings';
 import { createDateFromString, getProjectedPTOBalance } from '../utils/dateUtils';
 
@@ -139,6 +139,24 @@ export default function HomePage({
     );
   }, [selectedDate, userSettings.currentPTO, userSettings.accrualRate, userSettings.payPeriod, userSettings.vacations, userSettings.paydayOfWeek]);
 
+  // Calculate days until selected date
+  const daysUntilVacation = useMemo(() => {
+    if (!selectedDate) return 0;
+    
+    const today = new Date();
+    const targetDate = createDateFromString(selectedDate);
+    const diffTime = targetDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return Math.max(0, diffDays);
+  }, [selectedDate]);
+
+  // Determine if user has enough PTO for a typical vacation
+  const hasEnoughForVacation = useMemo(() => {
+    const typicalVacationHours = 40; // 5 days * 8 hours
+    return calculatedPTO >= typicalVacationHours;
+  }, [calculatedPTO]);
+
   // Determine the main CTA action and content
   const handleMainCTA = () => {
     if (hasCompletedOnboarding) {
@@ -241,7 +259,8 @@ export default function HomePage({
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Your Next vacation
+                      <MapPin className="w-4 h-4 inline mr-1" />
+                      Your Next Vacation Date
                     </label>
                     <input
                       type="date"
@@ -251,7 +270,7 @@ export default function HomePage({
                       min={new Date().toISOString().split('T')[0]}
                     />
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Future Date
+                      {daysUntilVacation > 0 ? `${daysUntilVacation} days from now` : 'Select a future date'}
                     </p>
                   </div>
                 </div>
@@ -270,24 +289,53 @@ export default function HomePage({
                     <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
                       ({hoursToDays(calculatedPTO)} days)
                     </div>
-                    {calculatedPTO > userSettings.currentPTO && (
-                      <div className="inline-flex items-center px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-sm font-medium">
-                        <TrendingUp className="w-4 h-4 mr-1" />
-                        +{(calculatedPTO - userSettings.currentPTO).toFixed(2)} hours from accrual
+
+                    {/* PTO Status Indicators */}
+                    <div className="space-y-2 mb-4">
+                      {calculatedPTO > userSettings.currentPTO && (
+                        <div className="inline-flex items-center px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-sm font-medium">
+                          <TrendingUp className="w-4 h-4 mr-1" />
+                          +{(calculatedPTO - userSettings.currentPTO).toFixed(2)} hours from accrual
+                        </div>
+                      )}
+                      {calculatedPTO === userSettings.currentPTO && selectedDate && (
+                        <div className="inline-flex items-center px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full text-sm font-medium">
+                          <Clock className="w-4 h-4 mr-1" />
+                          Current balance
+                        </div>
+                      )}
+                      {calculatedPTO < userSettings.currentPTO && (
+                        <div className="inline-flex items-center px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full text-sm font-medium">
+                          <Calendar className="w-4 h-4 mr-1" />
+                          After planned vacations
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Vacation Readiness Indicator */}
+                    <div className={`p-3 rounded-lg border ${
+                      hasEnoughForVacation 
+                        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700'
+                        : 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700'
+                    }`}>
+                      <div className="flex items-center justify-center space-x-2">
+                        {hasEnoughForVacation ? (
+                          <>
+                            <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                            <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                              Ready for a 5-day vacation!
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                            <span className="text-sm font-medium text-amber-700 dark:text-amber-300">
+                              Need {(40 - calculatedPTO).toFixed(1)} more hours for 5 days
+                            </span>
+                          </>
+                        )}
                       </div>
-                    )}
-                    {calculatedPTO === userSettings.currentPTO && selectedDate && (
-                      <div className="inline-flex items-center px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full text-sm font-medium">
-                        <Clock className="w-4 h-4 mr-1" />
-                        Current balance
-                      </div>
-                    )}
-                    {calculatedPTO < userSettings.currentPTO && (
-                      <div className="inline-flex items-center px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full text-sm font-medium">
-                        <Calendar className="w-4 h-4 mr-1" />
-                        After planned vacations
-                      </div>
-                    )}
+                    </div>
                   </div>
 
                   {/* Vacation Notification */}
