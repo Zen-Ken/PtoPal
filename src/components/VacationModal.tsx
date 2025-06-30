@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Save, Trash2, Calculator, TrendingUp, AlertTriangle, CheckCircle, Info } from 'lucide-react';
+import { X, Save, Trash2, Calculator, TrendingUp, AlertTriangle, CheckCircle, Info, Clock, Calendar } from 'lucide-react';
 import { VacationEntry } from '../types/VacationEntry';
 import { UserSettings } from '../types/UserSettings';
 import { generateVacationId } from '../utils/dateUtils';
@@ -9,6 +9,10 @@ import {
   hoursToDays,
   VacationValidationResult
 } from '../utils/vacationValidation';
+import { 
+  simulatePTOBalanceAcrossVacations,
+  VacationSimulationResult
+} from '../utils/vacationSimulation';
 
 interface VacationModalProps {
   isOpen: boolean;
@@ -89,6 +93,29 @@ export default function VacationModal({
     );
   }, [vacationForm.startDate, vacationForm.endDate, vacationForm.includeWeekends, userSettings, editingVacation?.id]);
 
+  // Chronological PTO simulation for future conflicts
+  const simulationResult: VacationSimulationResult = useMemo(() => {
+    // Only run simulation if we have valid dates
+    if (!vacationForm.startDate || !vacationForm.endDate) {
+      return {
+        hasWarnings: false,
+        warnings: [],
+        simulationSteps: []
+      };
+    }
+
+    return simulatePTOBalanceAcrossVacations(
+      userSettings,
+      {
+        startDate: vacationForm.startDate,
+        endDate: vacationForm.endDate,
+        includeWeekends: vacationForm.includeWeekends,
+        description: vacationForm.description
+      },
+      editingVacation?.id
+    );
+  }, [vacationForm.startDate, vacationForm.endDate, vacationForm.includeWeekends, vacationForm.description, userSettings, editingVacation?.id]);
+
   // Check if vacation dates have changed from original (for conditional validation display)
   const vacationDatesChanged = useMemo(() => {
     return haveVacationDatesChanged(
@@ -100,8 +127,11 @@ export default function VacationModal({
   // Determine if we should show validation results
   const shouldShowValidation = vacationForm.startDate && vacationForm.endDate && vacationDatesChanged;
 
+  // Check if save should be disabled
+  const isSaveDisabled = !vacationForm.startDate || !vacationForm.endDate || simulationResult.hasWarnings;
+
   const handleSave = () => {
-    if (!vacationForm.startDate || !vacationForm.endDate) return;
+    if (!vacationForm.startDate || !vacationForm.endDate || simulationResult.hasWarnings) return;
     
     // Use the validation system's calculated hours
     const totalHours = validation.requiredHours;
@@ -179,7 +209,7 @@ export default function VacationModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-large max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-large max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-bold text-gray-900 dark:text-white">
@@ -321,6 +351,58 @@ export default function VacationModal({
               </div>
             )}
 
+            {/* Future Vacation Conflicts Warning */}
+            {simulationResult.hasWarnings && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <h4 className="text-lg font-bold text-red-800 dark:text-red-200 mb-2">
+                      Future Vacation Conflicts Detected
+                    </h4>
+                    <p className="text-sm text-red-700 dark:text-red-300 mb-3">
+                      This vacation would cause insufficient PTO balance for your future planned vacations:
+                    </p>
+                    
+                    <div className="space-y-3">
+                      {simulationResult.warnings.map((warning, index) => (
+                        <div key={index} className="bg-red-100 dark:bg-red-900/30 rounded-lg p-3 border border-red-200 dark:border-red-700">
+                          <div className="flex items-start space-x-3">
+                            <Calendar className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                            <div className="flex-1">
+                              <div className="font-semibold text-red-800 dark:text-red-200 mb-1">
+                                {warning.affectedVacationDescription}
+                              </div>
+                              <div className="text-sm text-red-700 dark:text-red-300 mb-2">
+                                {warning.affectedVacationDates}
+                              </div>
+                              <div className="text-sm text-red-600 dark:text-red-400">
+                                <strong>Shortfall:</strong> {warning.shortfallHours.toFixed(2)} hours
+                                <br />
+                                <strong>Available:</strong> {warning.projectedBalance.toFixed(2)} hours
+                                <br />
+                                <strong>Required:</strong> {warning.requiredHours.toFixed(2)} hours
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
+                      <div className="flex items-start space-x-2">
+                        <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                        <p className="text-sm text-amber-700 dark:text-amber-300">
+                          <strong>Suggestion:</strong> Consider adjusting your vacation dates, reducing the duration, 
+                          or modifying your future vacation plans to avoid conflicts.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
           </div>
 
           <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
@@ -343,8 +425,13 @@ export default function VacationModal({
               </button>
               <button
                 onClick={handleSave}
-                disabled={!vacationForm.startDate || !vacationForm.endDate}
-                className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 disabled:dark:bg-gray-600 text-white px-6 py-2.5 rounded-lg font-medium transition-all duration-200 shadow-soft hover:shadow-medium flex items-center space-x-2"
+                disabled={isSaveDisabled}
+                className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-200 shadow-soft hover:shadow-medium flex items-center space-x-2 ${
+                  isSaveDisabled
+                    ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                    : 'bg-primary-600 hover:bg-primary-700 text-white'
+                }`}
+                title={simulationResult.hasWarnings ? 'Cannot save: Future vacation conflicts detected' : ''}
               >
                 <Save className="w-4 h-4" />
                 <span>{editingVacation ? 'Update' : 'Save'} Vacation</span>
