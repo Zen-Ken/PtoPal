@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Calendar, Clock, TrendingUp, DollarSign, Plus, X, Edit3, Trash2, MapPin, Save, Calculator, Target, Info } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Clock, TrendingUp, DollarSign, Plus, X, Edit3, Trash2, MapPin, Save, Calculator, Target, Info, Navigation } from 'lucide-react';
 import { UserSettings } from '../types/UserSettings';
 import { VacationEntry } from '../types/VacationEntry';
 import PaydayTooltip from './PaydayTooltip';
@@ -313,6 +313,38 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
       }
       return newDate;
     });
+  };
+
+  // Function to navigate to a vacation's month and highlight it
+  const navigateToVacation = (vacation: VacationEntry) => {
+    const vacationStartDate = createDateFromString(vacation.startDate);
+    const vacationMonth = vacationStartDate.getMonth();
+    const vacationYear = vacationStartDate.getFullYear();
+    
+    // Navigate to the vacation's month
+    setCurrentDate(new Date(vacationYear, vacationMonth, 1));
+    
+    // Optional: Set the vacation start date as selected date for highlighting
+    setSelectedDate(vacation.startDate);
+    
+    // Scroll the vacation into view after a short delay to allow calendar to render
+    setTimeout(() => {
+      const dateKey = vacation.startDate;
+      const dayElement = dayRefs.current.get(dateKey);
+      if (dayElement) {
+        dayElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center',
+          inline: 'center'
+        });
+        
+        // Add a temporary highlight effect
+        dayElement.classList.add('ring-4', 'ring-primary-400', 'ring-opacity-75');
+        setTimeout(() => {
+          dayElement.classList.remove('ring-4', 'ring-primary-400', 'ring-opacity-75');
+        }, 2000);
+      }
+    }, 100);
   };
 
   const isToday = (day: number) => {
@@ -678,10 +710,9 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                   upcomingVacations.map((vacation) => (
                     <div 
                       key={vacation.id} 
-                      className="p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200/50 dark:border-purple-700/50 rounded-lg hover:shadow-soft cursor-pointer transition-all duration-200"
-                      onClick={() => handleEditVacation(vacation)}
+                      className="p-3 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200/50 dark:border-purple-700/50 rounded-lg hover:shadow-soft transition-all duration-200 group"
                     >
-                      <div className="flex items-start justify-between">
+                      <div className="flex items-start justify-between mb-3">
                         <div className="flex-1">
                           <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
                             {vacation.description || 'Vacation'}
@@ -699,7 +730,24 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                             )}
                           </div>
                         </div>
-                        <Edit3 className="w-4 h-4 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 transition-colors" />
+                      </div>
+                      
+                      {/* Action Buttons */}
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => navigateToVacation(vacation)}
+                          className="flex-1 bg-primary-100 dark:bg-primary-900/30 hover:bg-primary-200 dark:hover:bg-primary-900/50 text-primary-700 dark:text-primary-300 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center space-x-2 group-hover:scale-105"
+                        >
+                          <Navigation className="w-4 h-4" />
+                          <span>View on Calendar</span>
+                        </button>
+                        <button
+                          onClick={() => handleEditVacation(vacation)}
+                          className="bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 p-2 rounded-lg transition-all duration-200 group-hover:scale-105"
+                          title="Edit vacation"
+                        >
+                          <Edit3 className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
                   ))
@@ -724,10 +772,9 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                   {pastVacations.slice(0, 5).map((vacation) => (
                     <div 
                       key={vacation.id} 
-                      className="p-3 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer transition-all duration-200"
-                      onClick={() => handleEditVacation(vacation)}
+                      className="p-3 bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 group"
                     >
-                      <div className="flex items-start justify-between">
+                      <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
                           <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-1">
                             {vacation.description || 'Vacation'}
@@ -739,7 +786,24 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                             {vacation.totalHours.toFixed(2)} hrs ({hoursToDays(vacation.totalHours)}d)
                           </div>
                         </div>
-                        <Edit3 className="w-3 h-3 text-gray-400 dark:text-gray-500" />
+                      </div>
+                      
+                      {/* Action Buttons for Past Vacations */}
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => navigateToVacation(vacation)}
+                          className="flex-1 bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center justify-center space-x-2 group-hover:scale-105"
+                        >
+                          <Navigation className="w-4 h-4" />
+                          <span>View</span>
+                        </button>
+                        <button
+                          onClick={() => handleEditVacation(vacation)}
+                          className="bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-300 p-2 rounded-lg transition-all duration-200 group-hover:scale-105"
+                          title="Edit vacation"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                        </button>
                       </div>
                     </div>
                   ))}
