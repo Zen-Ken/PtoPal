@@ -1,6 +1,7 @@
-import React from 'react';
-import { Calendar, Clock, TrendingUp, Users, Shield, Sparkles, ChevronRight, CalendarDays, Zap, User, Calculator, Target, CheckCircle } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Calendar, Clock, TrendingUp, Users, Shield, Sparkles, ChevronRight, CalendarDays, Zap, User, Calculator, Target, CheckCircle, AlertTriangle } from 'lucide-react';
 import { UserSettings } from '../types/UserSettings';
+import { createDateFromString, getProjectedPTOBalance } from '../utils/dateUtils';
 
 interface HomePageProps {
   selectedDate: string;
@@ -102,6 +103,41 @@ export default function HomePage({
         return payPeriod;
     }
   };
+
+  // Check if there are vacations between current date and selected date
+  const vacationsBetweenDates = useMemo(() => {
+    if (!selectedDate) return [];
+    
+    const today = new Date();
+    const targetDate = createDateFromString(selectedDate);
+    
+    // Only check if target date is in the future
+    if (targetDate <= today) return [];
+    
+    return userSettings.vacations.filter(vacation => {
+      const vacationStart = createDateFromString(vacation.startDate);
+      const vacationEnd = createDateFromString(vacation.endDate);
+      
+      // Check if vacation overlaps with the period between today and target date
+      return vacationEnd > today && vacationStart <= targetDate;
+    });
+  }, [selectedDate, userSettings.vacations]);
+
+  // Get projected PTO data that accounts for vacations
+  const projectedPTOWithVacations = useMemo(() => {
+    if (!selectedDate) return null;
+    
+    const targetDate = createDateFromString(selectedDate);
+    return getProjectedPTOBalance(
+      userSettings.currentPTO,
+      userSettings.accrualRate,
+      userSettings.payPeriod,
+      userSettings.vacations,
+      targetDate,
+      new Date(),
+      userSettings.paydayOfWeek
+    );
+  }, [selectedDate, userSettings.currentPTO, userSettings.accrualRate, userSettings.payPeriod, userSettings.vacations, userSettings.paydayOfWeek]);
 
   // Determine the main CTA action and content
   const handleMainCTA = () => {
@@ -253,6 +289,31 @@ export default function HomePage({
                       </div>
                     )}
                   </div>
+
+                  {/* Vacation Notification */}
+                  {vacationsBetweenDates.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-primary-200 dark:border-primary-700">
+                      <button
+                        onClick={() => setCurrentPage('calendar')}
+                        className="w-full bg-amber-100 dark:bg-amber-900/30 hover:bg-amber-200 dark:hover:bg-amber-900/50 border border-amber-200 dark:border-amber-700 rounded-lg p-3 transition-all duration-200 group"
+                      >
+                        <div className="flex items-start space-x-3">
+                          <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                          <div className="text-left flex-1">
+                            <div className="text-sm font-semibold text-amber-800 dark:text-amber-200 mb-1">
+                              Saved Vacations Detected
+                            </div>
+                            <div className="text-xs text-amber-700 dark:text-amber-300 leading-relaxed">
+                              This calculation doesn't account for your {vacationsBetweenDates.length} saved vacation{vacationsBetweenDates.length > 1 ? 's' : ''}.
+                              <span className="block font-medium mt-1 group-hover:text-amber-800 dark:group-hover:text-amber-200 transition-colors">
+                                Click to see your projected balance with vacations →
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
