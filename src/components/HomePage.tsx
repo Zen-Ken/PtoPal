@@ -237,11 +237,6 @@ export default function HomePage({
                       className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-lg font-medium bg-white dark:bg-gray-700 transition-all duration-200 text-gray-900 dark:text-white"
                       min={new Date().toISOString().split('T')[0]}
                     />
-                    {nextVacation && (
-                      <p className="text-xs text-primary-600 dark:text-primary-400 mt-1 font-medium">
-                        Your next vacation: {nextVacation.description || 'Vacation'} on {formatNextVacationDate()}
-                      </p>
-                    )}
                   </div>
                 </div>
 
