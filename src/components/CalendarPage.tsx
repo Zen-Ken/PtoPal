@@ -414,9 +414,10 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
     const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
     const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
     
+    // Position tooltip to the right of the icon to avoid overlay
     setTooltipPosition({
-      top: rect.bottom + scrollTop + 8,
-      left: rect.left + scrollLeft + (rect.width / 2) - 160 // Center the tooltip
+      top: rect.top + scrollTop,
+      left: rect.right + scrollLeft + 8
     });
     setOpenTooltipDate(dateKey);
   };
