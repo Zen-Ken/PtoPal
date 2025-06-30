@@ -91,13 +91,13 @@ export default function HomePage({
   const formatPayPeriod = (payPeriod: string) => {
     switch (payPeriod) {
       case 'weekly':
-        return 'weekly';
+        return 'Weekly';
       case 'biweekly':
-        return 'bi-weekly';
+        return 'Bi-weekly';
       case 'semimonthly':
-        return 'semi-monthly';
+        return 'Semi-monthly';
       case 'monthly':
-        return 'monthly';
+        return 'Monthly';
       default:
         return payPeriod;
     }
@@ -200,7 +200,7 @@ export default function HomePage({
                       placeholder="How many PTO hours you earn per pay period"
                     />
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Equivalent to {hoursToDays(userSettings.accrualRate)} days per {formatPayPeriod(userSettings.payPeriod)} pay period
+                      {formatPayPeriod(userSettings.payPeriod)} accrual rate.
                     </p>
                   </div>
                   <div>
