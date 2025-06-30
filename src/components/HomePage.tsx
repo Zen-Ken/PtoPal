@@ -1,8 +1,6 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Calendar, Clock, TrendingUp, Users, Shield, Sparkles, ChevronRight, CalendarDays, Zap, User, Calculator, Target, CheckCircle } from 'lucide-react';
 import { UserSettings } from '../types/UserSettings';
-import { VacationEntry } from '../types/VacationEntry';
-import { createDateFromString } from '../utils/dateUtils';
 
 interface HomePageProps {
   selectedDate: string;
@@ -105,16 +103,6 @@ export default function HomePage({
     }
   };
 
-  // Find the next upcoming vacation
-  const nextVacation = useMemo(() => {
-    const today = new Date();
-    const upcomingVacations = userSettings.vacations
-      .filter(vacation => createDateFromString(vacation.startDate) >= today)
-      .sort((a, b) => createDateFromString(a.startDate).getTime() - createDateFromString(b.startDate).getTime());
-    
-    return upcomingVacations.length > 0 ? upcomingVacations[0] : null;
-  }, [userSettings.vacations]);
-
   // Determine the main CTA action and content
   const handleMainCTA = () => {
     if (hasCompletedOnboarding) {
@@ -139,17 +127,6 @@ export default function HomePage({
   };
 
   const mainCTA = getMainCTAContent();
-
-  // Format the next vacation start date
-  const formatNextVacationDate = () => {
-    if (!nextVacation) return '';
-    const date = createDateFromString(nextVacation.startDate);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
-  };
 
   return (
     <>
@@ -243,7 +220,7 @@ export default function HomePage({
                 <div className="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 rounded-xl p-6 flex flex-col justify-center relative overflow-hidden">
                   <div className="text-center">
                     <div className="text-sm text-primary-700 dark:text-primary-300 font-semibold mb-2 uppercase tracking-wide">
-                      {nextVacation ? `Your next vacation starts: ${formatNextVacationDate()}` : `On ${formatSelectedDate()}`}
+                      On {formatSelectedDate()}
                     </div>
                     <div className="text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-500 mb-2">
                       {calculatedPTO.toFixed(2)}
