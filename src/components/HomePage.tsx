@@ -87,6 +87,22 @@ export default function HomePage({
     }
   ];
 
+  // Helper function to format pay period for display
+  const formatPayPeriod = (payPeriod: string) => {
+    switch (payPeriod) {
+      case 'weekly':
+        return 'weekly';
+      case 'biweekly':
+        return 'bi-weekly';
+      case 'semimonthly':
+        return 'semi-monthly';
+      case 'monthly':
+        return 'monthly';
+      default:
+        return payPeriod;
+    }
+  };
+
   // Determine the main CTA action and content
   const handleMainCTA = () => {
     if (hasCompletedOnboarding) {
@@ -184,7 +200,7 @@ export default function HomePage({
                       placeholder="How many PTO hours you earn per pay period"
                     />
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Equivalent to {hoursToDays(userSettings.accrualRate)} days per pay period
+                      Equivalent to {hoursToDays(userSettings.accrualRate)} days per {formatPayPeriod(userSettings.payPeriod)} pay period
                     </p>
                   </div>
                   <div>
