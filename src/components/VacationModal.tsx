@@ -321,36 +321,6 @@ export default function VacationModal({
               </div>
             )}
 
-            {/* Validation Message - Only show for new vacations or when dates have changed */}
-            {shouldShowValidation && (
-              <div className={`p-4 rounded-lg border ${getValidationStyles()}`}>
-                <div className="flex items-start space-x-3">
-                  {getValidationIcon()}
-                  <div className="flex-1">
-                    <div className="font-medium text-sm">
-                      {validation.message}
-                    </div>
-                    
-                    {/* Additional context for weekend handling */}
-                    {validation.breakdown.weekendDays > 0 && (
-                      <div className="mt-2 text-xs opacity-90">
-                        {!vacationForm.includeWeekends ? (
-                          <div>
-                            <strong>Weekend Handling:</strong> {validation.breakdown.weekendDays} weekend day{validation.breakdown.weekendDays > 1 ? 's' : ''} excluded from PTO calculation
-                          </div>
-                        ) : (
-                          <div>
-                            <strong>Weekend Handling:</strong> {validation.breakdown.weekendDays} weekend day{validation.breakdown.weekendDays > 1 ? 's' : ''} included in PTO calculation
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
           <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
             {editingVacation && (
               <button
