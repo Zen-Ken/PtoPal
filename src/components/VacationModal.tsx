@@ -321,7 +321,6 @@ export default function VacationModal({
               </div>
             )}
 
-          
           </div>
 
           <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
