@@ -1,14 +1,14 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Calendar, Clock, TrendingUp, DollarSign, Plus, Edit3, MapPin, Calculator, Target, Home, Info } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { ChevronLeft, ChevronRight, Calendar, Clock, TrendingUp, DollarSign, Plus, X, Edit3, Trash2, MapPin, Save, Calculator, Target } from 'lucide-react';
 import { UserSettings } from '../types/UserSettings';
 import { VacationEntry } from '../types/VacationEntry';
 import PaydayTooltip from './PaydayTooltip';
-import VacationModal from './VacationModal';
-import LegendTooltip from './LegendTooltip';
 import { 
   calculatePTOForTargetDate, 
   getVacationsForDate, 
+  generateVacationId, 
   formatDateRange,
+  calculateVacationHours,
   normalizeDate,
   createDateFromString,
   getProjectedPTOBalance,
@@ -39,30 +39,25 @@ interface DayInfo {
   totalPTOOnPayDay?: number;
 }
 
+interface VacationFormData {
+  startDate: string;
+  endDate: string;
+  includeWeekends: boolean;
+  description: string;
+}
+
 export default function CalendarPage({ onBack, userSettings, onUpdateSettings, selectedDate, setSelectedDate }: CalendarPageProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [isAddVacationModalOpen, setIsAddVacationModalOpen] = useState(false);
   const [editingVacation, setEditingVacation] = useState<VacationEntry | null>(null);
   const [openTooltipDate, setOpenTooltipDate] = useState<string | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
-  const [modalInitialDates, setModalInitialDates] = useState({ startDate: '', endDate: '' });
-  
-  // Legend tooltip state
-  const [isLegendTooltipOpen, setIsLegendTooltipOpen] = useState(false);
-  const [legendTooltipPosition, setLegendTooltipPosition] = useState({ top: 0, left: 0 });
-  const legendTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Set calendar month to match the selected date from Home page
-  useEffect(() => {
-    if (selectedDate) {
-      const targetDate = createDateFromString(selectedDate);
-      // Only update if the month/year is different from current display
-      if (targetDate.getMonth() !== currentDate.getMonth() || 
-          targetDate.getFullYear() !== currentDate.getFullYear()) {
-        setCurrentDate(new Date(targetDate.getFullYear(), targetDate.getMonth(), 1));
-      }
-    }
-  }, [selectedDate]); // Remove currentDate from dependencies to avoid infinite loop
+  const [vacationForm, setVacationForm] = useState<VacationFormData>({
+    startDate: '',
+    endDate: '',
+    includeWeekends: false,
+    description: ''
+  });
   
   const payPeriodOptions = {
     weekly: { days: 7, label: 'Weekly' },
@@ -73,58 +68,6 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
 
   // Helper function to convert hours to days for display
   const hoursToDays = (hours: number) => (hours / 8).toFixed(2);
-
-  // Define legend data
-  const legendItems = useMemo(() => [
-    {
-      type: 'icon' as const,
-      icon: DollarSign,
-      iconColor: 'bg-gradient-to-r from-emerald-500 to-green-600',
-      description: 'Future Pay Day (hover/click for details)'
-    },
-    {
-      type: 'icon' as const,
-      icon: DollarSign,
-      iconColor: 'bg-gradient-to-r from-gray-400 to-gray-500 opacity-60',
-      description: 'Past Pay Day'
-    },
-    {
-      type: 'color' as const,
-      colorClass: 'bg-gradient-to-r from-purple-500 to-pink-600',
-      description: 'Vacation Day'
-    },
-    {
-      type: 'border' as const,
-      borderClass: 'bg-primary-200 dark:bg-primary-800 border-2 border-primary-400 dark:border-primary-600',
-      description: 'Today'
-    },
-    {
-      type: 'border' as const,
-      borderClass: 'border-2 border-emerald-200 dark:border-emerald-700 bg-emerald-50/30 dark:bg-emerald-900/10',
-      description: 'Future Pay Day Border'
-    },
-    {
-      type: 'border' as const,
-      borderClass: 'border-2 border-gray-400 dark:border-gray-500 bg-gray-50/30 dark:bg-gray-800/10',
-      description: 'Past Pay Day Border'
-    }
-  ], []);
-
-  // Calculate projected PTO balance for the selected future date
-  const projectedPTOData = useMemo(() => {
-    if (!selectedDate) return null;
-    
-    const targetDate = createDateFromString(selectedDate);
-    return getProjectedPTOBalance(
-      userSettings.currentPTO,
-      userSettings.accrualRate,
-      userSettings.payPeriod,
-      userSettings.vacations,
-      targetDate,
-      new Date(),
-      userSettings.paydayOfWeek
-    );
-  }, [selectedDate, userSettings.currentPTO, userSettings.accrualRate, userSettings.payPeriod, userSettings.vacations, userSettings.paydayOfWeek]);
 
   // Helper functions - moved before useMemo hooks that use them
   const getDaysInMonth = (date: Date) => {
@@ -305,11 +248,6 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
     });
   };
 
-  const jumpToToday = () => {
-    const today = new Date();
-    setCurrentDate(new Date(today.getFullYear(), today.getMonth(), 1));
-  };
-
   const isToday = (day: number) => {
     const today = new Date();
     return day === today.getDate() &&
@@ -333,48 +271,6 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
     const checkDateNormalized = new Date(checkDate.getFullYear(), checkDate.getMonth(), checkDate.getDate());
     
     return checkDateNormalized < todayNormalized;
-  };
-
-  // Check if we're currently viewing today's month
-  const isCurrentMonth = () => {
-    const today = new Date();
-    return currentDate.getMonth() === today.getMonth() && 
-           currentDate.getFullYear() === today.getFullYear();
-  };
-
-  // Legend tooltip handlers
-  const handleLegendIconMouseEnter = (event: React.MouseEvent) => {
-    if (legendTimeoutRef.current) {
-      clearTimeout(legendTimeoutRef.current);
-    }
-    
-    const rect = event.currentTarget.getBoundingClientRect();
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
-    
-    setLegendTooltipPosition({
-      top: rect.bottom + scrollTop + 8,
-      left: Math.max(16, Math.min(rect.left + scrollLeft - 300, window.innerWidth - 416)) // Offset to show tooltip to the left of icon
-    });
-    setIsLegendTooltipOpen(true);
-  };
-
-  const handleLegendIconMouseLeave = () => {
-    legendTimeoutRef.current = setTimeout(() => {
-      setIsLegendTooltipOpen(false);
-    }, 150); // Small delay to allow moving to tooltip
-  };
-
-  const handleLegendTooltipMouseEnter = () => {
-    if (legendTimeoutRef.current) {
-      clearTimeout(legendTimeoutRef.current);
-    }
-  };
-
-  const handleLegendTooltipMouseLeave = () => {
-    legendTimeoutRef.current = setTimeout(() => {
-      setIsLegendTooltipOpen(false);
-    }, 150);
   };
 
   const handlePaydayIconHover = (event: React.MouseEvent, dateKey: string) => {
@@ -418,12 +314,20 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
       // Edit existing vacation
       const vacation = dayInfo.vacations[0]; // Edit the first vacation if multiple
       setEditingVacation(vacation);
+      setVacationForm({
+        startDate: vacation.startDate,
+        endDate: vacation.endDate,
+        includeWeekends: vacation.includeWeekends,
+        description: vacation.description || ''
+      });
     } else {
       // Add new vacation
       setEditingVacation(null);
-      setModalInitialDates({
+      setVacationForm({
         startDate: dateKey,
-        endDate: dateKey
+        endDate: dateKey,
+        includeWeekends: false,
+        description: ''
       });
     }
     setIsAddVacationModalOpen(true);
@@ -433,44 +337,86 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
     setEditingVacation(null);
     const today = new Date();
     const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-    setModalInitialDates({
+    setVacationForm({
       startDate: todayKey,
-      endDate: todayKey
+      endDate: todayKey,
+      includeWeekends: false,
+      description: ''
     });
     setIsAddVacationModalOpen(true);
   };
 
   const handleEditVacation = (vacation: VacationEntry) => {
     setEditingVacation(vacation);
+    setVacationForm({
+      startDate: vacation.startDate,
+      endDate: vacation.endDate,
+      includeWeekends: vacation.includeWeekends,
+      description: vacation.description || ''
+    });
     setIsAddVacationModalOpen(true);
   };
 
-  const handleSaveVacation = (vacation: VacationEntry) => {
+  const handleSaveVacation = () => {
+    if (!vacationForm.startDate || !vacationForm.endDate) return;
+    
+    const totalHours = Math.round(calculateVacationHours(
+      vacationForm.startDate,
+      vacationForm.endDate,
+      vacationForm.includeWeekends
+    ) * 100) / 100;
+    
+    const now = new Date().toISOString();
+    
     if (editingVacation) {
       // Update existing vacation
-      const updatedVacations = userSettings.vacations.map(v =>
-        v.id === editingVacation.id ? vacation : v
+      const updatedVacations = userSettings.vacations.map(vacation =>
+        vacation.id === editingVacation.id
+          ? {
+              ...vacation,
+              startDate: vacationForm.startDate,
+              endDate: vacationForm.endDate,
+              totalHours,
+              includeWeekends: vacationForm.includeWeekends,
+              description: vacationForm.description,
+              updatedAt: now
+            }
+          : vacation
       );
       onUpdateSettings({ vacations: updatedVacations });
     } else {
       // Add new vacation
-      onUpdateSettings({ vacations: [...userSettings.vacations, vacation] });
+      const newVacation: VacationEntry = {
+        id: generateVacationId(),
+        startDate: vacationForm.startDate,
+        endDate: vacationForm.endDate,
+        totalHours,
+        includeWeekends: vacationForm.includeWeekends,
+        description: vacationForm.description,
+        createdAt: now,
+        updatedAt: now
+      };
+      onUpdateSettings({ vacations: [...userSettings.vacations, newVacation] });
     }
+    
+    setIsAddVacationModalOpen(false);
+    setEditingVacation(null);
   };
 
   const handleDeleteVacation = (vacationId: string) => {
     const updatedVacations = userSettings.vacations.filter(vacation => vacation.id !== vacationId);
     onUpdateSettings({ vacations: updatedVacations });
+    setIsAddVacationModalOpen(false);
+    setEditingVacation(null);
   };
 
-  const formatSelectedDate = () => {
-    if (!selectedDate) return '';
-    const date = createDateFromString(selectedDate);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
-    });
+  const calculateFormHours = () => {
+    if (!vacationForm.startDate || !vacationForm.endDate) return 0;
+    return Math.round(calculateVacationHours(
+      vacationForm.startDate,
+      vacationForm.endDate,
+      vacationForm.includeWeekends
+    ) * 100) / 100;
   };
 
   const monthNames = [
@@ -501,8 +447,8 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
     <div className="min-h-screen bg-white dark:bg-gray-900 transition-colors duration-300">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0">
-            <div className="flex items-center space-x-3 w-full sm:w-auto justify-center sm:justify-start">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
               <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
                 <Calendar className="w-6 h-6 text-white" />
               </div>
@@ -513,42 +459,29 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
             </div>
             
             {/* Actions */}
-            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 w-full sm:w-auto">
+            <div className="flex items-center space-x-4">
               <button
                 onClick={handleAddVacation}
-                className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-soft hover:shadow-medium flex items-center space-x-2 w-full sm:w-auto justify-center"
+                className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-soft hover:shadow-medium flex items-center space-x-2"
               >
                 <Plus className="w-4 h-4" />
                 <span>Add Vacation</span>
               </button>
-              
-              <div className="flex items-center justify-between w-full sm:w-auto">
-                <button
-                  onClick={() => navigateMonth('prev')}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                >
-                  <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                </button>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white text-center flex-grow mx-2">
-                  {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-                </h2>
-                <button
-                  onClick={() => navigateMonth('next')}
-                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-                >
-                  <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-                </button>
-                {!isCurrentMonth() && (
-                  <button
-                    onClick={jumpToToday}
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-soft hover:shadow-medium flex items-center space-x-2 ml-2"
-                    title="Jump to current month"
-                  >
-                    <Home className="w-4 h-4" />
-                    <span className="hidden sm:inline">Today</span>
-                  </button>
-                )}
-              </div>
+              <button
+                onClick={() => navigateMonth('prev')}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              </button>
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white min-w-[200px] text-center">
+                {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+              </h2>
+              <button
+                onClick={() => navigateMonth('next')}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              </button>
             </div>
           </div>
         </div>
@@ -556,26 +489,12 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Calendar */}
           <div className="lg:col-span-3">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-200 dark:border-gray-700 p-4 sm:p-6 relative">
-              {/* Legend Icon */}
-              <button
-                className="absolute top-4 right-4 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all duration-200 group z-10"
-                onMouseEnter={handleLegendIconMouseEnter}
-                onMouseLeave={handleLegendIconMouseLeave}
-                onClick={handleLegendIconMouseEnter}
-                title="View calendar legend"
-              >
-                <div className="w-6 h-6 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-200">
-                  <Info className="w-4 h-4 text-white" />
-                </div>
-              </button>
-
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-200 dark:border-gray-700 p-6">
               {/* Calendar Header */}
               <div className="grid grid-cols-7 gap-1 mb-4">
                 {dayNames.map((day) => (
-                  <div key={day} className="p-2 sm:p-3 text-center text-sm font-semibold text-gray-600 dark:text-gray-400">
-                    <span className="hidden sm:inline">{day}</span>
-                    <span className="sm:hidden">{day.slice(0, 1)}</span>
+                  <div key={day} className="p-3 text-center text-sm font-semibold text-gray-600 dark:text-gray-400">
+                    {day}
                   </div>
                 ))}
               </div>
@@ -584,7 +503,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
               <div className="grid grid-cols-7 gap-1">
                 {/* Empty cells for days before month starts */}
                 {Array.from({ length: firstDay }, (_, index) => (
-                  <div key={`empty-${index}`} className="p-2 h-24 sm:h-32"></div>
+                  <div key={`empty-${index}`} className="p-3 h-32"></div>
                 ))}
 
                 {/* Days of the month */}
@@ -602,7 +521,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                     <div
                       key={day}
                       onClick={() => handleDayClick(day)}
-                      className={`p-1 sm:p-2 h-24 sm:h-32 border-2 rounded-lg relative transition-all duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                      className={`p-2 h-32 border-2 rounded-lg relative transition-all duration-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 ${
                         todayClass 
                           ? 'bg-primary-50 dark:bg-primary-900/30 border-primary-300 dark:border-primary-600 ring-2 ring-primary-200 dark:ring-primary-700' 
                           : dayInfo?.isPayDay
@@ -612,7 +531,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                           : 'border-gray-200 dark:border-gray-600'
                       }`}
                     >
-                      <div className={`text-xs sm:text-sm font-medium mb-1 ${
+                      <div className={`text-sm font-medium mb-1 ${
                         todayClass ? 'text-primary-700 dark:text-primary-300' : 'text-gray-900 dark:text-white'
                       }`}>
                         {day}
@@ -620,9 +539,9 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                       
                       {/* Pay Day Dollar Icon */}
                       {dayInfo?.isPayDay && dayInfo.totalPTOOnPayDay !== undefined && (
-                        <div className="absolute top-1 sm:top-2 right-1 sm:right-2">
+                        <div className="absolute top-2 right-2">
                           <button
-                            className={`w-4 h-4 sm:w-6 sm:h-6 rounded-full flex items-center justify-center transition-all duration-200 transform hover:scale-110 ${
+                            className={`w-6 h-6 rounded-full flex items-center justify-center transition-all duration-200 transform hover:scale-110 ${
                               isFuture 
                                 ? 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-soft hover:shadow-medium' 
                                 : 'bg-gradient-to-r from-gray-400 to-gray-500 opacity-60'
@@ -632,14 +551,14 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                             onClick={(e) => handlePaydayIconClick(e, dateKey)}
                             title="Pay Day - Click for details"
                           >
-                            <DollarSign className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
+                            <DollarSign className="w-3 h-3 text-white" />
                           </button>
                         </div>
                       )}
 
                       {/* Individual Vacation Indicators */}
                       {dayInfo?.vacations && dayInfo.vacations.length > 0 && (
-                        <div className="space-y-1 mt-4 sm:mt-6">
+                        <div className="space-y-1 mt-6">
                           {dayInfo.vacations.slice(0, 2).map((vacation, index) => {
                             const colors = [
                               'from-purple-500 to-pink-600',
@@ -654,15 +573,15 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                             return (
                               <div
                                 key={vacation.id}
-                                className={`bg-gradient-to-r ${colorClass} text-white text-xs px-1 sm:px-2 py-0.5 sm:py-1 rounded-md shadow-soft cursor-pointer hover:shadow-medium transition-all duration-200 transform hover:scale-105`}
+                                className={`bg-gradient-to-r ${colorClass} text-white text-xs px-2 py-1 rounded-md shadow-soft cursor-pointer hover:shadow-medium transition-all duration-200 transform hover:scale-105`}
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleEditVacation(vacation);
                                 }}
                               >
                                 <div className="flex items-center space-x-1 truncate">
-                                  <MapPin className="w-2 h-2 sm:w-3 sm:h-3 flex-shrink-0" />
-                                  <span className="font-medium truncate text-xs">
+                                  <MapPin className="w-3 h-3 flex-shrink-0" />
+                                  <span className="font-medium truncate">
                                     {vacation.description || 'Vacation'}
                                   </span>
                                 </div>
@@ -670,7 +589,7 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                             );
                           })}
                           {dayInfo.vacations.length > 2 && (
-                            <div className="text-xs text-gray-500 dark:text-gray-400 px-1 sm:px-2">
+                            <div className="text-xs text-gray-500 dark:text-gray-400 px-2">
                               +{dayInfo.vacations.length - 2} more
                             </div>
                           )}
@@ -685,83 +604,6 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
 
           {/* Sidebar - Vacation Management */}
           <div className="space-y-6">
-            {/* Projected PTO Balance */}
-            <div className="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 rounded-xl p-6 border border-primary-200/50 dark:border-primary-700/50">
-              <div className="flex items-center space-x-3 mb-4">
-                <Target className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">Projected PTO Balance</h3>
-              </div>
-              <p className="text-sm text-primary-700 dark:text-primary-300 mb-4">
-                This projection includes your saved vacations and future accruals.
-              </p>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                    Select Future Date
-                  </label>
-                  <input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-full px-3 py-2 border border-primary-200 dark:border-primary-700 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white dark:bg-gray-700 transition-all duration-200 text-gray-900 dark:text-white text-sm"
-                    min={new Date().toISOString().split('T')[0]}
-                  />
-                </div>
-                
-                {projectedPTOData && (
-                  <div className="space-y-3">
-                    <div className="text-center p-4 bg-white dark:bg-gray-800 rounded-lg border border-primary-200 dark:border-primary-700">
-                      <div className="text-sm text-primary-700 dark:text-primary-300 font-semibold mb-1">
-                        On {formatSelectedDate()}
-                      </div>
-                      <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-500">
-                        {projectedPTOData.projectedBalance.toFixed(2)} hrs
-                      </div>
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        ({hoursToDays(projectedPTOData.projectedBalance)} days)
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600 dark:text-gray-400">Starting Balance</span>
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {projectedPTOData.breakdown.startingBalance.toFixed(2)} hrs
-                        </span>
-                      </div>
-                      
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600 dark:text-gray-400">PTO Accrued</span>
-                        <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                          +{projectedPTOData.breakdown.totalAccrued.toFixed(2)} hrs
-                        </span>
-                      </div>
-                      
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-600 dark:text-gray-400 flex items-center space-x-1">
-                          <MapPin className="w-3 h-3" />
-                          <span>Vacation Hours</span>
-                        </span>
-                        <span className="font-medium text-red-600 dark:text-red-400">
-                          -{projectedPTOData.breakdown.totalVacationHours.toFixed(2)} hrs
-                        </span>
-                      </div>
-                      
-                      <div className="pt-2 border-t border-primary-200 dark:border-primary-700">
-                        <div className="flex justify-between items-center">
-                          <span className="font-semibold text-gray-700 dark:text-gray-300">Final Balance</span>
-                          <span className="font-bold text-primary-600 dark:text-primary-400">
-                            {projectedPTOData.breakdown.finalBalance.toFixed(2)} hrs
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
             {/* Upcoming Vacations */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-soft border border-gray-100 dark:border-gray-700 p-6">
               <div className="flex items-center justify-between mb-4">
@@ -866,6 +708,45 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
                 </div>
               </div>
             )}
+
+            {/* Legend */}
+            <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/30 dark:to-orange-900/30 rounded-xl p-6 border border-amber-200/50 dark:border-amber-700/50">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Legend</h3>
+              
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 bg-gradient-to-r from-emerald-500 to-green-600 rounded-full flex items-center justify-center">
+                    <DollarSign className="w-3 h-3 text-white" />
+                  </div>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Future Pay Day (hover/click for details)</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 bg-gradient-to-r from-gray-400 to-gray-500 opacity-60 rounded-full flex items-center justify-center">
+                    <DollarSign className="w-3 h-3 text-white" />
+                  </div>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Past Pay Day</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-4 h-4 bg-gradient-to-r from-purple-500 to-pink-600 rounded"></div>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Vacation Day</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-4 h-4 bg-primary-200 dark:bg-primary-800 border-2 border-primary-400 dark:border-primary-600 rounded"></div>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Today</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-4 h-4 border-2 border-emerald-200 dark:border-emerald-700 bg-emerald-50/30 dark:bg-emerald-900/10 rounded"></div>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Future Pay Day Border</span>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <div className="w-4 h-4 border-2 border-gray-400 dark:border-gray-500 bg-gray-50/30 dark:bg-gray-800/10 rounded"></div>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Past Pay Day Border</span>
+                </div>
+                <div className="text-xs text-gray-600 dark:text-gray-400 mt-3 p-2 bg-gray-100 dark:bg-gray-700 rounded">
+                  <strong>Tip:</strong> Click on vacation indicators to edit, or click on any day to add new vacations. Hover or click on pay day dollar icons for detailed balance information.
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -881,27 +762,126 @@ export default function CalendarPage({ onBack, userSettings, onUpdateSettings, s
         />
       )}
 
-      {/* Legend Tooltip */}
-      <LegendTooltip
-        isOpen={isLegendTooltipOpen}
-        position={legendTooltipPosition}
-        onClose={() => setIsLegendTooltipOpen(false)}
-        onMouseEnter={handleLegendTooltipMouseEnter}
-        onMouseLeave={handleLegendTooltipMouseLeave}
-        legendItems={legendItems}
-      />
-
       {/* Vacation Modal */}
-      <VacationModal
-        isOpen={isAddVacationModalOpen}
-        onClose={() => setIsAddVacationModalOpen(false)}
-        editingVacation={editingVacation}
-        onSave={handleSaveVacation}
-        onDelete={handleDeleteVacation}
-        initialStartDate={modalInitialDates.startDate}
-        initialEndDate={modalInitialDates.endDate}
-        userSettings={userSettings}
-      />
+      {isAddVacationModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-large max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                  {editingVacation ? 'Edit Vacation' : 'Add Vacation'}
+                </h3>
+                <button
+                  onClick={() => setIsAddVacationModalOpen(false)}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                    Description (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={vacationForm.description}
+                    onChange={(e) => setVacationForm(prev => ({ ...prev, description: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="e.g., Hawaii Trip, Family Visit"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      Start Date
+                    </label>
+                    <input
+                      type="date"
+                      value={vacationForm.startDate}
+                      onChange={(e) => setVacationForm(prev => ({ ...prev, startDate: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                      End Date
+                    </label>
+                    <input
+                      type="date"
+                      value={vacationForm.endDate}
+                      onChange={(e) => setVacationForm(prev => ({ ...prev, endDate: e.target.value }))}
+                      className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      min={vacationForm.startDate}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="includeWeekends"
+                    checked={vacationForm.includeWeekends}
+                    onChange={(e) => setVacationForm(prev => ({ ...prev, includeWeekends: e.target.checked }))}
+                    className="w-5 h-5 text-primary-600 border-2 border-gray-300 dark:border-gray-600 rounded focus:ring-primary-500 bg-white dark:bg-gray-700"
+                  />
+                  <label htmlFor="includeWeekends" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Include weekends in PTO calculation
+                  </label>
+                </div>
+
+                {vacationForm.startDate && vacationForm.endDate && (
+                  <div className="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 p-4 rounded-lg border border-primary-200/50 dark:border-primary-700/50">
+                    <div className="text-center">
+                      <div className="text-sm text-primary-700 dark:text-primary-300 font-semibold mb-1">
+                        Total PTO Required
+                      </div>
+                      <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-500">
+                        {calculateFormHours().toFixed(2)} hours
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        ({hoursToDays(calculateFormHours())} days)
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+                {editingVacation && (
+                  <button
+                    onClick={() => handleDeleteVacation(editingVacation.id)}
+                    className="flex items-center space-x-2 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-medium transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    <span>Delete</span>
+                  </button>
+                )}
+                
+                <div className="flex items-center space-x-3 ml-auto">
+                  <button
+                    onClick={() => setIsAddVacationModalOpen(false)}
+                    className="px-6 py-2.5 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveVacation}
+                    disabled={!vacationForm.startDate || !vacationForm.endDate}
+                    className="bg-primary-600 hover:bg-primary-700 disabled:bg-gray-300 disabled:dark:bg-gray-600 text-white px-6 py-2.5 rounded-lg font-medium transition-all duration-200 shadow-soft hover:shadow-medium flex items-center space-x-2"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>{editingVacation ? 'Update' : 'Save'} Vacation</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
