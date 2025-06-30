@@ -39,6 +39,12 @@ export default function VacationModal({
     description: ''
   });
 
+  // Store original vacation dates when editing
+  const [originalVacationDates, setOriginalVacationDates] = useState<{
+    startDate: string;
+    endDate: string;
+  } | null>(null);
+
   // Update form when editing vacation changes
   useEffect(() => {
     if (editingVacation) {
@@ -48,6 +54,11 @@ export default function VacationModal({
         includeWeekends: editingVacation.includeWeekends,
         description: editingVacation.description || ''
       });
+      // Store original dates for comparison
+      setOriginalVacationDates({
+        startDate: editingVacation.startDate,
+        endDate: editingVacation.endDate
+      });
     } else {
       setVacationForm({
         startDate: initialStartDate,
@@ -55,6 +66,7 @@ export default function VacationModal({
         includeWeekends: false,
         description: ''
       });
+      setOriginalVacationDates(null);
     }
   }, [editingVacation, initialStartDate, initialEndDate]);
 
@@ -95,6 +107,16 @@ export default function VacationModal({
     
     return projectedData.projectedBalance;
   }, [vacationForm.startDate, userSettings]);
+
+  // Check if vacation dates have changed from original
+  const vacationDatesChanged = useMemo(() => {
+    if (!originalVacationDates) return true; // New vacation, always show balance check
+    
+    return (
+      vacationForm.startDate !== originalVacationDates.startDate ||
+      vacationForm.endDate !== originalVacationDates.endDate
+    );
+  }, [vacationForm.startDate, vacationForm.endDate, originalVacationDates]);
 
   const handleSave = () => {
     if (!vacationForm.startDate || !vacationForm.endDate) return;
@@ -258,8 +280,11 @@ export default function VacationModal({
               </div>
             )}
 
-            {/* Balance Check */}
-            {vacationForm.startDate && vacationForm.endDate && availablePTOOnStartDate !== null && (
+            {/* Balance Check - Only show for new vacations or when dates have changed */}
+            {vacationForm.startDate && 
+             vacationForm.endDate && 
+             availablePTOOnStartDate !== null && 
+             vacationDatesChanged && (
               <div className={`p-3 rounded-lg border ${
                 availablePTOOnStartDate >= calculateFormHours()
                   ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700'
