@@ -95,9 +95,9 @@ export default function HomePage({
       case 'weekly':
         return 'Weekly';
       case 'biweekly':
-        return 'Bi-weekly';
+        return 'Bi-weekly (Every 2 weeks)';
       case 'semimonthly':
-        return 'Semi-monthly';
+        return 'Semi-monthly (15th & Last day)';
       case 'monthly':
         return 'Monthly';
       default:
