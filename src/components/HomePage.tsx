@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef, useEffect } from 'react';
 import { Calendar, Clock, TrendingUp, Users, Shield, Sparkles, ChevronRight, CalendarDays, Zap, User, Calculator, Target, CheckCircle, CalendarCheck } from 'lucide-react';
 import { UserSettings } from '../types/UserSettings';
 import { createDateFromString, getProjectedPTOBalance } from '../utils/dateUtils';
@@ -38,6 +38,16 @@ export default function HomePage({
   hoursToDays,
   setCurrentPage
 }: HomePageProps) {
+  // Ref for the date input to enable auto-focus
+  const dateInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-focus the date input when component mounts
+  useEffect(() => {
+    if (dateInputRef.current) {
+      dateInputRef.current.focus();
+    }
+  }, []);
+
   const features = [
     {
       icon: Zap,
@@ -241,57 +251,80 @@ export default function HomePage({
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                      Your Next vacation
+                      Future Date
                     </label>
                     <input
+                      ref={dateInputRef}
                       type="date"
                       value={selectedDate}
                       onChange={(e) => setSelectedDate(e.target.value)}
                       className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-lg font-medium bg-white dark:bg-gray-700 transition-all duration-200 text-gray-900 dark:text-white"
                       min={new Date().toISOString().split('T')[0]}
+                      placeholder="Select your vacation date"
+                      autoFocus
                     />
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Future Date
+                      {selectedDate ? 'Your selected vacation date' : 'Choose when you want to take time off'}
                     </p>
                   </div>
                 </div>
 
                 <div className="bg-gradient-to-br from-primary-50 to-primary-100 dark:from-primary-900/20 dark:to-primary-800/20 rounded-xl p-6 flex flex-col justify-center relative overflow-hidden">
                   <div className="text-center">
-                    <div className="text-sm text-primary-700 dark:text-primary-300 font-semibold mb-2 uppercase tracking-wide">
-                      On {formatSelectedDate()}
-                    </div>
-                    <div className="text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-500 mb-2">
-                      {calculatedPTO.toFixed(2)}
-                    </div>
-                    <div className="text-gray-700 dark:text-gray-300 font-semibold text-base mb-2">
-                      hours of PTO available
-                    </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
-                      ({hoursToDays(calculatedPTO)} days)
-                    </div>
-                    {calculatedPTO > userSettings.currentPTO && (
-                      <div className="inline-flex items-center px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-sm font-medium">
-                        <TrendingUp className="w-4 h-4 mr-1" />
-                        +{(calculatedPTO - userSettings.currentPTO).toFixed(2)} hours from accrual
-                      </div>
-                    )}
-                    {calculatedPTO === userSettings.currentPTO && selectedDate && (
-                      <div className="inline-flex items-center px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full text-sm font-medium">
-                        <Clock className="w-4 h-4 mr-1" />
-                        Current balance
-                      </div>
-                    )}
-                    {calculatedPTO < userSettings.currentPTO && (
-                      <div className="inline-flex items-center px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full text-sm font-medium">
-                        <Calendar className="w-4 h-4 mr-1" />
-                        After planned vacations
-                      </div>
+                    {selectedDate ? (
+                      <>
+                        <div className="text-sm text-primary-700 dark:text-primary-300 font-semibold mb-2 uppercase tracking-wide">
+                          On {formatSelectedDate()}
+                        </div>
+                        <div className="text-3xl sm:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-primary-500 mb-2">
+                          {calculatedPTO.toFixed(2)}
+                        </div>
+                        <div className="text-gray-700 dark:text-gray-300 font-semibold text-base mb-2">
+                          hours of PTO available
+                        </div>
+                        <div className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+                          ({hoursToDays(calculatedPTO)} days)
+                        </div>
+                        {calculatedPTO > userSettings.currentPTO && (
+                          <div className="inline-flex items-center px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-sm font-medium">
+                            <TrendingUp className="w-4 h-4 mr-1" />
+                            +{(calculatedPTO - userSettings.currentPTO).toFixed(2)} hours from accrual
+                          </div>
+                        )}
+                        {calculatedPTO === userSettings.currentPTO && selectedDate && (
+                          <div className="inline-flex items-center px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full text-sm font-medium">
+                            <Clock className="w-4 h-4 mr-1" />
+                            Current balance
+                          </div>
+                        )}
+                        {calculatedPTO < userSettings.currentPTO && (
+                          <div className="inline-flex items-center px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full text-sm font-medium">
+                            <Calendar className="w-4 h-4 mr-1" />
+                            After planned vacations
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <div className="text-sm text-primary-700 dark:text-primary-300 font-semibold mb-4 uppercase tracking-wide">
+                          Select a Date Above
+                        </div>
+                        <div className="text-2xl font-bold text-gray-500 dark:text-gray-400 mb-4">
+                          📅
+                        </div>
+                        <div className="text-gray-600 dark:text-gray-400 text-base mb-4">
+                          Choose your vacation date to see your projected PTO balance
+                        </div>
+                        <div className="inline-flex items-center px-4 py-2 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full text-sm font-medium border border-primary-200 dark:border-primary-700">
+                          <Calendar className="w-4 h-4 mr-2" />
+                          Waiting for date selection...
+                        </div>
+                      </>
                     )}
                   </div>
 
                   {/* Vacation Notification */}
-                  {vacationsBetweenDates.length > 0 && (
+                  {vacationsBetweenDates.length > 0 && selectedDate && (
                     <div className="mt-4 pt-4 border-t border-primary-200 dark:border-primary-700">
                       <button
                         onClick={() => setCurrentPage('calendar')}

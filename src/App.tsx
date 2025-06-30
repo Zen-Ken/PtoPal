@@ -14,7 +14,7 @@ import { calculatePTOForTargetDate } from './utils/dateUtils';
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState('home');
-  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedDate, setSelectedDate] = useState(''); // Start with empty string
   const [calculatedPTO, setCalculatedPTO] = useState(0);
   
   // Local input states for better UX
@@ -40,17 +40,12 @@ function App() {
     setAccrualRateInputValue(userSettings.accrualRate.toFixed(2));
   }, [userSettings.accrualRate]);
 
-  useEffect(() => {
-    // Calculate date 3 months from now as default
-    const today = new Date();
-    const threeMonthsFromNow = new Date(today.getFullYear(), today.getMonth() + 3, today.getDate());
-    const defaultDate = threeMonthsFromNow.toISOString().split('T')[0];
-    setSelectedDate(defaultDate);
-  }, []);
-
+  // Calculate PTO when selectedDate changes (only if date is provided)
   useEffect(() => {
     if (selectedDate) {
       calculatePTOForDate(selectedDate);
+    } else {
+      setCalculatedPTO(0); // Reset to 0 when no date is selected
     }
   }, [selectedDate, userSettings.currentPTO, userSettings.accrualRate, userSettings.payPeriod, userSettings.vacations]);
 
