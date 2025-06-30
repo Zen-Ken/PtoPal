@@ -112,17 +112,12 @@ export function getAvailablePTOOnDate(
   const targetDate = createDateFromString(targetDateStr);
   const today = new Date();
   
-  // If target date is today or in the past, use current PTO
-  if (targetDate <= today) {
-    return userSettings.currentPTO;
-  }
-  
   // Filter out the vacation being edited to avoid double-counting
   const relevantVacations = excludeVacationId 
     ? userSettings.vacations.filter(v => v.id !== excludeVacationId)
     : userSettings.vacations;
   
-  // For future dates, calculate projected PTO balance
+  // Always calculate projected PTO balance using getProjectedPTOBalance
   const projectedData = getProjectedPTOBalance(
     userSettings.currentPTO,
     userSettings.accrualRate,

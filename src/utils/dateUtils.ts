@@ -354,7 +354,7 @@ export const calculatePTOForTargetDate = (
 };
 
 /**
- * NEW: Calculates projected PTO balance for a future date, accounting for both accruals and vacation deductions
+ * Calculates projected PTO balance for a future date, accounting for both accruals and vacation deductions
  */
 export const getProjectedPTOBalance = (
   currentPTO: number,
@@ -378,21 +378,6 @@ export const getProjectedPTOBalance = (
   const today = normalizeDate(currentDate);
   const target = normalizeDate(targetDate);
   
-  // If target date is in the past or today, return current PTO
-  if (target <= today) {
-    return {
-      projectedBalance: currentPTO,
-      accruedHours: 0,
-      vacationHoursUsed: 0,
-      breakdown: {
-        startingBalance: currentPTO,
-        totalAccrued: 0,
-        totalVacationHours: 0,
-        finalBalance: currentPTO
-      }
-    };
-  }
-
   // Calculate PTO that will be accrued between now and target date
   const accruedHours = calculateAccruedPTO(today, target, accrualRate, payPeriod, paydayOfWeek);
   
