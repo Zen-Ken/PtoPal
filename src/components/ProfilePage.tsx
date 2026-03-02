@@ -1,14 +1,12 @@
-import React, { useState, useEffect } from 'react';
+'use client';
+
+import React, { useState } from 'react';
 import { User, Calendar, Clock, Calculator, Shield, Check, TrendingUp } from 'lucide-react';
 import { UserSettings } from '../types/UserSettings';
+import { useUserSettings } from '../context/UserSettingsContext';
 
-interface ProfilePageProps {
-  onBack: () => void;
-  userSettings: UserSettings;
-  onUpdateSettings: (settings: Partial<UserSettings>) => void;
-}
-
-export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: ProfilePageProps) {
+export default function ProfilePage() {
+  const { userSettings, updateSettings: onUpdateSettings } = useUserSettings();
   const [formData, setFormData] = useState<UserSettings>(userSettings);
   const [showSavedNotification, setShowSavedNotification] = useState(false);
 
@@ -70,15 +68,15 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
     if (!selectedPeriod) return formData.accrualRate;
     
     // The accrual rate is now per pay period, so convert to monthly
-    const accrualValue = formData.accrualRate === '' ? 0 : Number(formData.accrualRate);
+    const accrualValue = Number(formData.accrualRate) || 0;
     return Math.round(accrualValue * selectedPeriod.periodsPerMonth * 100) / 100;
   };
 
   // Calculate projected date to reach annual allowance cap
   const getProjectedCapDate = () => {
-    const currentPTO = formData.currentPTO === '' ? 0 : Number(formData.currentPTO);
-    const annualAllowance = formData.annualAllowance === '' ? 0 : Number(formData.annualAllowance);
-    const accrualRate = formData.accrualRate === '' ? 0 : Number(formData.accrualRate);
+    const currentPTO = Number(formData.currentPTO) || 0;
+    const annualAllowance = Number(formData.annualAllowance) || 0;
+    const accrualRate = Number(formData.accrualRate) || 0;
     
     // If already at or above cap
     if (currentPTO >= annualAllowance) {
@@ -125,10 +123,7 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
   };
 
   // Helper function to convert hours to days for display
-  const hoursToDays = (hours: number | string) => {
-    const numHours = hours === '' ? 0 : Number(hours);
-    return (numHours / 8).toFixed(2);
-  };
+  const hoursToDays = (hours: number) => (Number(hours) / 8).toFixed(2);
 
   // Calculate days since last accrual update
   const getDaysSinceLastUpdate = () => {
@@ -320,7 +315,7 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600 dark:text-gray-400">PTO Balance</span>
                   <div className="text-right">
-                    <div className="font-bold text-gray-900 dark:text-white">{(formData.currentPTO === '' ? 0 : Number(formData.currentPTO)).toFixed(2)} hours</div>
+                    <div className="font-bold text-gray-900 dark:text-white">{(Number(formData.currentPTO) || 0).toFixed(2)} hours</div>
                     <div className="text-xs text-gray-600 dark:text-gray-400">({hoursToDays(formData.currentPTO)} days)</div>
                   </div>
                 </div>
@@ -336,7 +331,7 @@ export default function ProfilePage({ onBack, userSettings, onUpdateSettings }: 
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600 dark:text-gray-400">Annual Allowance</span>
                   <div className="text-right">
-                    <div className="font-bold text-gray-900 dark:text-white">{(formData.annualAllowance === '' ? 0 : Number(formData.annualAllowance)).toFixed(2)} hours</div>
+                    <div className="font-bold text-gray-900 dark:text-white">{(Number(formData.annualAllowance) || 0).toFixed(2)} hours</div>
                     <div className="text-xs text-gray-600 dark:text-gray-400">({hoursToDays(formData.annualAllowance)} days)</div>
                   </div>
                 </div>

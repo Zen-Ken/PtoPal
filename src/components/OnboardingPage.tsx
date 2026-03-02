@@ -1,14 +1,17 @@
+'use client';
+
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Calendar, Clock, Briefcase, CheckCircle, Sparkles, User } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import { UserSettings, defaultUserSettings } from '../types/UserSettings';
+import { useUserSettings } from '../context/UserSettingsContext';
 
-interface OnboardingPageProps {
-  onComplete: (settings: UserSettings) => void;
-  onBack: () => void;
-}
-
-export default function OnboardingPage({ onComplete, onBack }: OnboardingPageProps) {
+export default function OnboardingPage() {
+  const router = useRouter();
+  const { completeOnboarding } = useUserSettings();
+  const onComplete = (settings: UserSettings) => { completeOnboarding(settings); router.push('/'); };
+  const onBack = () => router.push('/');
   const [currentSlide, setCurrentSlide] = useState(0);
   const [formData, setFormData] = useState<UserSettings>(defaultUserSettings);
   

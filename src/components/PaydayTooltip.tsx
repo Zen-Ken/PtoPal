@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { DollarSign, X, Clock } from 'lucide-react';
 

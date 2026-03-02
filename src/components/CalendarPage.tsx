@@ -1,14 +1,16 @@
+'use client';
+
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Calendar, Clock, TrendingUp, DollarSign, Plus, X, Edit3, Trash2, MapPin, Save, Calculator, Target, Info, Navigation } from 'lucide-react';
-import { UserSettings } from '../types/UserSettings';
 import { VacationEntry } from '../types/VacationEntry';
 import PaydayTooltip from './PaydayTooltip';
 import LegendTooltip from './LegendTooltip';
 import VacationModal from './VacationModal';
-import { 
-  calculatePTOForTargetDate, 
-  getVacationsForDate, 
-  generateVacationId, 
+import { useUserSettings } from '../context/UserSettingsContext';
+import {
+  calculatePTOForTargetDate,
+  getVacationsForDate,
+  generateVacationId,
   formatDateRange,
   calculateVacationHours,
   normalizeDate,
@@ -16,14 +18,6 @@ import {
   getProjectedPTOBalance,
   getNextDayOfWeek
 } from '../utils/dateUtils';
-
-interface CalendarPageProps {
-  onBack: () => void;
-  userSettings: UserSettings;
-  onUpdateSettings: (settings: Partial<UserSettings>) => void;
-  selectedDate: string;
-  setSelectedDate: (date: string) => void;
-}
 
 interface PayPeriodEvent {
   date: Date;
@@ -41,15 +35,12 @@ interface DayInfo {
   totalPTOOnPayDay?: number;
 }
 
-export default function CalendarPage({ onBack, userSettings, onUpdateSettings, selectedDate, setSelectedDate }: CalendarPageProps) {
+export default function CalendarPage() {
+  const { userSettings, updateSettings: onUpdateSettings } = useUserSettings();
+  const [selectedDate, setSelectedDate] = useState('');
+
   // Initialize currentDate based on selectedDate if available, but only once
-  const [currentDate, setCurrentDate] = useState(() => {
-    if (selectedDate) {
-      const selected = createDateFromString(selectedDate);
-      return new Date(selected.getFullYear(), selected.getMonth(), 1);
-    }
-    return new Date();
-  });
+  const [currentDate, setCurrentDate] = useState(() => new Date());
   
   const [isAddVacationModalOpen, setIsAddVacationModalOpen] = useState(false);
   const [editingVacation, setEditingVacation] = useState<VacationEntry | null>(null);

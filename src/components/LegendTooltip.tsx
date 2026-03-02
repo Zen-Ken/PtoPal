@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { DollarSign, MapPin, Info } from 'lucide-react';
 

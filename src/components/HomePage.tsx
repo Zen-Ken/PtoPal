@@ -1,45 +1,30 @@
-import React, { useMemo, useRef, useEffect } from 'react';
+'use client';
+
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Calendar, Clock, TrendingUp, Users, Shield, Sparkles, ChevronRight, CalendarDays, Zap, User, Calculator, Target, CheckCircle, CalendarCheck } from 'lucide-react';
-import { UserSettings } from '../types/UserSettings';
-import { createDateFromString, getProjectedPTOBalance } from '../utils/dateUtils';
+import { createDateFromString, getProjectedPTOBalance, calculatePTOForTargetDate } from '../utils/dateUtils';
+import { useUserSettings } from '../context/UserSettingsContext';
 
-interface HomePageProps {
-  selectedDate: string;
-  setSelectedDate: (date: string) => void;
-  calculatedPTO: number;
-  currentPTOInputValue: string;
-  setCurrentPTOInputValue: (value: string) => void;
-  accrualRateInputValue: string;
-  setAccrualRateInputValue: (value: string) => void;
-  userSettings: UserSettings;
-  onCurrentPTOBlur: () => void;
-  onAccrualRateBlur: () => void;
-  onGetStarted: () => void;
-  hasCompletedOnboarding: boolean;
-  formatSelectedDate: () => string;
-  hoursToDays: (hours: number) => string;
-  setCurrentPage: (page: string) => void;
-}
+export default function HomePage() {
+  const router = useRouter();
+  const { userSettings, updateSettings, hasCompletedOnboarding } = useUserSettings();
 
-export default function HomePage({
-  selectedDate,
-  setSelectedDate,
-  calculatedPTO,
-  currentPTOInputValue,
-  setCurrentPTOInputValue,
-  accrualRateInputValue,
-  setAccrualRateInputValue,
-  userSettings,
-  onCurrentPTOBlur,
-  onAccrualRateBlur,
-  onGetStarted,
-  hasCompletedOnboarding,
-  formatSelectedDate,
-  hoursToDays,
-  setCurrentPage
-}: HomePageProps) {
-  // Ref for the date input to enable auto-focus
+  const [selectedDate, setSelectedDate] = useState('');
+  const [calculatedPTO, setCalculatedPTO] = useState(0);
+  const [currentPTOInputValue, setCurrentPTOInputValue] = useState('');
+  const [accrualRateInputValue, setAccrualRateInputValue] = useState('');
+
   const dateInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync input values with userSettings
+  useEffect(() => {
+    setCurrentPTOInputValue(userSettings.currentPTO.toFixed(2));
+  }, [userSettings.currentPTO]);
+
+  useEffect(() => {
+    setAccrualRateInputValue(userSettings.accrualRate.toFixed(2));
+  }, [userSettings.accrualRate]);
 
   // Auto-focus the date input when component mounts
   useEffect(() => {
@@ -48,95 +33,78 @@ export default function HomePage({
     }
   }, []);
 
-  const features = [
-    {
-      icon: Zap,
-      title: "Instant Calculations",
-      description: "Get real-time PTO projections with our lightning-fast calculator engine."
-    },
-    {
-      icon: TrendingUp,
-      title: "Smart Forecasting",
-      description: "Predict your PTO balance months ahead to plan the perfect getaway."
-    },
-    {
-      icon: Calendar,
-      title: "Vacation Planner",
-      description: "Visualize your time off and optimize your work-life balance."
-    },
-    {
-      icon: Shield,
-      title: "Privacy First",
-      description: "Your PTO data stays secure with enterprise-grade encryption."
+  // Calculate PTO when selectedDate changes
+  useEffect(() => {
+    if (selectedDate) {
+      const targetDate = new Date(selectedDate);
+      const balance = calculatePTOForTargetDate(
+        userSettings.currentPTO,
+        userSettings.accrualRate,
+        userSettings.payPeriod,
+        userSettings.vacations,
+        targetDate
+      );
+      setCalculatedPTO(Math.round(balance * 100) / 100);
+    } else {
+      setCalculatedPTO(0);
     }
-  ];
+  }, [selectedDate, userSettings.currentPTO, userSettings.accrualRate, userSettings.payPeriod, userSettings.vacations]);
 
-  const howItWorksSteps = [
-    {
-      step: "01",
-      icon: User,
-      title: "Set Up Your Profile",
-      description: "Enter your current PTO balance, accrual rate, and pay schedule in just a few clicks."
-    },
-    {
-      step: "02",
-      icon: Calculator,
-      title: "Calculate Future Balance",
-      description: "Pick any future date and instantly see how much PTO you'll have available."
-    },
-    {
-      step: "03",
-      icon: Target,
-      title: "Plan Your Vacations",
-      description: "Use our calendar to schedule time off and see how it affects your balance."
-    },
-    {
-      step: "04",
-      icon: CheckCircle,
-      title: "Enjoy Peace of Mind",
-      description: "Never worry about PTO again with accurate tracking and smart planning."
-    }
-  ];
+  const handleCurrentPTOBlur = () => {
+    const numericValue = currentPTOInputValue === '' ? 0 : Number(currentPTOInputValue);
+    updateSettings({ currentPTO: Math.round(numericValue * 100) / 100 });
+  };
 
-  // Helper function to format pay period for display
+  const handleAccrualRateBlur = () => {
+    const numericValue = accrualRateInputValue === '' ? 0 : Number(accrualRateInputValue);
+    updateSettings({ accrualRate: Math.round(numericValue * 100) / 100 });
+  };
+
+  const formatSelectedDate = () => {
+    if (!selectedDate) return '';
+    return new Date(selectedDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
+
+  const hoursToDays = (hours: number) => (hours / 8).toFixed(2);
+
   const formatPayPeriod = (payPeriod: string) => {
     switch (payPeriod) {
-      case 'weekly':
-        return 'Weekly';
-      case 'biweekly':
-        return 'Bi-weekly (Every 2 weeks)';
-      case 'semimonthly':
-        return 'Semi-monthly (15th & Last day)';
-      case 'monthly':
-        return 'Monthly';
-      default:
-        return payPeriod;
+      case 'weekly': return 'Weekly';
+      case 'biweekly': return 'Bi-weekly (Every 2 weeks)';
+      case 'semimonthly': return 'Semi-monthly (15th & Last day)';
+      case 'monthly': return 'Monthly';
+      default: return payPeriod;
     }
   };
 
-  // Check if there are vacations between current date and selected date
+  const features = [
+    { icon: Zap, title: "Instant Calculations", description: "Get real-time PTO projections with our lightning-fast calculator engine." },
+    { icon: TrendingUp, title: "Smart Forecasting", description: "Predict your PTO balance months ahead to plan the perfect getaway." },
+    { icon: Calendar, title: "Vacation Planner", description: "Visualize your time off and optimize your work-life balance." },
+    { icon: Shield, title: "Privacy First", description: "Your PTO data stays secure with enterprise-grade encryption." }
+  ];
+
+  const howItWorksSteps = [
+    { step: "01", icon: User, title: "Set Up Your Profile", description: "Enter your current PTO balance, accrual rate, and pay schedule in just a few clicks." },
+    { step: "02", icon: Calculator, title: "Calculate Future Balance", description: "Pick any future date and instantly see how much PTO you'll have available." },
+    { step: "03", icon: Target, title: "Plan Your Vacations", description: "Use our calendar to schedule time off and see how it affects your balance." },
+    { step: "04", icon: CheckCircle, title: "Enjoy Peace of Mind", description: "Never worry about PTO again with accurate tracking and smart planning." }
+  ];
+
   const vacationsBetweenDates = useMemo(() => {
     if (!selectedDate) return [];
-    
     const today = new Date();
     const targetDate = createDateFromString(selectedDate);
-    
-    // Only check if target date is in the future
     if (targetDate <= today) return [];
-    
     return userSettings.vacations.filter(vacation => {
       const vacationStart = createDateFromString(vacation.startDate);
       const vacationEnd = createDateFromString(vacation.endDate);
-      
-      // Check if vacation overlaps with the period between today and target date
       return vacationEnd > today && vacationStart <= targetDate;
     });
   }, [selectedDate, userSettings.vacations]);
 
-  // Get projected PTO data that accounts for vacations
   const projectedPTOWithVacations = useMemo(() => {
     if (!selectedDate) return null;
-    
     const targetDate = createDateFromString(selectedDate);
     return getProjectedPTOBalance(
       userSettings.currentPTO,
@@ -149,30 +117,17 @@ export default function HomePage({
     );
   }, [selectedDate, userSettings.currentPTO, userSettings.accrualRate, userSettings.payPeriod, userSettings.vacations, userSettings.paydayOfWeek]);
 
-  // Determine the main CTA action and content
   const handleMainCTA = () => {
     if (hasCompletedOnboarding) {
-      setCurrentPage('calendar');
+      router.push('/calendar');
     } else {
-      onGetStarted();
+      router.push('/onboarding');
     }
   };
 
-  const getMainCTAContent = () => {
-    if (hasCompletedOnboarding) {
-      return {
-        text: 'View Your PTO Calendar',
-        icon: CalendarDays
-      };
-    } else {
-      return {
-        text: 'Get Started - It\'s Free!',
-        icon: User
-      };
-    }
-  };
-
-  const mainCTA = getMainCTAContent();
+  const mainCTA = hasCompletedOnboarding
+    ? { text: 'View Your PTO Calendar', icon: CalendarDays }
+    : { text: "Get Started - It's Free!", icon: User };
 
   return (
     <>
@@ -191,7 +146,7 @@ export default function HomePage({
               </span>
             </h1>
             <p className="mt-6 max-w-3xl mx-auto text-xl text-gray-600 dark:text-gray-300 leading-relaxed">
-              Plan your perfect vacation with confidence. PTOPal calculates your future PTO balance, 
+              Plan your perfect vacation with confidence. PTOPal calculates your future PTO balance,
               tracks accruals, and helps you make the most of your well-deserved time off.
             </p>
           </div>
@@ -221,7 +176,7 @@ export default function HomePage({
                       type="number"
                       value={currentPTOInputValue}
                       onChange={(e) => setCurrentPTOInputValue(e.target.value)}
-                      onBlur={onCurrentPTOBlur}
+                      onBlur={handleCurrentPTOBlur}
                       className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-lg font-medium bg-white dark:bg-gray-700 transition-all duration-200 text-gray-900 dark:text-white"
                       min="0"
                       step="0.01"
@@ -239,7 +194,7 @@ export default function HomePage({
                       type="number"
                       value={accrualRateInputValue}
                       onChange={(e) => setAccrualRateInputValue(e.target.value)}
-                      onBlur={onAccrualRateBlur}
+                      onBlur={handleAccrualRateBlur}
                       className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-lg font-medium bg-white dark:bg-gray-700 transition-all duration-200 text-gray-900 dark:text-white"
                       min="0"
                       step="0.01"
@@ -327,7 +282,7 @@ export default function HomePage({
                   {vacationsBetweenDates.length > 0 && selectedDate && (
                     <div className="mt-4 pt-4 border-t border-primary-200 dark:border-primary-700">
                       <button
-                        onClick={() => setCurrentPage('calendar')}
+                        onClick={() => router.push('/calendar')}
                         className="w-full bg-primary-100 dark:bg-primary-900/30 hover:bg-primary-200 dark:hover:bg-primary-900/50 border border-primary-200 dark:border-primary-700 rounded-lg p-3 transition-all duration-200 group"
                       >
                         <div className="flex items-start space-x-3">
@@ -337,7 +292,7 @@ export default function HomePage({
                               You have {vacationsBetweenDates.length} vacation{vacationsBetweenDates.length > 1 ? 's' : ''} planned!
                             </div>
                             <div className="text-xs text-primary-700 dark:text-primary-300 leading-relaxed">
-                              Remember, this total doesn't subtract your upcoming vacations. 
+                              Remember, this total doesn't subtract your upcoming vacations.
                               <span className="block font-medium mt-1 group-hover:text-primary-800 dark:group-hover:text-primary-200 transition-colors">
                                 View your calendar for the complete picture →
                               </span>
@@ -351,7 +306,7 @@ export default function HomePage({
               </div>
 
               <div className="text-center">
-                <button 
+                <button
                   onClick={handleMainCTA}
                   className="bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-all duration-200 transform hover:scale-105 shadow-medium hover:shadow-large flex items-center justify-center mx-auto"
                 >
@@ -386,30 +341,21 @@ export default function HomePage({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {howItWorksSteps.map((step, index) => (
               <div key={index} className="relative group">
-                {/* Connection Line (hidden on last item) */}
                 {index < howItWorksSteps.length - 1 && (
                   <div className="hidden lg:block absolute top-16 left-full w-full h-0.5 bg-gradient-to-r from-primary-200 to-primary-300 dark:from-primary-700 dark:to-primary-600 z-0 transform translate-x-6"></div>
                 )}
-                
                 <div className="relative bg-white dark:bg-gray-800 p-8 rounded-xl shadow-soft hover:shadow-medium transition-all duration-300 border border-gray-100 dark:border-gray-700 hover:border-primary-200 dark:hover:border-primary-700 z-10">
-                  {/* Step Number */}
                   <div className="absolute -top-4 left-8 bg-gradient-to-r from-primary-500 to-primary-600 text-white text-sm font-bold px-3 py-1 rounded-full shadow-soft">
                     {step.step}
                   </div>
-                  
-                  {/* Icon */}
                   <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-primary-600 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-soft mx-auto">
                     <step.icon className="w-8 h-8 text-white" />
                   </div>
-                  
-                  {/* Content */}
                   <div className="text-center">
                     <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-300">
                       {step.title}
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
-                      {step.description}
-                    </p>
+                    <p className="text-gray-600 dark:text-gray-300 leading-relaxed">{step.description}</p>
                   </div>
                 </div>
               </div>
@@ -438,10 +384,7 @@ export default function HomePage({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
-              <div
-                key={index}
-                className="group bg-white dark:bg-gray-800 p-8 rounded-xl shadow-soft hover:shadow-medium transition-all duration-300 border border-gray-100 dark:border-gray-700 hover:border-primary-200 dark:hover:border-primary-700"
-              >
+              <div key={index} className="group bg-white dark:bg-gray-800 p-8 rounded-xl shadow-soft hover:shadow-medium transition-all duration-300 border border-gray-100 dark:border-gray-700 hover:border-primary-200 dark:hover:border-primary-700">
                 <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-soft">
                   <feature.icon className="w-6 h-6 text-white" />
                 </div>
@@ -471,8 +414,8 @@ export default function HomePage({
                 </span>
               </h2>
               <p className="text-lg text-gray-600 dark:text-gray-300 mb-8 leading-relaxed">
-                Stop letting PTO expire or missing out on well-deserved breaks. 
-                PTOPal empowers you with intelligent insights to maximize your time off 
+                Stop letting PTO expire or missing out on well-deserved breaks.
+                PTOPal empowers you with intelligent insights to maximize your time off
                 and maintain the perfect work-life balance.
               </p>
               <div className="space-y-4 mb-8">
@@ -515,8 +458,8 @@ export default function HomePage({
                       </div>
                     </div>
                     <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2 overflow-hidden">
-                      <div 
-                        className="bg-gradient-to-r from-primary-500 to-primary-600 h-2 rounded-full transition-all duration-500" 
+                      <div
+                        className="bg-gradient-to-r from-primary-500 to-primary-600 h-2 rounded-full transition-all duration-500"
                         style={{width: `${Math.min((userSettings.currentPTO / userSettings.annualAllowance) * 100, 100)}%`}}
                       ></div>
                     </div>
@@ -524,7 +467,7 @@ export default function HomePage({
                       {Math.round((userSettings.currentPTO / userSettings.annualAllowance) * 100)}% of annual allowance
                     </div>
                   </div>
-                  
+
                   <div className="bg-white dark:bg-gray-700 p-6 rounded-xl shadow-soft border border-gray-100 dark:border-gray-600">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center space-x-3">
@@ -539,8 +482,8 @@ export default function HomePage({
                       </div>
                     </div>
                     <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toLocaleDateString('en-US', { 
-                        month: 'long', 
+                      {new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0).toLocaleDateString('en-US', {
+                        month: 'long',
                         day: 'numeric',
                         year: 'numeric'
                       })}
@@ -562,12 +505,10 @@ export default function HomePage({
                 <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
                   <Sparkles className="w-5 h-5 text-white" />
                 </div>
-                <span className="ml-3 text-xl font-bold">
-                  PTOPal
-                </span>
+                <span className="ml-3 text-xl font-bold">PTOPal</span>
               </div>
               <p className="text-gray-400 mb-8 max-w-md leading-relaxed">
-                Your intelligent companion for managing time off. Never lose track of your 
+                Your intelligent companion for managing time off. Never lose track of your
                 PTO balance and plan the perfect vacation with confidence and precision.
               </p>
               <div className="flex space-x-4">
@@ -598,15 +539,10 @@ export default function HomePage({
               </ul>
             </div>
           </div>
-          
           <div className="flex flex-col md:flex-row justify-between items-center border-t border-gray-800 pt-8">
             <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-6">
-              <p className="text-gray-400 text-sm">
-                © 2024 PTOPal. All rights reserved.
-              </p>
-              <p className="text-xs text-gray-500">
-                Created for World's Largest Hackathon 2024
-              </p>
+              <p className="text-gray-400 text-sm">© 2024 PTOPal. All rights reserved.</p>
+              <p className="text-xs text-gray-500">Created for World's Largest Hackathon 2024</p>
             </div>
             <div className="flex space-x-6 mt-4 md:mt-0">
               <a href="#" className="text-gray-400 hover:text-white text-sm transition-colors">Privacy Policy</a>
